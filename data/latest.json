@@ -1,6 +1,6 @@
 {
- "t": "2026-11-09T23:03:12+01:00",
- "summary": "Tweede controle van 9 november: 60 rechtstreekse vluchten ververst via Kiwi.com vanaf Schiphol, Eindhoven, Rotterdam, Weeze en Charleroi; goedkoopst €17 enkele reis (onder meer Eindhoven → Tirana op 9 december). Trein- en busprijzen van NS International en Kombo konden niet worden gelezen en er staan geen alerts.",
+ "t": "2026-11-09T23:03:38+01:00",
+ "summary": "Dagelijkse controle: 60 rechtstreekse vluchten via Kiwi.com ververst vanaf Schiphol, Eindhoven, Rotterdam, Weeze en Charleroi; goedkoopst €17 (14 routes). Trein- en busprijzen niet ververst: NS International en Kombo konden niet worden gelezen.",
  "deals": [
   {
    "id": "kiwi-ams-dub",
@@ -13,19 +13,19 @@
    "price": 28,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2026-12-08",
-   "depTime": "14:20",
+   "out": "2026-12-09",
+   "depTime": "14:40",
    "dur": 100,
    "transfers": 0,
    "bag": "tasje",
-   "flight": "FR3101",
-   "link": "https://kiwi.com/u/gn4877t",
+   "flight": "FR3103",
+   "link": "https://kiwi.com/u/jbq4mkj",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
-   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR3101, rechtstreeks. Alleen een klein tasje is inbegrepen."
+   "checked": "2026-11-09T22:54:18+01:00",
+   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR3103, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-ams-agp",
@@ -44,12 +44,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR5692",
-   "link": "https://kiwi.com/u/v94u2qv",
+   "link": "https://kiwi.com/u/2ukyfk2w",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR5692, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -63,18 +63,18 @@
    "price": 67,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-17",
-   "depTime": "06:55",
+   "out": "2027-01-01",
+   "depTime": "07:10",
    "dur": 145,
    "transfers": 0,
    "bag": "tasje",
    "flight": "HV6335",
-   "link": "https://kiwi.com/u/37shnu",
+   "link": "https://kiwi.com/u/6wqcgh",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6335, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -88,18 +88,18 @@
    "price": 67,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-02",
-   "depTime": "06:25",
+   "out": "2027-01-11",
+   "depTime": "17:55",
    "dur": 175,
    "transfers": 0,
    "bag": "tasje",
    "flight": "HV6729",
-   "link": "https://kiwi.com/u/4tu5w4",
+   "link": "https://kiwi.com/u/uc9qw54",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6729, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -119,12 +119,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "VY1055",
-   "link": "https://kiwi.com/u/9ttnppn",
+   "link": "https://kiwi.com/u/sbg729",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht VY1055, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -144,12 +144,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "U25708",
-   "link": "https://kiwi.com/u/fknx4c",
+   "link": "https://kiwi.com/u/pxmv6n",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht U25708, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -163,19 +163,19 @@
    "price": 77,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-17",
-   "depTime": "05:00",
+   "out": "2027-01-22",
+   "depTime": "19:05",
    "dur": 145,
    "transfers": 0,
    "bag": "tasje",
-   "flight": "HV5625",
-   "link": "https://kiwi.com/u/zkvmq3",
+   "flight": "HV5627",
+   "link": "https://kiwi.com/u/42bf6u",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
-   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV5625, rechtstreeks. Alleen een klein tasje is inbegrepen."
+   "checked": "2026-11-09T22:54:18+01:00",
+   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV5627, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-ams-man",
@@ -188,19 +188,19 @@
    "price": 78,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-19",
-   "depTime": "17:50",
+   "out": "2027-01-08",
+   "depTime": "19:25",
    "dur": 80,
    "transfers": 0,
    "bag": "tasje",
-   "flight": "U27855",
-   "link": "https://kiwi.com/u/qu78653",
+   "flight": "U22160",
+   "link": "https://kiwi.com/u/b5bqth",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
-   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht U27855, rechtstreeks. Alleen een klein tasje is inbegrepen."
+   "checked": "2026-11-09T22:54:18+01:00",
+   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht U22160, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-ams-edi",
@@ -219,12 +219,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "U27837",
-   "link": "https://kiwi.com/u/vpx6b8",
+   "link": "https://kiwi.com/u/ccqqbw",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht U27837, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -238,19 +238,19 @@
    "price": 81,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2026-12-31",
-   "depTime": "07:15",
+   "out": "2026-12-10",
+   "depTime": "10:45",
    "dur": 80,
    "transfers": 0,
    "bag": "tasje",
-   "flight": "U27845",
-   "link": "https://kiwi.com/u/5tt3jh",
+   "flight": "U27849",
+   "link": "https://kiwi.com/u/49fnxxh",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
-   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht U27845, rechtstreeks. Alleen een klein tasje is inbegrepen."
+   "checked": "2026-11-09T22:54:18+01:00",
+   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht U27849, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-ams-prg",
@@ -263,18 +263,18 @@
    "price": 83,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-01",
-   "depTime": "11:00",
+   "out": "2027-01-04",
+   "depTime": "18:05",
    "dur": 90,
    "transfers": 0,
    "bag": "tasje",
    "flight": "U27927",
-   "link": "https://kiwi.com/u/yzf49rn",
+   "link": "https://kiwi.com/u/q8fnrf",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht U27927, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -288,19 +288,19 @@
    "price": 83,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-21",
-   "depTime": "09:40",
+   "out": "2027-01-22",
+   "depTime": "21:20",
    "dur": 95,
    "transfers": 0,
    "bag": "tasje",
-   "flight": "U25406",
-   "link": "https://kiwi.com/u/wz79p86",
+   "flight": "U25408",
+   "link": "https://kiwi.com/u/q6urht9",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
-   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht U25406, rechtstreeks. Alleen een klein tasje is inbegrepen."
+   "checked": "2026-11-09T22:54:18+01:00",
+   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht U25408, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-ein-tia",
@@ -319,12 +319,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR9940",
-   "link": "https://kiwi.com/u/4mwhkt",
+   "link": "https://kiwi.com/u/sf42ccy",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR9940, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -344,12 +344,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR2538",
-   "link": "https://kiwi.com/u/9t6wqn",
+   "link": "https://kiwi.com/u/vdcdxt",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR2538, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -369,12 +369,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR5869",
-   "link": "https://kiwi.com/u/x7k5mst",
+   "link": "https://kiwi.com/u/mc5zkz",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR5869, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -394,12 +394,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR6014",
-   "link": "https://kiwi.com/u/4xc75p",
+   "link": "https://kiwi.com/u/82ggkq",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR6014, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -419,12 +419,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR4062",
-   "link": "https://kiwi.com/u/497bns",
+   "link": "https://kiwi.com/u/znbgn6",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR4062, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -444,12 +444,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR2576",
-   "link": "https://kiwi.com/u/xbwh3s",
+   "link": "https://kiwi.com/u/yghg23f",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR2576, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -469,12 +469,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR3461",
-   "link": "https://kiwi.com/u/jcsg5mz",
+   "link": "https://kiwi.com/u/vwksj2",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR3461, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -494,12 +494,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR5815",
-   "link": "https://kiwi.com/u/stcnrd",
+   "link": "https://kiwi.com/u/mthznk",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR5815, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -519,12 +519,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR3532",
-   "link": "https://kiwi.com/u/v7fd6pc",
+   "link": "https://kiwi.com/u/m9dmq9",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR3532, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -544,12 +544,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR787",
-   "link": "https://kiwi.com/u/hh6k7t",
+   "link": "https://kiwi.com/u/pw5s58",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR787, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -569,12 +569,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR2119",
-   "link": "https://kiwi.com/u/3n6njt",
+   "link": "https://kiwi.com/u/679chw",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR2119, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -594,12 +594,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR5891",
-   "link": "https://kiwi.com/u/ny34sn",
+   "link": "https://kiwi.com/u/xmudrm",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR5891, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -619,12 +619,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "HV5021",
-   "link": "https://kiwi.com/u/9thjr3f",
+   "link": "https://kiwi.com/u/79p9gx3",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV5021, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -638,19 +638,19 @@
    "price": 70,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-05",
-   "depTime": "18:00",
-   "dur": 60,
+   "out": "2026-12-02",
+   "depTime": "09:00",
+   "dur": 55,
    "transfers": 0,
    "bag": "tasje",
-   "flight": "HV6993",
-   "link": "https://kiwi.com/u/ckqfxu",
+   "flight": "HV6991",
+   "link": "https://kiwi.com/u/fx5fsmx",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
-   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6993, rechtstreeks. Alleen een klein tasje is inbegrepen."
+   "checked": "2026-11-09T22:54:18+01:00",
+   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6991, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-rtm-inn",
@@ -663,18 +663,18 @@
    "price": 70,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-10",
+   "out": "2027-01-03",
    "depTime": "14:15",
    "dur": 85,
    "transfers": 0,
    "bag": "tasje",
    "flight": "HV6925",
-   "link": "https://kiwi.com/u/qxhyhd5",
+   "link": "https://kiwi.com/u/ghhjf7",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6925, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -694,12 +694,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "HV6063",
-   "link": "https://kiwi.com/u/tfqgsyt",
+   "link": "https://kiwi.com/u/jd7jwuz",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6063, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -719,12 +719,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "HV6035",
-   "link": "https://kiwi.com/u/kcnfw8",
+   "link": "https://kiwi.com/u/rsmhnd8",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6035, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -738,19 +738,19 @@
    "price": 70,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-18",
-   "depTime": "07:50",
+   "out": "2027-01-17",
+   "depTime": "17:30",
    "dur": 170,
    "transfers": 0,
    "bag": "tasje",
-   "flight": "HV6853",
-   "link": "https://kiwi.com/u/4f8hgg",
+   "flight": "HV6855",
+   "link": "https://kiwi.com/u/xwprj6",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
-   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6853, rechtstreeks. Alleen een klein tasje is inbegrepen."
+   "checked": "2026-11-09T22:54:18+01:00",
+   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6855, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-rtm-szg",
@@ -763,19 +763,19 @@
    "price": 71,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-04",
-   "depTime": "19:15",
+   "out": "2027-01-01",
+   "depTime": "06:55",
    "dur": 85,
    "transfers": 0,
    "bag": "tasje",
-   "flight": "HV6781",
-   "link": "https://kiwi.com/u/v5fygmu",
+   "flight": "HV5605",
+   "link": "https://kiwi.com/u/wxtvp7",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
-   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6781, rechtstreeks. Alleen een klein tasje is inbegrepen."
+   "checked": "2026-11-09T22:54:18+01:00",
+   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV5605, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-rtm-vlc",
@@ -794,12 +794,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "HV6443",
-   "link": "https://kiwi.com/u/7qs3bq7",
+   "link": "https://kiwi.com/u/j7vv4nw",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6443, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -819,12 +819,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "HV5051",
-   "link": "https://kiwi.com/u/m296xz",
+   "link": "https://kiwi.com/u/jg9d87",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV5051, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -844,12 +844,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "HV5241",
-   "link": "https://kiwi.com/u/x5qkwv",
+   "link": "https://kiwi.com/u/wx6zgw",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV5241, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -863,18 +863,18 @@
    "price": 72,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-05",
-   "depTime": "07:00",
+   "out": "2027-01-17",
+   "depTime": "16:00",
    "dur": 180,
    "transfers": 0,
    "bag": "tasje",
    "flight": "HV6091",
-   "link": "https://kiwi.com/u/6hfs3v",
+   "link": "https://kiwi.com/u/qr9tsv",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6091, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -894,12 +894,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "HV6073",
-   "link": "https://kiwi.com/u/n8jmvc5",
+   "link": "https://kiwi.com/u/y77sm4",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht HV6073, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -919,12 +919,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR8332",
-   "link": "https://kiwi.com/u/bsb5bs",
+   "link": "https://kiwi.com/u/ctg4n3",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR8332, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -944,12 +944,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR5489",
-   "link": "https://kiwi.com/u/yxd55ry",
+   "link": "https://kiwi.com/u/5puf9m",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR5489, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -969,12 +969,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR7605",
-   "link": "https://kiwi.com/u/vjk828c",
+   "link": "https://kiwi.com/u/r2nwc42",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR7605, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -994,12 +994,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR8632",
-   "link": "https://kiwi.com/u/bwmyj33",
+   "link": "https://kiwi.com/u/pv4jk6",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR8632, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1019,13 +1019,38 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR6390",
-   "link": "https://kiwi.com/u/pguyfsb",
+   "link": "https://kiwi.com/u/x2xht85",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR6390, rechtstreeks. Alleen een klein tasje is inbegrepen."
+  },
+  {
+   "id": "kiwi-nrn-pmi",
+   "mode": "vliegtuig",
+   "provider": "Ryanair",
+   "from": "NRN",
+   "arr": "PMI",
+   "toCity": "Palma de Mallorca",
+   "toCountry": "Spanje",
+   "price": 21,
+   "trip": "enkel",
+   "priceType": "gevonden",
+   "out": "2027-01-04",
+   "depTime": "13:05",
+   "dur": 140,
+   "transfers": 0,
+   "bag": "tasje",
+   "flight": "FR6218",
+   "link": "https://kiwi.com/u/cgcytt",
+   "src": [
+    "kiwi"
+   ],
+   "book": "kiwi",
+   "checked": "2026-11-09T22:54:18+01:00",
+   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR6218, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-nrn-bri",
@@ -1044,38 +1069,13 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR7524",
-   "link": "https://kiwi.com/u/uv5ybc",
+   "link": "https://kiwi.com/u/v9sy6jq",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR7524, rechtstreeks. Alleen een klein tasje is inbegrepen."
-  },
-  {
-   "id": "kiwi-nrn-pmi",
-   "mode": "vliegtuig",
-   "provider": "Ryanair",
-   "from": "NRN",
-   "arr": "PMI",
-   "toCity": "Palma de Mallorca",
-   "toCountry": "Spanje",
-   "price": 21,
-   "trip": "enkel",
-   "priceType": "gevonden",
-   "out": "2026-11-26",
-   "depTime": "16:45",
-   "dur": 140,
-   "transfers": 0,
-   "bag": "tasje",
-   "flight": "FR6218",
-   "link": "https://kiwi.com/u/kftmwhm",
-   "src": [
-    "kiwi"
-   ],
-   "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
-   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR6218, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-nrn-alc",
@@ -1094,12 +1094,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR6212",
-   "link": "https://kiwi.com/u/4fkudrm",
+   "link": "https://kiwi.com/u/t7m9mc",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR6212, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1119,12 +1119,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR5688",
-   "link": "https://kiwi.com/u/9ugwjjb",
+   "link": "https://kiwi.com/u/k6rt64",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR5688, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1144,12 +1144,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR9642",
-   "link": "https://kiwi.com/u/grqk9t",
+   "link": "https://kiwi.com/u/n3h2khd",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR9642, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1169,12 +1169,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR2126",
-   "link": "https://kiwi.com/u/f7uwcqf",
+   "link": "https://kiwi.com/u/u4mwvpm",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR2126, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1194,12 +1194,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR8612",
-   "link": "https://kiwi.com/u/mq6268",
+   "link": "https://kiwi.com/u/4ppxtk",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR8612, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1219,12 +1219,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR3223",
-   "link": "https://kiwi.com/u/h6xkb3s",
+   "link": "https://kiwi.com/u/x7m6jgv",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR3223, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1238,19 +1238,19 @@
    "price": 17,
    "trip": "enkel",
    "priceType": "gevonden",
-   "out": "2027-01-19",
-   "depTime": "10:05",
+   "out": "2026-12-06",
+   "depTime": "07:15",
    "dur": 90,
    "transfers": 0,
    "bag": "tasje",
-   "flight": "FR1522",
-   "link": "https://kiwi.com/u/rz9q9f",
+   "flight": "FR4938",
+   "link": "https://kiwi.com/u/2vyv9t4",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
-   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR1522, rechtstreeks. Alleen een klein tasje is inbegrepen."
+   "checked": "2026-11-09T22:54:18+01:00",
+   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR4938, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-crl-bgy",
@@ -1269,12 +1269,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR4522",
-   "link": "https://kiwi.com/u/fpzrv43",
+   "link": "https://kiwi.com/u/fjwqy2",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR4522, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1294,12 +1294,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR4838",
-   "link": "https://kiwi.com/u/r5r8qbk",
+   "link": "https://kiwi.com/u/36pkb46",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR4838, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1319,12 +1319,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR4496",
-   "link": "https://kiwi.com/u/h9gscs",
+   "link": "https://kiwi.com/u/86fkmw",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR4496, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1344,38 +1344,13 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR3745",
-   "link": "https://kiwi.com/u/s45bmf",
+   "link": "https://kiwi.com/u/7yqrfy",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR3745, rechtstreeks. Alleen een klein tasje is inbegrepen."
-  },
-  {
-   "id": "kiwi-crl-wro",
-   "mode": "vliegtuig",
-   "provider": "Ryanair",
-   "from": "CRL",
-   "arr": "WRO",
-   "toCity": "Wrocław",
-   "toCountry": "Polen",
-   "price": 17,
-   "trip": "enkel",
-   "priceType": "gevonden",
-   "out": "2026-12-31",
-   "depTime": "15:35",
-   "dur": 105,
-   "transfers": 0,
-   "bag": "tasje",
-   "flight": "FR8372",
-   "link": "https://kiwi.com/u/hs3365",
-   "src": [
-    "kiwi"
-   ],
-   "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
-   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR8372, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-crl-gro",
@@ -1394,12 +1369,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR1670",
-   "link": "https://kiwi.com/u/53mzfj",
+   "link": "https://kiwi.com/u/fmjnty3",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR1670, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1419,13 +1394,38 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR47",
-   "link": "https://kiwi.com/u/gf2fmmr",
+   "link": "https://kiwi.com/u/sb57f5",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR47, rechtstreeks. Alleen een klein tasje is inbegrepen."
+  },
+  {
+   "id": "kiwi-crl-wro",
+   "mode": "vliegtuig",
+   "provider": "Ryanair",
+   "from": "CRL",
+   "arr": "WRO",
+   "toCity": "Wrocław",
+   "toCountry": "Polen",
+   "price": 17,
+   "trip": "enkel",
+   "priceType": "gevonden",
+   "out": "2026-12-31",
+   "depTime": "15:35",
+   "dur": 105,
+   "transfers": 0,
+   "bag": "tasje",
+   "flight": "FR8372",
+   "link": "https://kiwi.com/u/zfjkxs",
+   "src": [
+    "kiwi"
+   ],
+   "book": "kiwi",
+   "checked": "2026-11-09T22:54:18+01:00",
+   "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR8372, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
    "id": "kiwi-crl-cia",
@@ -1444,12 +1444,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR5650",
-   "link": "https://kiwi.com/u/bcjzpb",
+   "link": "https://kiwi.com/u/hhu4mq",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR5650, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1469,12 +1469,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR4864",
-   "link": "https://kiwi.com/u/v2ffswv",
+   "link": "https://kiwi.com/u/3yscnjq",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR4864, rechtstreeks. Alleen een klein tasje is inbegrepen."
   },
   {
@@ -1494,12 +1494,12 @@
    "transfers": 0,
    "bag": "tasje",
    "flight": "FR7323",
-   "link": "https://kiwi.com/u/u8nbwfw",
+   "link": "https://kiwi.com/u/bbfd5u",
    "src": [
     "kiwi"
    ],
    "book": "kiwi",
-   "checked": "2026-11-09T22:55:00+01:00",
+   "checked": "2026-11-09T22:54:18+01:00",
    "note": "Live gevonden via Kiwi.com door de dagelijkse controle: vlucht FR7323, rechtstreeks. Alleen een klein tasje is inbegrepen."
   }
  ],

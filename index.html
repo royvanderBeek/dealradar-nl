@@ -3532,7 +3532,11 @@ async function syncAlertsFromCloud() {
     if (state.tab === 'bewaard') renderSaved();
   } finally { alertSyncBusy = false; }
 }
-const cleanAlert = a => ({ dest: a.dest, mode: a.mode, max: a.max, created: a.created, from: a.from || null, label: a.label || null });
+// In de database staan ook de vliegveldcodes en de naam van de bestemming, zodat de dagelijkse controle vluchten kan koppelen
+const cleanAlert = a => {
+  const d = a.dest !== 'overal' ? DEST[a.dest] : null;
+  return { dest: a.dest, destName: d ? d.n : 'Overal', codes: d ? (d.codes || []) : [], mode: a.mode, max: a.max, created: a.created };
+};
 async function cloudAddAlert(a) { if (CLOUD.db && CLOUD.isOwner) { try { await CLOUD.db.collection('alerts').doc(a.id).set(cleanAlert(a)); } catch (err) { toast('Alert alleen in deze browser bewaard (database niet bereikbaar).'); } } }
 async function cloudRemoveAlert(id) { if (CLOUD.db && CLOUD.isOwner) { try { await CLOUD.db.collection('alerts').doc(id).delete(); } catch (err) { /* blijft lokaal weg */ } } }
 // Treffers van de dagelijkse controle (staan in de nieuwste run)

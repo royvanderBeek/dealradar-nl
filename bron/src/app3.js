@@ -212,20 +212,24 @@ function kiwiToDeal(it, checked, tag) {
     provider: carriers.join(' + ') || 'Luchtvaartmaatschappij', price: Math.round(Number(it.price) * 100) / 100,
     out: String(ob.departureTime || '').slice(0, 10) || undefined, depTime: String(ob.departureTime || '').slice(11, 16) || undefined,
     dur: mins(ob), transfers: stops, bag, flight: kiwiFlights(ob).join(', '), tag: tag || undefined,
+    stopNote: stops ? `Route heen: ${ob.route.join(' → ')}${ib && Array.isArray(ib.route) ? `; terug: ${ib.route.join(' → ')}` : ''}.` : undefined,
     ...(ib ? { back: String(ib.departureTime).slice(0, 10), backTime: String(ib.departureTime).slice(11, 16), backDur: mins(ib), backFlight: kiwiFlights(ib).join(', '), backFrom: ib.from, backTo: ib.to } : {}),
     link: typeof it.bookingUrl === 'string' && /^https:\/\//.test(it.bookingUrl) ? it.bookingUrl : undefined, checked,
   });
 }
 // De zoekvraag voor Kiwi.com, passend bij je keuzes (soort reis, verblijf, bagage, periode)
-function kiwiInput(o, flyTo, win, broad) {
-  const input = { flyFrom: o, flyTo, departureDate: ddmmyyyy(win.from), departureDateTo: ddmmyyyy(win.to), currency: 'EUR', locale: 'nl', sort: 'price', one_for_city: broad, adults: 1 };
-  if (state.filters.direct) input.max_sector_stopovers = 0;
+function kiwiInput(o, flyTo, win, broad, far) {
+  // Ver weg: iets langer vooruit zoeken (110 dagen) en hooguit 1 overstap per richting
+  const to = far && !win.tag ? addDays(win.from, 110) : win.to;
+  const input = { flyFrom: o, flyTo, departureDate: ddmmyyyy(win.from), departureDateTo: ddmmyyyy(to), currency: 'EUR', locale: 'nl', sort: 'price', one_for_city: broad, adults: 1 };
+  if (state.filters.direct) input.max_sector_stopovers = 0; else if (far) input.max_sector_stopovers = 1;
   if (state.bag === 'hand') input.adults_hand_bags = [1];
   if (state.bag === 'koffer') input.adults_hold_bags = [1];
   if (win.weekend) input.fly_days = '5,6';
   if (state.trip === 'retour') {
     const st = STAYS[state.stay];
-    const nMin = win.weekend ? 2 : st.min, nMax = win.weekend ? 3 : st.max;
+    const longStay = far && state.stay === 'alle' && !win.weekend; // ver weg blijf je meestal langer
+    const nMin = win.weekend ? 2 : longStay ? 5 : st.min, nMax = win.weekend ? 3 : longStay ? 16 : st.max;
     input.nights_in_dst_from = nMin; input.nights_in_dst_to = nMax;
     if (win.strictBack) {
       const lastDep = addDays(win.to, -nMin);
@@ -245,6 +249,21 @@ function mcpErrorText(err, server) {
   if (code === 'selection_required') return `Kies in Claude welke ${server}-koppeling deze pagina mag gebruiken.`;
   return `${server} werkt nu niet${code ? ` (${code})` : ''}.`;
 }
+// Welke zoekopdrachten horen bij jouw keuze? Europa vanaf de dichtstbijzijnde vliegvelden;
+// andere werelddelen vanaf Schiphol en je dichtstbijzijnde vliegveld (Afrika ook vanaf de andere, want daar vliegen prijsvechters heen).
+const KIWI_REGION = { AF: 'Africa', AS: 'Asia', NA: 'North America', SA: 'South America', OC: 'Oceania' };
+function kiwiTasks(dest, origins) {
+  const withAms = [...new Set(['AMS', ...origins])];
+  if (dest) {
+    const far = contOf(dest) !== 'EU';
+    return (far ? withAms.slice(0, 3) : origins).map(o => ({ o, flyTo: dest.iata || dest.en || dest.n, far }));
+  }
+  const r = state.reach, tasks = [];
+  if (r === 'wereld' || r === 'europa') origins.forEach(o => tasks.push({ o, flyTo: 'Europe', far: false }));
+  const conts = r === 'wereld' || r === 'ver' ? ['AF', 'AS', 'NA', 'SA'] : KIWI_REGION[r] ? [r] : [];
+  for (const c of conts) (c === 'AF' ? withAms.slice(0, 4) : [...new Set(['AMS', origins[0]])]).forEach(o => tasks.push({ o, flyTo: KIWI_REGION[c], far: true }));
+  return tasks;
+}
 async function scanKiwi() {
   if (!CLOUD.mcp || !CLOUD.kiwi) return;
   state.src.kiwi = { status: 'busy', text: 'zoeken…' }; renderRadar();
@@ -254,9 +273,11 @@ async function scanKiwi() {
   const tag = [state.trip === 'retour' && state.stay !== 'alle' && !(win && win.weekend) ? state.stay : '', win && win.tag ? win.tag : ''].filter(Boolean).join('-');
   const found = [];
   let lastErr = null, asked = 0;
-  for (const o of (win ? origins : [])) {
-    const input = kiwiInput(o, flyTo, win, !dest);
-    if (!input) continue;
+  const tasks = win ? kiwiTasks(dest, origins) : [];
+  let fatal = false;
+  const run = async t => {
+    const input = kiwiInput(t.o, t.flyTo, win, !dest, t.far);
+    if (!input || fatal) return;
     asked++;
     try {
       const res = await CLOUD.mcp.callTool(KIWI, 'search-flight', input, { cache: { staleTime: 10 * 60000, gcTime: 60 * 60000 } });
@@ -265,9 +286,11 @@ async function scanKiwi() {
       list.forEach(it => { const d = kiwiToDeal(it, checked, tag); if (d) found.push(d); });
     } catch (err) {
       lastErr = err;
-      if (['server_not_connected', 'needs_reauth', 'not_in_manifest', 'not_granted', 'capability_disabled', 'approval_required', 'selection_required'].includes(err && err.code)) break;
+      if (['server_not_connected', 'needs_reauth', 'not_in_manifest', 'not_granted', 'capability_disabled', 'approval_required', 'selection_required'].includes(err && err.code)) fatal = true;
     }
-  }
+  };
+  // Vier zoekopdrachten tegelijk, zodat ook "hele wereld" snel klaar is
+  for (let i = 0; i < tasks.length && !fatal; i += 4) await Promise.all(tasks.slice(i, i + 4).map(run));
   const best = new Map();
   found.forEach(d => { const o = best.get(d.id); if (!o || d.price < o.price) best.set(d.id, d); });
   // Eerdere live resultaten van het andere soort reis blijven staan; dezelfde route wordt ververst
@@ -277,7 +300,7 @@ async function scanKiwi() {
   const what = state.trip === 'retour' ? 'retourvluchten' : 'enkele vluchten';
   if (best.size) {
     state.src.kiwi = { status: 'ok', text: `${best.size} live ${what}` };
-    saveSearch([...best.values()], { flyTo, from: win.from, to: win.to, origins, trip: state.trip, stay: state.stay, bag: state.bag });
+    saveSearch([...best.values()], { flyTo: dest ? flyTo : state.reach, from: win.from, to: win.to, origins, trip: state.trip, stay: state.stay, bag: state.bag });
   } else state.src.kiwi = lastErr ? { status: 'error', text: mcpErrorText(lastErr, KIWI) } : { status: 'ok', text: asked ? `geen ${what} gevonden` : 'deze periode is te kort of al voorbij' };
   rebuildHistory();
   renderRadar();

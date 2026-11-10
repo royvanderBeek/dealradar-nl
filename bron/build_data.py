@@ -126,6 +126,70 @@ D=[
  ('wroclaw','Wrocław','Polen','PL',['stad'],None,'WRO','Wroclaw',[]),
  ('biarritz','Biarritz','Frankrijk','FR',['strand'],None,'BIQ','Biarritz',[]),
  ('bergerac','Bergerac','Frankrijk','FR',['natuur'],None,'EGC','Bergerac',[]),
+ # ===== Buiten Europa (alleen vliegtuig) =====
+ ('marrakech','Marrakech','Marokko','MA',['stad','natuur'],None,'RAK','Marrakech',[]),
+ ('essaouira','Essaouira','Marokko','MA',['strand','stad'],None,'ESU','Essaouira',[]),
+ ('tanger','Tanger','Marokko','MA',['stad','strand'],None,'TNG','Tangier',[]),
+ ('nador','Nador','Marokko','MA',['strand'],None,'NDR','Nador',[]),
+ ('fez','Fez','Marokko','MA',['stad'],None,'FEZ','Fez',[]),
+ ('agadir','Agadir','Marokko','MA',['strand'],None,'AGA','Agadir',[]),
+ ('rabat','Rabat','Marokko','MA',['stad'],None,'RBA','Rabat',[]),
+ ('casablanca','Casablanca','Marokko','MA',['stad'],None,'CMN','Casablanca',[]),
+ ('sharm','Sharm-el-Sheikh','Egypte','EG',['strand'],None,'SSH','Sharm el Sheikh',[]),
+ ('hurghada','Hurghada','Egypte','EG',['strand'],None,'HRG','Hurghada',[]),
+ ('cairo','Caïro','Egypte','EG',['stad'],None,'CAI','Cairo',['SPX']),
+ ('marsa-alam','Marsa Alam','Egypte','EG',['strand','natuur'],None,'RMF','Marsa Alam',[]),
+ ('djerba','Djerba','Tunesië','TN',['strand'],None,'DJE','Djerba',[]),
+ ('tunis','Tunis','Tunesië','TN',['stad','strand'],None,'TUN','Tunis',[]),
+ ('sal','Sal (Kaapverdië)','Kaapverdië','CV',['strand'],None,'SID','Sal',[]),
+ ('boa-vista','Boa Vista (Kaapverdië)','Kaapverdië','CV',['strand'],None,'BVC','Boa Vista',[]),
+ ('banjul','Banjul','Gambia','GM',['strand'],None,'BJL','Banjul',[]),
+ ('zanzibar','Zanzibar','Tanzania','TZ',['strand','natuur'],None,'ZNZ','Zanzibar',[]),
+ ('kaapstad','Kaapstad','Zuid-Afrika','ZA',['stad','natuur','strand'],None,'CPT','Cape Town',[]),
+ ('johannesburg','Johannesburg','Zuid-Afrika','ZA',['stad','natuur'],None,'JNB','Johannesburg',[]),
+ ('nairobi','Nairobi','Kenia','KE',['natuur','stad'],None,'NBO','Nairobi',[]),
+ ('ankara','Ankara','Turkije','TR',['stad'],None,'ESB','Ankara',[]),
+ ('izmir','Izmir','Turkije','TR',['stad','strand'],None,'ADB','Izmir',[]),
+ ('bodrum','Bodrum','Turkije','TR',['strand'],None,'BJV','Bodrum',[]),
+ ('dalaman','Dalaman','Turkije','TR',['strand','natuur'],None,'DLM','Dalaman',[]),
+ ('tbilisi','Tbilisi','Georgië','GE',['stad','natuur'],None,'TBS','Tbilisi',[]),
+ ('dubai','Dubai','Verenigde Arabische Emiraten','AE',['stad','strand'],None,'DXB','Dubai',['DWC']),
+ ('abu-dhabi','Abu Dhabi','Verenigde Arabische Emiraten','AE',['stad','strand'],None,'AUH','Abu Dhabi',[]),
+ ('amman','Amman','Jordanië','JO',['stad','natuur'],None,'AMM','Amman',[]),
+ ('bangkok','Bangkok','Thailand','TH',['stad'],None,'BKK','Bangkok',['DMK']),
+ ('phuket','Phuket','Thailand','TH',['strand'],None,'HKT','Phuket',[]),
+ ('chiang-mai','Chiang Mai','Thailand','TH',['stad','natuur'],None,'CNX','Chiang Mai',[]),
+ ('krabi','Krabi','Thailand','TH',['strand','natuur'],None,'KBV','Krabi',[]),
+ ('bali','Bali (Denpasar)','Indonesië','ID',['strand','natuur'],None,'DPS','Bali',[]),
+ ('singapore','Singapore','Singapore','SG',['stad'],None,'SIN','Singapore',[]),
+ ('kuala-lumpur','Kuala Lumpur','Maleisië','MY',['stad'],None,'KUL','Kuala Lumpur',[]),
+ ('hanoi','Hanoi','Vietnam','VN',['stad','natuur'],None,'HAN','Hanoi',[]),
+ ('ho-chi-minh','Ho Chi Minhstad','Vietnam','VN',['stad'],None,'SGN','Ho Chi Minh City',[]),
+ ('tokio','Tokio','Japan','JP',['stad'],None,'NRT','Tokyo',['HND']),
+ ('seoul','Seoul','Zuid-Korea','KR',['stad'],None,'ICN','Seoul',[]),
+ ('hongkong','Hongkong','Hongkong','HK',['stad'],None,'HKG','Hong Kong',[]),
+ ('delhi','Delhi','India','IN',['stad'],None,'DEL','Delhi',[]),
+ ('colombo','Colombo','Sri Lanka','LK',['strand','natuur'],None,'CMB','Colombo',[]),
+ ('male','Malediven (Malé)','Malediven','MV',['strand'],None,'MLE','Male',[]),
+ ('new-york','New York','Verenigde Staten','US',['stad'],None,'JFK','New York',['EWR','LGA','SWF']),
+ ('boston','Boston','Verenigde Staten','US',['stad'],None,'BOS','Boston',[]),
+ ('miami','Miami','Verenigde Staten','US',['strand','stad'],None,'MIA','Miami',['FLL']),
+ ('orlando','Orlando','Verenigde Staten','US',['stad'],None,'MCO','Orlando',[]),
+ ('los-angeles','Los Angeles','Verenigde Staten','US',['stad','strand'],None,'LAX','Los Angeles',[]),
+ ('toronto','Toronto','Canada','CA',['stad'],None,'YYZ','Toronto',[]),
+ ('montreal','Montreal','Canada','CA',['stad'],None,'YUL','Montreal',[]),
+ ('cancun','Cancún','Mexico','MX',['strand'],None,'CUN','Cancun',[]),
+ ('punta-cana','Punta Cana','Dominicaanse Republiek','DO',['strand'],None,'PUJ','Punta Cana',[]),
+ ('curacao','Curaçao','Curaçao','CW',['strand','natuur'],None,'CUR','Curacao',[]),
+ ('bonaire','Bonaire','Bonaire (Caribisch Nederland)','BQ',['strand','natuur'],None,'BON','Bonaire',[]),
+ ('aruba','Aruba','Aruba','AW',['strand'],None,'AUA','Aruba',[]),
+ ('paramaribo','Paramaribo','Suriname','SR',['stad','natuur'],None,'PBM','Paramaribo',[]),
+ ('rio','Rio de Janeiro','Brazilië','BR',['stad','strand'],None,'GIG','Rio de Janeiro',[]),
+ ('sao-paulo','São Paulo','Brazilië','BR',['stad'],None,'GRU','Sao Paulo',[]),
+ ('buenos-aires','Buenos Aires','Argentinië','AR',['stad'],None,'EZE','Buenos Aires',[]),
+ ('bogota','Bogotá','Colombia','CO',['stad','natuur'],None,'BOG','Bogota',[]),
+ ('lima','Lima','Peru','PE',['stad','natuur'],None,'LIM','Lima',[]),
+ ('sydney','Sydney','Australië','AU',['stad','strand'],None,'SYD','Sydney',[]),
 ]
 CITY_AIRPORT={'PAR':'CDG','LON':'LHR','MIL':'MXP','ROM':'FCO','STO':'ARN'}
 dest={}
@@ -147,13 +211,21 @@ nlair={}
 for code,label in [('AMS','Schiphol'),('EIN','Eindhoven Airport'),('RTM','Rotterdam The Hague Airport'),('MST','Maastricht Aachen Airport'),('GRQ','Groningen Airport Eelde')]:
     a=airport(code); nlair[code]=dict(n=label,lat=a[0],lon=a[1])
 print(nlair)
-# Compacte vliegveldtabel (Europa en omgeving) voor live zoekresultaten: IATA -> [lat, lon, land, plaats]
+# Compacte vliegveldtabel (hele wereld) voor live zoekresultaten: IATA -> [lat, lon, land, plaats]
 apx={}
 for code,r in ap.items():
     if r.get('scheduled_service')!='yes' or r['type'] not in ('large_airport','medium_airport'): continue
     la,lo=float(r['latitude_deg']),float(r['longitude_deg'])
-    if not (25<=la<=72 and -32<=lo<=46): continue
-    apx[code]=[round(la,3),round(lo,3),r['iso_country'],r['municipality'] or r['name']]
+    eu=(25<=la<=72 and -32<=lo<=46)
+    apx[code]=[round(la,3 if eu else 2),round(lo,3 if eu else 2),r['iso_country'],r['municipality'] or r['name']]
 print('vliegvelden:',len(apx))
-json.dump(dict(stations=nl,dest=dest,airports=nlair,ap=apx),open('/home/claude/build/src/basedata.json','w'),ensure_ascii=False,separators=(',',':'))
+# Werelddeel per land (meest voorkomende waarde in OurAirports); Europa is de standaard en staat er niet in
+from collections import Counter, defaultdict
+cc_cont=defaultdict(Counter)
+for r in ap.values(): cc_cont[r['iso_country']][r['continent']]+=1
+cont={cc:c.most_common(1)[0][0] for cc,c in cc_cont.items()}
+cont.update({'CY':'EU','RU':'EU','TR':'AS','GE':'AS','AM':'AS','AZ':'AS','KZ':'AS'})
+cont={cc:v for cc,v in cont.items() if v!='EU'}
+print('landen buiten Europa:',len(cont), Counter(cont.values()))
+json.dump(dict(stations=nl,dest=dest,airports=nlair,ap=apx,cont=cont),open('/home/claude/build/src/basedata.json','w'),ensure_ascii=False,separators=(',',':'))
 print('ok')

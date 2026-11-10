@@ -712,3 +712,10 @@ html { overflow-x: hidden; overflow-x: clip; }
 .deal { align-content: start; }
 .deal-top { padding-right: 44px; }
 .dlg-body .deal-top { padding-right: 0; }
+
+/* Hele wereld: keuze "hoe ver", kaartwissel */
+.reach { margin-top: 6px; min-height: 44px; font-size: 15px; }
+.reach[hidden] { display: none; }
+.map-seg { width: auto; flex: none; }
+.map-seg button { padding: 0 18px; min-height: 36px; }
+.tile[data-tile="ver"] { --tc: var(--radar); }

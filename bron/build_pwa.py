@@ -102,6 +102,7 @@ De app werkt daarna ook zonder internet, met de laatst bewaarde deals.
 
 ## Wat kan de app?
 - **Retour of enkele reis.** Bij vluchten is de retourprijs samen gezocht (heen en terug, met vluchtnummers en het aantal nachten). Bij trein en bus rekent de app 2 × de vanafprijs en zet er "berekend" bij.
+- **Hele wereld:** Europa per trein, bus en vliegtuig, en vluchten naar Afrika, Azië en Amerika. Kies zelf hoe ver je wilt, of bekijk de wereldkaart.
 - **Wanneer:** flexibel, een maand, een weekend, een schoolvakantie (data van de Rijksoverheid) of je eigen datums.
 - **Overzicht:** de beste deal per bestemming, een compacte lijst, een kaart van Europa, een prijskalender en ideeën zoals "Naar de zon" of "Met de trein".
 - **Eerlijk:** elke deal heeft een bron, een link en een controle-tijd. Schattingen van Skyscanner staan apart als "Indicatie".

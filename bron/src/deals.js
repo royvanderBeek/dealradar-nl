@@ -3,7 +3,7 @@
    ---------------------------------------------------------------------
    Elke prijs in dit bestand komt van de genoemde bron. Claude heeft alle
    bronnen opnieuw gecontroleerd op dinsdag 10 november 2026 tussen 06:33
-   en 12:50 (Nederlandse tijd). Prijzen veranderen snel: controleer altijd
+   en 13:06 (Nederlandse tijd). Prijzen veranderen snel: controleer altijd
    bij de aanbieder voordat je boekt.
 
    Zelf een deal toevoegen? Kopieer een blok in SNAPSHOT_DEALS en vul in:
@@ -32,7 +32,7 @@
      who       'jongeren' | 'groep' (alleen voor bepaalde reizigers)
    ===================================================================== */
 
-const CHECK_WINDOW = 'dinsdag 10 november 2026, 06:33–12:50';
+const CHECK_WINDOW = 'dinsdag 10 november 2026, 06:33–13:06';
 const T = hhmm => `2026-11-10T${hhmm}:00+01:00`;
 const T9 = hhmm => `2026-11-09T${hhmm}:00+01:00`; // kaartjes en kortingen: gecontroleerd op 9 november
 
@@ -83,6 +83,7 @@ const SRC = {
   bagHV:      { name: 'AirAdvisor – Transavia bagagekosten (bijgewerkt 26 okt 2026)', url: 'https://airadvisor.com/nl/bagagelimiet/transavia-airlines' },
   bagTA:      { name: 'Test-Aankoop – extra betalen voor handbagage', url: 'https://www.test-aankoop.be/familie-prive/reizen/pers/extra-betalen-voor-handbagage' },
   co2Flight:  { name: 'CO2emissiefactoren.nl 2026 – vliegtuig Europees 700–2500 km', url: 'https://co2emissiefactoren.nl/factoren/2026/51/189/personenvervoer-vliegtuig-europees-700-2500-km/' },
+  co2Far:     { name: 'CO2emissiefactoren.nl 2026 – vliegtuig intercontinentaal > 2500 km', url: 'https://co2emissiefactoren.nl/factoren/2026/51/190/personenvervoer-vliegtuig-intercontinentaal-2500-km/' },
   co2Train:   { name: 'CO2emissiefactoren.nl 2026 – trein elektrisch', url: 'https://co2emissiefactoren.nl/factoren/2026/53/196/personenvervoer-openbaar-vervoer-trein-elektrisch/' },
   co2Short:   { name: 'CO2 Emissiefactoren België 2025 – vlucht < 700 km (via Climatiq)', url: 'https://www.climatiq.io/data/emission-factor/76723029-e9f3-45d0-b4eb-5649b1d36d27' },
   co2Coach:   { name: 'CO2 Emissiefactoren 2024 – touringcar diesel (via Climatiq)', url: 'https://www.climatiq.io/data/emission-factor/7d213d3b-43dc-4e03-b7cc-a1a42422accd' },
@@ -265,14 +266,14 @@ const SKY_DEALS = [
   ['ams-fao', 'AMS', 'faro', 'FAO', 50, '2026-12-09', null, 'Ryanair', 1],
   ['ams-bva', 'AMS', 'parijs', 'BVA', 52, '2026-12-12', null, 'Ryanair', 1, { tip: 'Aankomst Parijs Beauvais (ver buiten de stad). Ter vergelijking: de trein naar Parijs kost vanaf €35.' }],
   ['ams-dbv', 'AMS', 'dubrovnik', 'DBV', 54, '2026-12-12', null, 'Ryanair', 1],
-  ['ams-rba', 'AMS', { toCity: 'Rabat', toCountry: 'Marokko' }, 'RBA', 54, '2026-12-05', null, 'Ryanair', 1],
+  ['ams-rba', 'AMS', 'rabat', 'RBA', 54, '2026-12-05', null, 'Ryanair', 1],
   ['ams-ham', 'AMS', 'hamburg', 'HAM', 58, '2026-12-09', null, 'Ryanair', 1, { tip: 'De trein naar Hamburg kost vanaf €33 en heeft geen overstap op een vliegveld.' }],
   ['ams-tia', 'AMS', 'tirana', 'TIA', 59, '2026-12-01', null, 'Ryanair', 1],
   ['ams-mla', 'AMS', 'malta', 'MLA', 60, '2027-01-25', null, 'easyJet', 0],
   ['ams-tos', 'AMS', 'tromso', 'TOS', 62, '2027-01-24', null, 'easyJet', 0, { tip: 'Noorderlicht-seizoen.' }],
   ['ams-vce', 'AMS', 'venetie', 'VCE', 62, '2027-03-03', null, 'easyJet', 0],
   ['ams-prg', 'AMS', 'praag', 'PRG', 64, '2027-02-25', null, 'easyJet', 0],
-  ['ams-rak', 'AMS', { toCity: 'Marrakech', toCountry: 'Marokko' }, 'RAK', 65, '2026-11-23', null, 'easyJet', 0],
+  ['ams-rak', 'AMS', 'marrakech', 'RAK', 65, '2026-11-23', null, 'easyJet', 0],
   ['ams-wmi', 'AMS', 'warschau', 'WMI', 66, '2027-01-16', null, 'Ryanair', 1, { tip: 'Aankomst Warschau Modlin (buiten de stad).' }],
   // Groningen, enkele reis
   ['grq-her', 'GRQ', 'heraklion', 'HER', 152, '2027-08-26', null, 'Corendon', 0],
@@ -290,7 +291,7 @@ function kiwiDeal(r) {
   if (!d.note) {
     const bag = { koffer: 'Ruimbagage (koffer) is inbegrepen.', hand: 'Een handbagagekoffer is inbegrepen.', tasje: 'Alleen een klein tasje is inbegrepen.' }[d.bag] || '';
     const fl = ret ? `heen ${d.flight || '?'}, terug ${d.backFlight || '?'}` : `vlucht ${d.flight || '?'}`;
-    d.note = `Live gevonden via Kiwi.com${d.via ? ' door ' + d.via : ''}: ${fl}, ${n ? `${n} overstap${n > 1 ? 'pen' : ''}` : 'rechtstreeks'}. ${bag}`
+    d.note = `Live gevonden via Kiwi.com${d.via ? ' door ' + d.via : ''}: ${fl}, ${n ? `${n} overstap${n > 1 ? 'pen' : ''}` : 'rechtstreeks'}. ${d.stopNote ? d.stopNote + ' ' : ''}${bag}`
       + (d.backFrom && d.backFrom !== d.arr ? ` Let op: de terugvlucht vertrekt vanaf ${AIRPORT_NAMES[d.backFrom] || d.backFrom} (${d.backFrom}), niet vanaf het vliegveld waar je aankomt.` : '')
       + (d.backTo && d.backTo !== d.from ? ` Let op: de terugvlucht landt op ${(ORIGINS[d.backTo] || {}).n || d.backTo}, niet op het vliegveld waar je vertrekt.` : '')
       + (d.from === 'NRN' ? ' Weeze ligt net over de grens in Duitsland; reken op extra reistijd om er te komen.' : '')
@@ -298,6 +299,37 @@ function kiwiDeal(r) {
   }
   return d;
 }
+
+// Verre vluchten en vluchten met een overstap: live gezocht via Kiwi.com op 10 nov 2026 tussen 13:00 en 13:04
+// (retour, 1 volwassene, vertrek tussen 12 nov 2026 en 28 feb 2027). Per regel staat wat er anders is dan "rechtstreeks, klein tasje".
+const far = (from, arr, toCity, toCountry, price, dep, dur, flight, back, backDur, backFlight, provider, code, hhmm, x = {}) => kiwiDeal({
+  from, arr, toCity, toCountry, price, out: dep.slice(0, 10), depTime: dep.slice(11, 16), dur, flight, provider,
+  back: back.slice(0, 10), backTime: back.slice(11, 16), backDur, backFlight, link: `https://kiwi.com/u/${code}`, checked: T(hhmm), ...x });
+const KIWI_FAR = [
+  // Azië en Midden-Oosten (vanaf Schiphol)
+  far('AMS', 'SAW', 'Istanboel', 'Turkije', 150, '2026-12-01T13:40', 215, 'VF2', '2026-12-07T13:45', 235, 'VF3', 'AJet', 'k64gzt4', '13:00'),
+  far('AMS', 'ESB', 'Ankara', 'Turkije', 190, '2026-12-10T16:40', 390, 'VF4, VF3010', '2026-12-20T13:15', 255, 'VF501', 'AJet', '7yfw4dk', '13:00', { transfers: 1, stopNote: 'Heen 1 overstap in Istanboel, terug rechtstreeks.' }),
+  far('AMS', 'AYT', 'Antalya', 'Turkije', 198, '2026-12-04T09:20', 250, 'CD5155', '2026-12-16T16:15', 480, 'U28556, U28675', 'Corendon + easyJet', 'n9tvxh', '13:00', { transfers: 1, stopNote: 'Heen rechtstreeks, terug 1 overstap in Londen Gatwick.' }),
+  far('AMS', 'ADB', 'Izmir', 'Turkije', 203, '2026-12-03T13:40', 390, 'VF2, VF3070', '2026-12-12T11:00', 400, 'VF3065, VF3', 'AJet', 'wcn5t5g', '13:00', { transfers: 1, stopNote: 'Heen en terug 1 overstap in Istanboel.' }),
+  far('AMS', 'TBS', 'Tbilisi', 'Georgië', 209, '2026-12-31T16:40', 495, 'VF4, VF227', '2027-01-07T06:05', 570, 'VF228, VF1', 'AJet', 'vnz43nh', '13:00', { transfers: 1, stopNote: 'Heen en terug 1 overstap in Istanboel.' }),
+  far('AMS', 'CNX', 'Chiang Mai', 'Thailand', 572, '2026-12-02T17:05', 2355, 'MU230, MU205', '2026-12-19T15:35', 1745, 'MU206, MU229', 'China Eastern Airlines', '78nvmxc', '13:04', { transfers: 1, bag: 'koffer', stopNote: 'Heen en terug 1 lange overstap in Shanghai: de heenreis duurt ruim 39 uur en je komt pas op 4 dec aan.' }),
+  far('AMS', 'HKT', 'Phuket', 'Thailand', 579, '2026-11-24T21:20', 870, 'EY42, EY412', '2026-12-02T09:10', 920, 'EY411, EY41', 'Etihad Airways', 'cdnhnb', '13:04', { transfers: 1, bag: 'hand', stopNote: 'Heen en terug 1 overstap in Abu Dhabi.' }),
+  far('AMS', 'BKK', 'Bangkok', 'Thailand', 594, '2026-11-26T20:00', 915, 'WY172, WY815', '2026-12-09T11:05', 1020, 'N0192, KL1226', 'Oman Air + Norse Atlantic Airways + KLM', 'yyq97v3', '13:04', { transfers: 1, stopNote: 'Heen 1 overstap in Muscat, terug 1 overstap in Stockholm.' }),
+  // Afrika: Marokko en Egypte
+  far('AMS', 'RAK', 'Marrakech', 'Marokko', 122, '2026-12-07T19:40', 230, 'U26002', '2026-12-17T15:05', 230, 'U26001', 'easyJet', '3kytwtt', '13:02'),
+  far('CRL', 'ESU', 'Essaouira', 'Marokko', 38, '2026-12-13T13:35', 220, 'FR5280', '2026-12-22T18:20', 215, 'FR5281', 'Ryanair', '4z656sj', '13:03'),
+  far('CRL', 'TNG', 'Tanger', 'Marokko', 42, '2026-12-07T21:00', 175, 'FR8073', '2026-12-15T06:50', 180, 'FR8074', 'Ryanair', '55ckds', '13:03'),
+  far('CRL', 'NDR', 'Nador', 'Marokko', 47, '2027-01-11T07:15', 175, 'FR6046', '2027-01-19T10:10', 175, 'FR6045', 'Ryanair', '9qhmdv', '13:03'),
+  far('CRL', 'RAK', 'Marrakech', 'Marokko', 48, '2027-01-05T19:10', 210, 'FR8075', '2027-01-12T06:05', 215, 'FR71', 'Ryanair', '9ckhxs', '13:03'),
+  far('CRL', 'FEZ', 'Fez', 'Marokko', 50, '2026-12-08T12:40', 180, 'FR5001', '2026-12-15T08:00', 195, 'FR5002', 'Ryanair', '6fxcx6', '13:03'),
+  far('AMS', 'SSH', 'Sharm-el-Sheikh', 'Egypte', 169, '2027-02-28T11:10', 300, 'U27981', '2027-03-07T17:55', 325, 'U27982', 'easyJet', 'vgrch468', '13:03'),
+  far('AMS', 'HRG', 'Hurghada', 'Egypte', 169, '2027-02-27T09:00', 300, 'U27977', '2027-03-10T16:15', 345, 'U27978', 'easyJet', 'wgpjgvg', '13:03'),
+  far('AMS', 'CAI', 'Caïro', 'Egypte', 217, '2027-01-27T07:30', 275, 'HV5161', '2027-02-04T18:25', 305, 'HV5164', 'Transavia', '9qw8ks', '13:03'),
+  far('AMS', 'RMF', 'Marsa Alam', 'Egypte', 240, '2026-12-02T11:05', 310, 'HV6557', '2026-12-09T18:10', 350, 'HV6558', 'Transavia', '7p22z43', '13:03'),
+  // Caribisch gebied
+  far('AMS', 'CUR', 'Willemstad', 'Curaçao', 428, '2026-11-19T11:10', 640, 'OR367', '2026-12-02T20:45', 585, 'CD5990', 'TUI fly + Corendon', '4yf6xn', '13:02'),
+  far('AMS', 'BON', 'Bonaire', 'Bonaire (Caribisch Nederland)', 435, '2026-11-17T08:20', 640, 'OR391', '2026-11-29T20:55', 585, 'OR363', 'TUI fly', '4776w5h', '13:02'),
+];
 
 /* ---------- Gecontroleerde deals ---------- */
 const SNAPSHOT_DEALS = [
@@ -405,6 +437,8 @@ const SNAPSHOT_DEALS = [
     back: back.slice(0, 10), backTime: back.slice(11, 16), backDur, backFlight, backFrom,
     link: `https://kiwi.com/u/${code}`, checked: T(hhmm) })),
 
+  ...KIWI_FAR,
+
   // ===== VLIEGTUIG: indicaties van Skyscanner (gelezen op 10 nov 2026, 12:32) =====
   // Skyscanner noemt dit zelf een schatting op basis van prijzen van de laatste 4 dagen. Daarom staan ze als "Indicatie" in de app.
   ...SKY_DEALS.map(([id, from, to, arr, price, out, back, provider, transfers, extra]) => ({
@@ -475,6 +509,7 @@ const CO2 = {
   bus:   { f: 0.019, src: 'co2Coach', label: 'touringcar (diesel), CO2emissiefactoren 2024' },
   vliegKort: { f: 0.202, src: 'co2Short', label: 'vlucht < 700 km, CO2 Emissiefactoren België 2025' },
   vlieg: { f: 0.172, src: 'co2Flight', label: 'vlucht 700–2500 km, CO2emissiefactoren.nl 2026 (incl. niet-CO2-effecten)' },
+  vliegVer: { f: 0.157, src: 'co2Far', label: 'vlucht > 2500 km, CO2emissiefactoren.nl 2026 (incl. niet-CO2-effecten)' },
   upliftFlight: 1.08, // DEFRA/BEIS: 8% omweg
   routeGround: 1.2,   // aanname: weg/spoor is ca. 20% langer dan hemelsbreed
 };

@@ -64,6 +64,11 @@ const CODE2DEST = {};
 Object.values(DEST).forEach(d => (d.codes || []).forEach(c => { CODE2DEST[c] = d.id; }));
 const COUNTRIES = {};
 Object.values(DEST).forEach(d => { COUNTRIES[d.cc] = d.c; });
+// Werelddeel per land (Europa is de standaard)
+const CONT = BASE.cont || {};
+const CONT_NAMES = { EU: 'Europa', AF: 'Afrika', AS: 'Azië en Midden-Oosten', NA: 'Noord- en Midden-Amerika', SA: 'Zuid-Amerika', OC: 'Oceanië' };
+const contOf = d => CONT[d.cc] || 'EU';
+const PRICE_MAX = 1000; // schuif helemaal rechts = geen maximum
 const TYPES = { stad: 'Stedentrip', strand: 'Strand', natuur: 'Natuur', ski: 'Skiën' };
 const MODES = {
   trein: { label: 'Trein', icon: 'i-trein' },
@@ -89,12 +94,13 @@ function saveSettings() { store.set('settings', settings); }
 /* ---------- 4. Toestand ---------- */
 const UTRECHT = STATIONS.find(s => s.n === 'Utrecht Centraal') || STATIONS[0];
 function defaultFilters() {
-  return { modes: new Set(['trein', 'vliegtuig', 'bus', 'combi']), maxPrice: 300, maxHours: 24, maxAccess: 300, direct: false, bagIncl: false, countries: new Set(), types: new Set(), status: new Set(['snapshot', 'live']),
+  return { modes: new Set(['trein', 'vliegtuig', 'bus', 'combi']), maxPrice: PRICE_MAX, maxHours: 24, maxAccess: 300, direct: false, bagIncl: false, countries: new Set(), types: new Set(), status: new Set(['snapshot', 'live']),
     origins: new Set(), nlOnly: false, depPart: 'alle', noIndic: false };
 }
 const state = {
   origin: store.get('origin', { n: UTRECHT.n, lat: UTRECHT.lat, lon: UTRECHT.lon, kind: 'station', uic: UTRECHT.uic }),
   dest: 'overal',
+  reach: 'wereld', // hoe ver: wereld | europa | ver (buiten Europa) | AF | AS | NA | SA | OC
   trip: ['enkel', 'retour'].includes(store.get('trip')) ? store.get('trip') : 'retour', // soort reis: enkele reis of retour
   stay: 'alle',      // verblijf bij retour: alle | kort (1–4 nachten) | week (5–9) | lang (10+)
   bag: 'tasje',      // bagage bij live zoeken: tasje | hand | koffer
@@ -175,7 +181,7 @@ function enrich(deal) {
   const durEst = deal.dur == null;
   const nights = deal.out && deal.back ? Math.round((new Date(deal.back + 'T12:00:00') - new Date(deal.out + 'T12:00:00')) / 86400000) : null;
   const duration = deal.dur ?? estTravel(deal.mode === 'combi' ? 'trein' : deal.mode, gcd, deal.transfers);
-  const fac = isFlight ? (gcd < 700 ? CO2.vliegKort : CO2.vlieg) : (deal.mode === 'bus' ? CO2.bus : CO2.trein);
+  const fac = isFlight ? (gcd < 700 ? CO2.vliegKort : gcd > 2500 ? CO2.vliegVer : CO2.vlieg) : (deal.mode === 'bus' ? CO2.bus : CO2.trein);
   const legs = deal.trip === 'retour' ? 2 : 1;
   let egress;
   if (isFlight) {
@@ -214,6 +220,13 @@ function tripPrice(e) {
     return null;
   }
   return e.trip === 'enkel' ? { p: e.price, calc: false } : null;
+}
+// Past een bestemming bij "Hoe ver?" Een gekozen bestemming telt altijd.
+function reachOk(dest) {
+  const r = state.reach;
+  if (r === 'wereld' || state.dest !== 'overal') return true;
+  const c = contOf(dest);
+  return r === 'europa' ? c === 'EU' : r === 'ver' ? c !== 'EU' : c === r;
 }
 const tripWord = () => (state.trip === 'retour' ? 'retour' : 'enkele reis');
 const STAYS = { alle: { label: 'Maakt niet uit', min: 2, max: 7 }, kort: { label: 'Kort: 1 tot 4 nachten', min: 1, max: 4 }, week: { label: 'Week: 5 tot 9 nachten', min: 5, max: 9 }, lang: { label: 'Lang: 10 nachten of meer', min: 10, max: 21 } };
@@ -266,7 +279,8 @@ function filterDeals(opts = {}) {
     if (!f.modes.has(e.mode)) continue;
     if (!f.status.has(e.status)) continue;
     if (!opts.ignoreDest && state.dest !== 'overal' && e.to !== state.dest) continue;
-    if (!noLimit(f.maxPrice, 300) && tp.p > f.maxPrice) continue;
+    if (!noLimit(f.maxPrice, PRICE_MAX) && tp.p > f.maxPrice) continue;
+    if (!reachOk(e.dest)) continue;
     if (!stayOk(e)) continue;
     if (f.origins.size && !f.origins.has(e.from)) continue;
     if (f.nlOnly && e.o.abroad) continue;
@@ -306,7 +320,7 @@ function sortDeals(arr) {
 }
 function activeFilterCount() {
   const f = state.filters;
-  return (f.modes.size < 4 ? 1 : 0) + (!noLimit(f.maxPrice, 300) ? 1 : 0) + (!noLimit(f.maxHours, 24) ? 1 : 0) + (!noLimit(f.maxAccess, 300) ? 1 : 0)
+  return (f.modes.size < 4 ? 1 : 0) + (!noLimit(f.maxPrice, PRICE_MAX) ? 1 : 0) + (!noLimit(f.maxHours, 24) ? 1 : 0) + (!noLimit(f.maxAccess, 300) ? 1 : 0)
     + (f.direct ? 1 : 0) + (f.bagIncl ? 1 : 0) + f.countries.size + f.types.size + (f.status.size < 2 ? 1 : 0)
     + f.origins.size + (f.nlOnly ? 1 : 0) + (f.noIndic ? 1 : 0) + (f.depPart !== 'alle' ? 1 : 0);
 }

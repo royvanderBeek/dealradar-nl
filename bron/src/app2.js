@@ -18,7 +18,7 @@ const EU_SCHENGEN = new Set(['NL', 'BE', 'DE', 'FR', 'ES', 'PT', 'IT', 'IE', 'AT
 function docInfo(cc) {
   if (EU_SCHENGEN.has(cc)) return 'Een geldige ID-kaart of een geldig paspoort is genoeg (EU/Schengen).';
   if (cc === 'GB') return 'Paspoort verplicht; een ID-kaart is niet genoeg. Je hebt ook een ETA nodig: een digitale reistoestemming die je vooraf online aanvraagt.';
-  return 'Buiten de EU en Schengen: controleer vooraf welk reisdocument (en soms visum) je nodig hebt.';
+  return 'Buiten de EU en Schengen heb je meestal een paspoort nodig, en soms ook een visum of een reistoestemming. Controleer dit ruim voor je vertrek.';
 }
 
 /* ---------- 9. Basis ---------- */
@@ -146,8 +146,15 @@ function renderOriginHint() {
   const stTxt = st.km < 0.3 ? `station ${st.n}` : `station ${st.n} (${st.km.toFixed(1).replace('.', ',')} km)`;
   $('#originHint').textContent = `Dichtstbij: ${stTxt} · ${ap.map(a => `${a.n} (${Math.round(a.km)} km)`).join(', ')}`;
 }
+// Hoe ver wil je weg? Buiten Europa hoort de wereldkaart erbij.
+function setReach(r) {
+  state.reach = ['wereld', 'europa', 'ver', 'AF', 'AS', 'NA', 'SA', 'OC'].includes(r) ? r : 'wereld';
+  $('#inReach').value = state.reach;
+  if (state.reach === 'europa') setMapMode('eu'); else if (state.reach !== 'wereld') setMapMode('world');
+}
 function setDest(id) {
   state.dest = id;
+  $('#inReach').hidden = id !== 'overal';
   const anyBtn = $('#btnAnywhere');
   anyBtn.setAttribute('aria-pressed', String(id === 'overal'));
   $('#inDest').value = id === 'overal' ? '' : DEST[id].n;
@@ -170,6 +177,7 @@ function initSearch() {
   combobox(inD, $('#sugDest'), q => searchDest(q), d => setDest(d.id), d => `${icon('i-pin', 'sm')}<span>${esc(d.n)}</span><span class="kind">${esc(d.c)}</span>`);
   inD.addEventListener('change', () => { if (!inD.value.trim()) setDest('overal'); });
   $('#btnAnywhere').addEventListener('click', () => setDest('overal'));
+  $('#inReach').addEventListener('change', ev => { setReach(ev.target.value); renderAll(); if (CLOUD.kiwi && !state.scanning) scan({ onlyKiwi: true, initial: true }); });
   $('#btnLocate').addEventListener('click', () => {
     if (!('geolocation' in navigator)) { toast('Je browser kan je locatie niet delen. Typ je station of adres.'); return; }
     toast('Locatie opvragen…', { ms: 2500 });
@@ -253,7 +261,7 @@ function initSearch() {
     if (c === 'vergelijk') goTab('vergelijk');
     if (c === 'onder50') {
       const on = b.getAttribute('aria-pressed') !== 'true';
-      state.filters.maxPrice = on ? 50 : 300; syncFilterUI(); renderAll();
+      state.filters.maxPrice = on ? 50 : PRICE_MAX; syncFilterUI(); renderAll();
     }
   }));
   $$('.chips [data-type]').forEach(b => b.addEventListener('click', () => {
@@ -304,7 +312,7 @@ function initFiltersUI() {
     if (t.id === 'fDepPart') f.depPart = t.value;
     syncFilterUI(); renderAll();
   });
-  const ranges = [['fPrice', 'maxPrice', v => noLimit(v, 300) ? 'alles' : `≤ ${eur(v)}`], ['fHours', 'maxHours', v => noLimit(v, 24) ? 'alles' : `≤ ${v} uur`], ['fAccess', 'maxAccess', v => noLimit(v, 300) ? 'alles' : `≤ ${dur(v)}`]];
+  const ranges = [['fPrice', 'maxPrice', v => noLimit(v, PRICE_MAX) ? 'alles' : `≤ ${eur(v)}`], ['fHours', 'maxHours', v => noLimit(v, 24) ? 'alles' : `≤ ${v} uur`], ['fAccess', 'maxAccess', v => noLimit(v, 300) ? 'alles' : `≤ ${dur(v)}`]];
   ranges.forEach(([id, key, fmt]) => {
     const el = $('#' + id);
     el.addEventListener('input', () => { state.filters[key] = +el.value; $('#' + id + 'Out').textContent = fmt(+el.value); debouncedRender(); });
@@ -349,7 +357,7 @@ function syncFilterUI() {
   $$('#filters [data-f="country"]').forEach(c => { c.checked = f.countries.has(c.value); });
   $$('#filters [data-f="status"]').forEach(c => { c.checked = f.status.has(c.value); });
   $('#fDirect').checked = f.direct; $('#fBag').checked = f.bagIncl;
-  $('#fPrice').value = f.maxPrice; $('#fPriceOut').textContent = noLimit(f.maxPrice, 300) ? 'alles' : `≤ ${eur(f.maxPrice)}`;
+  $('#fPrice').value = f.maxPrice; $('#fPriceOut').textContent = noLimit(f.maxPrice, PRICE_MAX) ? 'alles' : `≤ ${eur(f.maxPrice)}`;
   $('#fHours').value = f.maxHours; $('#fHoursOut').textContent = noLimit(f.maxHours, 24) ? 'alles' : `≤ ${f.maxHours} uur`;
   $('#fAccess').value = f.maxAccess; $('#fAccessOut').textContent = noLimit(f.maxAccess, 300) ? 'alles' : `≤ ${dur(f.maxAccess)}`;
   $$('.chips [data-type]').forEach(b => b.setAttribute('aria-pressed', String(f.types.has(b.dataset.type))));
@@ -360,6 +368,7 @@ function syncFilterUI() {
 function renderActiveFilters() {
   const f = state.filters, chips = [];
   if (state.dest !== 'overal') chips.push({ label: `Naar: ${DEST[state.dest].n}`, fn: () => setDest('overal') });
+  else if (state.reach !== 'wereld') chips.push({ label: $('#inReach').selectedOptions[0].textContent, fn: () => setReach('wereld') });
   if (state.when.mode !== 'flex') {
     const w = state.when, r = w.mode === 'holiday' ? holidayRange() : null;
     const label = w.mode === 'weekend' ? 'Weekend' : w.mode === 'month' ? `Maand: ${$('#inMonth').selectedOptions[0]?.textContent || ''}`
@@ -372,7 +381,7 @@ function renderActiveFilters() {
   if (f.depPart !== 'alle') chips.push({ label: `Vertrek: ${f.depPart}`, fn: () => { f.depPart = 'alle'; } });
   if (f.noIndic) chips.push({ label: 'Zonder indicaties', fn: () => { f.noIndic = false; } });
   if (f.modes.size < 4) chips.push({ label: `Vervoer: ${[...f.modes].map(m => MODES[m].label).join(', ') || 'geen'}`, fn: () => { f.modes = new Set(Object.keys(MODES)); } });
-  if (!noLimit(f.maxPrice, 300)) chips.push({ label: `Max ${eur(f.maxPrice)} ${tripWord()}`, fn: () => { f.maxPrice = 300; } });
+  if (!noLimit(f.maxPrice, PRICE_MAX)) chips.push({ label: `Max ${eur(f.maxPrice)} ${tripWord()}`, fn: () => { f.maxPrice = PRICE_MAX; } });
   if (!noLimit(f.maxHours, 24)) chips.push({ label: `Max ${f.maxHours} uur`, fn: () => { f.maxHours = 24; } });
   if (!noLimit(f.maxAccess, 300)) chips.push({ label: `Naar vertrekpunt ≤ ${dur(f.maxAccess)}`, fn: () => { f.maxAccess = 300; } });
   if (f.direct) chips.push({ label: 'Rechtstreeks', fn: () => { f.direct = false; } });
@@ -467,6 +476,7 @@ const INSPIRE = [
   { id: 'zon', title: 'Naar de zon', icon: 'i-sun', test: e => e.dest.t.includes('strand'), apply: f => f.types.add('strand') },
   { id: 'stad', title: 'Stedentrip', icon: 'i-city', test: e => e.dest.t.includes('stad'), apply: f => f.types.add('stad') },
   { id: 'kerst', title: 'Kerstvakantie', icon: 'i-gift', test: e => { const r = holidayRange('kerst'); return !!(r && e.out && e.out >= addDays(r.from, -1) && e.out <= r.to && (!e.back || e.back <= r.to)); }, apply: () => setWhen('holiday', { hol: 'kerst' }), needs: () => holidayRange('kerst').to >= todayISO() },
+  { id: 'ver', title: 'Buiten Europa', icon: 'i-globe', test: e => contOf(e.dest) !== 'EU', apply: () => setReach('ver') },
   { id: 'trein', title: 'Met de trein', icon: 'i-trein', test: e => e.mode === 'trein', apply: f => { f.modes = new Set(['trein']); } },
   { id: 'ski', title: 'Wintersport', icon: 'i-snow', test: e => e.dest.t.includes('ski'), apply: f => f.types.add('ski') },
   { id: 'natuur', title: 'Natuur', icon: 'i-tree', test: e => e.dest.t.includes('natuur'), apply: f => f.types.add('natuur') },
@@ -493,6 +503,7 @@ $('#inspire').addEventListener('click', ev => {
   const b = ev.target.closest('[data-tile]'); if (!b) return;
   const t = INSPIRE.find(x => x.id === b.dataset.tile); if (!t) return;
   state.filters = defaultFilters();
+  setReach('wereld');
   setWhen('flex');
   state.stay = 'alle'; $('#inStay').value = 'alle';
   state.dest = 'overal'; $('#inDest').value = ''; $('#btnAnywhere').setAttribute('aria-pressed', 'true');
@@ -568,7 +579,7 @@ function emptyState() {
   const tips = [];
   if (activeFilterCount()) tips.push('<button class="btn" type="button" data-fix="filters">Wis filters</button>');
   if (state.dest !== 'overal') tips.push('<button class="btn ghost" type="button" data-fix="overal">Zoek overal</button>');
-  if (!noLimit(f.maxPrice, 300)) tips.push(`<button class="btn ghost" type="button" data-fix="price">Verhoog maximumprijs naar ${eur(Math.min(300, f.maxPrice * 2))}</button>`);
+  if (!noLimit(f.maxPrice, PRICE_MAX)) tips.push(`<button class="btn ghost" type="button" data-fix="price">Verhoog maximumprijs naar ${eur(Math.min(PRICE_MAX, f.maxPrice * 2))}</button>`);
   if (state.when.mode !== 'flex') tips.push('<button class="btn ghost" type="button" data-fix="flex">Zet datum op flexibel</button>');
   setTimeout(() => {
     const box = $('#emptyState');
@@ -577,7 +588,7 @@ function emptyState() {
       const k = b.dataset.fix;
       if (k === 'filters') state.filters = defaultFilters();
       if (k === 'overal') { setDest('overal'); return; }
-      if (k === 'price') state.filters.maxPrice = Math.min(300, state.filters.maxPrice * 2);
+      if (k === 'price') state.filters.maxPrice = Math.min(PRICE_MAX, state.filters.maxPrice * 2);
       if (k === 'flex') { $('.seg [data-when="flex"]').click(); return; }
       syncFilterUI(); renderAll();
     };
@@ -688,7 +699,20 @@ function openDealDialog(e, opts = {}) {
 
 /* ---------- 13. Kaart ---------- */
 const MAPV = { x: 0, y: 0, w: MAP.W, h: MAP.H };
+let MAPMODE = 'eu'; // 'eu' = kaart van Europa, 'world' = wereldkaart
+function drawMapBase() {
+  const m = MAPMODE === 'world' ? MAP.world : MAP;
+  $('#mapBase').innerHTML = `<rect x="-2000" y="-2000" width="5000" height="5000" fill="var(--sea)"/><path class="land" d="${m.land}"/>${MAPMODE === 'eu' ? `<path class="nl" d="${MAP.nl}"/>` : ''}<path class="borders" d="${m.borders}"/>`;
+}
+function setMapMode(mode) {
+  MAPMODE = mode === 'world' ? 'world' : 'eu';
+  $$('.map-seg [data-map]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.map === MAPMODE)));
+  drawMapBase();
+  Object.assign(MAPV, { x: 0, y: 0, w: MAP.W, h: MAP.H });
+  applyView(); renderDestPanel();
+}
 function proj(lon, lat) {
+  if (MAPMODE === 'world') { const rr = Math.PI / 180, w = MAP.world; return [w.translate[0] + w.scale * lon * rr, w.translate[1] - w.scale * w.k * lat * rr]; }
   const r = Math.PI / 180, l0 = 10 * r, p0 = 52 * r, l = lon * r, p = lat * r;
   const cosc = Math.sin(p0) * Math.sin(p) + Math.cos(p0) * Math.cos(p) * Math.cos(l - l0);
   const k = Math.sqrt(2 / (1 + cosc));
@@ -703,7 +727,8 @@ function renderMapLegend() {
   $('#mapLegend').innerHTML = lab.map((l, i) => `<span><i style="background:var(--tier${i + 1})"></i>${l}</span>`).join('') + `<span><i style="background:var(--line)"></i>geen deal met deze keuzes</span><span class="muted">Prijs = goedkoopste per persoon, ${tripWord()}. Een gecontroleerde deal gaat voor een indicatie.</span>`;
 }
 function initMap() {
-  $('#mapBase').innerHTML = `<rect x="-2000" y="-2000" width="5000" height="5000" fill="var(--sea)"/><path class="land" d="${MAP.land}"/><path class="nl" d="${MAP.nl}"/><path class="borders" d="${MAP.borders}"/>`;
+  drawMapBase();
+  $$('.map-seg [data-map]').forEach(b => b.addEventListener('click', () => setMapMode(b.dataset.map)));
   renderMapLegend();
   const svg = $('#mapSvg');
   const ptrs = new Map();
@@ -1491,6 +1516,12 @@ function openHelp(section) {
       <li><b>Controleer de prijs nu:</b> in Details van een vlucht zoekt deze knop (in Claude) dezelfde vlucht opnieuw op bij Kiwi.com. Zo zie je meteen of de prijs nog klopt.</li>
       <li><b>Bagage:</b> kies bij Zoeken een handbagagekoffer of ruimbagage. Live zoeken in Claude vraagt dan de prijs inclusief die bagage op.</li>
       <li><b>Schoolvakanties:</b> de data komen van de Rijksoverheid (schooljaar 2026-2027). De voorjaarsvakantie is een advies; je school mag afwijken.</li>
+    </ul></section>
+    <section id="h-wereld"><h3>De hele wereld</h3><ul>
+      <li><b>Hoe ver?</b> Kies onder "Waarheen?" de hele wereld, alleen Europa, buiten Europa of één werelddeel. Je kunt ook een verre stad typen, zoals Bangkok of New York.</li>
+      <li><b>Verre vluchten</b> zoekt de app (in Claude) vanaf Schiphol en je dichtstbijzijnde vliegveld, met hooguit 1 overstap en een verblijf van 5 tot 16 nachten. Bij een overstap staat erbij waar.</li>
+      <li><b>Wereldkaart:</b> op het tabblad Kaart wissel je tussen Europa en de wereld.</li>
+      <li><b>CO2:</b> voor vluchten boven 2500 km rekent de app met ${String(CO2.vliegVer.f).replace('.', ',')} kg per kilometer (<a href="${SRC.co2Far.url}" target="_blank" rel="noopener">bron</a>).</li>
     </ul></section>
     <section id="h-new"><h3>Live, dagelijks en geschiedenis</h3><ul>
       <li><b>Live vluchten (Kiwi.com):</b> in Claude zoekt <b>Scan deals</b> live via je gratis Kiwi.com-connector. Dat gebeurt vanaf de dichtstbijzijnde vliegvelden, en ook vanaf Weeze en Charleroi als die dichtbij liggen. Elke live deal heeft een eigen boeklink.</li>

@@ -66,6 +66,7 @@
   <symbol id="i-wave" viewBox="0 0 24 24"><circle cx="17" cy="7" r="3"/><path d="M3 15c2 0 2-1.5 4.5-1.5S10 15 12 15s2-1.5 4.5-1.5S19 15 21 15M3 19.5c2 0 2-1.5 4.5-1.5S10 19.5 12 19.5s2-1.5 4.5-1.5S19 19.5 21 19.5"/></symbol>
   <symbol id="i-euro" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5a4.3 4.3 0 1 0 0 7M7 11h6M7 13.5h5"/></symbol>
   <symbol id="i-gift" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M3 7h18v3H3zM12 7v13M12 7c-1.5-3.5-6-3.5-5 0M12 7c1.5-3.5 6-3.5 5 0"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 2.6 4.2 5.6 4.2 9s-1.4 6.4-4.2 9c-2.8-2.6-4.2-5.6-4.2-9S9.200 5.600 12 3z"/></symbol>
   <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l6-6"/><circle cx="16" cy="9" r="1"/></symbol>
 </svg>
 
@@ -124,10 +125,20 @@
         <div class="field">
           <label for="inDest">Waarheen?</label>
           <div class="input-row">
-            <input class="input" id="inDest" type="text" placeholder="Overal" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugDest">
+            <input class="input" id="inDest" type="text" placeholder="Stad of land, of laat leeg" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sugDest">
             <button class="btn soft sm" id="btnAnywhere" type="button" aria-pressed="true">Overal</button>
           </div>
           <ul class="suggest" id="sugDest" role="listbox" hidden></ul>
+          <select class="input reach" id="inReach" aria-label="Hoe ver wil je weg?">
+            <option value="wereld">Hele wereld</option>
+            <option value="europa">Alleen Europa</option>
+            <option value="ver">Buiten Europa</option>
+            <option value="AF">Afrika</option>
+            <option value="AS">Azië en Midden-Oosten</option>
+            <option value="NA">Noord- en Midden-Amerika</option>
+            <option value="SA">Zuid-Amerika</option>
+            <option value="OC">Oceanië</option>
+          </select>
         </div>
         <div class="field">
           <span class="lbl" id="lblWhen">Wanneer?</span>
@@ -218,7 +229,7 @@
         <div class="filters-head"><h3>Filters</h3><button class="icon-btn" type="button" id="btnFiltersClose" aria-label="Filters sluiten"><svg class="ic"><use href="#i-close"/></svg></button></div>
         <fieldset><legend>Vervoer</legend><div id="fModes"></div></fieldset>
         <fieldset><legend>Maximumprijs per persoon (<span id="fPriceTrip">retour</span>)</legend>
-          <div class="range-row"><input type="range" id="fPrice" aria-label="Maximumprijs per persoon" min="5" max="300" step="5" value="300" aria-describedby="fPriceOut"><output id="fPriceOut">alles</output></div></fieldset>
+          <div class="range-row"><input type="range" id="fPrice" aria-label="Maximumprijs per persoon" min="5" max="1000" step="5" value="1000" aria-describedby="fPriceOut"><output id="fPriceOut">alles</output></div></fieldset>
         <fieldset><legend>Maximale reistijd</legend>
           <div class="range-row"><input type="range" id="fHours" aria-label="Maximale reistijd in uren" min="1" max="24" step="1" value="24" aria-describedby="fHoursOut"><output id="fHoursOut">alles</output></div></fieldset>
         <fieldset><legend>Reis naar vertrekpunt (vanaf jouw plek)</legend>
@@ -290,7 +301,7 @@
 
   <!-- KAART -->
   <section class="view" id="view-kaart" data-view="kaart" aria-labelledby="mapTitle" hidden>
-    <div class="section-head"><h2 id="mapTitle">Kaart van Europa</h2><span class="small muted" id="mapSub">Goedkoopste prijs per bestemming, per persoon. Filters van het tabblad Deals gelden ook hier.</span></div>
+    <div class="section-head"><h2 id="mapTitle">Kaart</h2><div class="seg map-seg" role="group" aria-label="Welke kaart"><button type="button" data-map="eu" aria-pressed="true">Europa</button><button type="button" data-map="world" aria-pressed="false">Wereld</button></div><span class="small muted" id="mapSub">Goedkoopste prijs per bestemming, per persoon. Filters van het tabblad Deals gelden ook hier.</span></div>
     <div class="map-layout">
       <div class="map-card">
         <svg class="map-svg" id="mapSvg" viewBox="0 0 1000 860" role="img" aria-labelledby="mapTitle mapDesc" tabindex="0">

@@ -1,7 +1,7 @@
-/* DealRadar NL service worker – versie 084380fbfc
+/* DealRadar NL service worker – versie 8cb0940c49
    Pagina en data: eerst online ophalen (nieuwste prijzen), offline uit de cache.
    Lettertypen en iconen: uit de cache, op de achtergrond bijwerken. */
-const CACHE = 'dealradar-084380fbfc';
+const CACHE = 'dealradar-8cb0940c49';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './icon-192.png', './icon-512.png', './data/latest.json'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

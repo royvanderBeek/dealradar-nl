@@ -25,6 +25,7 @@ function destForAirport(iata, city, country) {
   if (same) { CODE2DEST[iata] = same.id; same.codes = [...(same.codes || []), iata]; return same.id; }
   const id = 'x-' + slugify(name);
   if (!DEST[id]) DEST[id] = { id, n: name, c: country || CC_NL[a[2]] || a[2], cc: a[2], t: [], lat: a[0], lon: a[1], iata, en: name, codes: [iata], dyn: true };
+  if (!COUNTRIES[a[2]]) COUNTRIES[a[2]] = DEST[id].c;
   CODE2DEST[iata] = id;
   return id;
 }
@@ -39,8 +40,11 @@ const CLOUD = { db: null, mcp: null, user: null, isOwner: false, runs: [], searc
 // Alleen deals met een bekend vertrekpunt, een echte prijs en een bestemming met coördinaten komen erdoor.
 function normalizeDeal(raw) {
   if (!raw || typeof raw !== 'object' || !raw.id) return null;
-  const base = SNAP_BY_ID.get(raw.id);
-  const d = base ? { ...base, ...raw } : { ...raw };
+  // Vluchten van Kiwi.com staan er compleet in (ook als korte rij); trein en bus vullen de ingebouwde deal aan met een nieuwe prijs
+  const isKiwi = /^kiwi-/.test(raw.id);
+  const base = isKiwi ? null : SNAP_BY_ID.get(raw.id);
+  let d = base ? { ...base, ...raw } : { ...raw };
+  if (isKiwi) d = kiwiDeal({ via: 'de dagelijkse controle', ...d });
   d.price = Number(d.price);
   if (!(d.price > 0) || d.price > 5000 || !MODES[d.mode] || !ORIGINS[d.from]) return null;
   if (!DEST[d.to]) { const id = destForAirport(d.arr, d.toCity, d.toCountry); if (!id) return null; d.to = id; }
@@ -48,7 +52,9 @@ function normalizeDeal(raw) {
   if (!d.src.length) d.src = [d.mode === 'vliegtuig' ? 'kiwi' : 'nsiHome'];
   d.trip = d.trip === 'retour' ? 'retour' : 'enkel';
   d.priceType = d.priceType === 'vanaf' ? 'vanaf' : 'gevonden';
-  d.bag = ['koffer', 'tasje', 'onbekend'].includes(d.bag) ? d.bag : 'onbekend';
+  d.bag = ['koffer', 'hand', 'tasje', 'onbekend'].includes(d.bag) ? d.bag : 'onbekend';
+  for (const k of ['out', 'back']) if (d[k] != null && !/^\d{4}-\d{2}-\d{2}$/.test(String(d[k]))) delete d[k];
+  if (d.trip === 'retour' && d.mode === 'vliegtuig' && !d.back) return null; // een retourvlucht zonder terugdatum klopt niet
   if (!d.checked || Number.isNaN(Date.parse(d.checked))) return null;
   if (typeof d.link === 'string' && !/^https:\/\//.test(d.link)) delete d.link;
   if (!d.book || !PROVIDERS[d.book]) d.book = d.mode === 'vliegtuig' ? (d.link ? 'kiwi' : 'google') : d.mode === 'bus' ? 'kombo-route' : 'nsi';
@@ -65,7 +71,7 @@ function mergeCloudDeals() {
       if (!old || Date.parse(d.checked) >= Date.parse(old.checked)) byId.set(d.id, d);
     }
   }
-  SNAP = [...byId.values()].map(enrich).filter(Boolean);
+  SNAP = [...byId.values()].map(resolveDest).filter(Boolean).map(enrich).filter(Boolean);
 }
 
 /* ---------- 3. Prijsgeschiedenis en topdeals ---------- */
@@ -136,7 +142,7 @@ const per100 = e => e.perDir / Math.max(1, e.routeKm / 100);
 // Topdeals: laagste prijs per 100 km (reizen vanaf 300 km), één per bestemming
 function topDeals(list, n = 6) {
   const seen = new Set(), out = [];
-  for (const x of list.filter(x => x.e.routeKm >= 300).sort((a, b) => per100(a.e) - per100(b.e))) {
+  for (const x of list.filter(x => x.e.routeKm >= 300 && !x.e.indic).sort((a, b) => per100(a.e) - per100(b.e))) {
     if (seen.has(x.e.to)) continue;
     seen.add(x.e.to); out.push(x);
     if (out.length >= n) break;
@@ -151,12 +157,12 @@ function renderTopDeals(list) {
   TOP_IDS = new Set(top.map(x => x.e.id));
   if (top.length < 3) { box.hidden = true; box.innerHTML = ''; return; }
   box.hidden = false;
-  box.innerHTML = `<div class="top-head"><h3>${icon('i-radar')}Topdeals</h3><span class="small muted">Laagste prijs per 100 km, één per bestemming</span></div>
-    <ol class="top-list">${top.map(({ e }) => `<li><button type="button" class="top-card" data-open="${esc(e.id)}" style="--mc:var(--m-${e.mode})">
+  box.innerHTML = `<div class="top-head"><h3>${icon('i-radar')}Topdeals</h3><span class="small muted">Laagste prijs per 100 km, één per bestemming (zonder indicaties)</span></div>
+    <ol class="top-list">${top.map(({ e, tp }) => `<li><button type="button" class="top-card" data-open="${esc(e.id)}" style="--mc:var(--m-${e.mode})">
       <span class="top-mode">${icon(MODES[e.mode].icon, 'sm')}${esc(MODES[e.mode].label)}</span>
       <b class="top-dest">${esc(e.dest.n)}</b>
-      <span class="top-price">${e.priceType === 'vanaf' ? '<small>vanaf</small> ' : ''}${eur(e.perDir)}</span>
-      <span class="small muted">${eur(per100(e))} per 100 km · ${esc(e.o.n)}</span>
+      <span class="top-price">${e.priceType === 'vanaf' ? '<small>vanaf</small> ' : ''}${eur(tp.p)} <small>${tripWord()}</small></span>
+      <span class="small muted">${eur(per100(e))} per 100 km · ${esc(e.o.n)}${e.out ? ' · ' + esc(dateNL(e.out, { dow: false })) : ''}</span>
     </button></li>`).join('')}</ol>`;
 }
 
@@ -170,39 +176,64 @@ function kiwiOrigins() {
   if (km(state.origin, ORIGINS.CRL) <= 190) near.push('CRL');
   return [...new Set(near)].slice(0, 4);
 }
+// In welke periode zoeken we? Morgen t/m 75 dagen, of de maand, vakantie of datums die je koos.
 function kiwiWindow() {
-  const from = addDays(todayISO(), 1);
-  if (state.when.mode === 'month' && state.when.month) {
-    const first = state.when.month + '-01';
-    const last = addDays(addDays(first, 32).slice(0, 8) + '01', -1);
-    return { from: first > from ? first : from, to: last };
+  const tomorrow = addDays(todayISO(), 1), w = whenWindow();
+  if (w) {
+    const from = w.from > tomorrow ? w.from : tomorrow;
+    const to = w.to > addDays(from, 120) ? addDays(from, 60) : w.to;
+    return to >= from ? { from, to, strictBack: w.strictBack, tag: state.when.mode === 'month' ? 'm' + state.when.month.replace('-', '') : state.when.mode === 'holiday' ? state.when.hol : 'dat' } : null;
   }
-  if (state.when.mode === 'weekend') return { from, to: addDays(from, 42), weekend: true };
-  return { from, to: addDays(from, 60) };
+  if (state.when.mode === 'weekend') return { from: tomorrow, to: addDays(tomorrow, 42), weekend: true, tag: 'wknd' };
+  return { from: tomorrow, to: addDays(tomorrow, 75) };
 }
-function kiwiToDeal(it, from, checked) {
+const kiwiFlights = leg => (leg && Array.isArray(leg.segments) ? leg.segments.map(s => s.flightNumber).filter(Boolean) : []);
+// Een zoekresultaat van Kiwi.com omzetten naar een deal. Het vertrekvliegveld komt uit het resultaat zelf
+// (Kiwi zoekt soms in een hele regio: "Brussel" geeft Charleroi én Zaventem).
+function kiwiToDeal(it, checked, tag) {
   const ob = it && it.outbound;
   if (!ob || !Array.isArray(ob.route) || !(Number(it.price) > 0)) return null;
   const segs = Array.isArray(ob.segments) ? ob.segments : [];
+  const from = ob.from || ob.route[0];
+  if (!ORIGINS[from] || ORIGINS[from].kind !== 'airport') return null;
   const arr = ob.to || ob.route[ob.route.length - 1];
   const last = segs[segs.length - 1] || {};
   const to = destForAirport(arr, last.toCity, last.toCountry);
   if (!to) return null;
-  const ret = it.tripType === 'return' && it.inbound;
-  const stops = ob.stops ?? Math.max(0, ob.route.length - 2);
-  const carriers = [...new Set(segs.map(s => s.carrierName).filter(Boolean))];
-  const bag = it.baggage && it.baggage.checkedBag > 0 ? 'koffer' : 'tasje';
-  return {
-    id: `kiwi-${from}-${arr}${ret ? '-r' : ''}`.toLowerCase(), status: 'live', liveKind: 'realtime', mode: 'vliegtuig',
-    provider: carriers.join(' + ') || 'Luchtvaartmaatschappij', from, to, arr, toCity: last.toCity, toCountry: last.toCountry,
-    price: Number(it.price), trip: ret ? 'retour' : 'enkel', priceType: 'gevonden',
+  const ib = it.tripType === 'return' && it.inbound && it.inbound.departureTime ? it.inbound : null;
+  const ibSegs = ib && Array.isArray(ib.segments) ? ib.segments : [];
+  const stops = Math.max(ob.stops ?? Math.max(0, ob.route.length - 2), ib ? (ib.stops ?? 0) : 0);
+  const carriers = [...new Set([...segs, ...ibSegs].map(s => s.carrierName).filter(Boolean))];
+  const bg = it.baggage || {};
+  const bag = bg.checkedBag > 0 ? 'koffer' : bg.cabinBag > 0 ? 'hand' : 'tasje';
+  const mins = leg => (leg && leg.durationSeconds ? Math.round(leg.durationSeconds / 60) : null);
+  return kiwiDeal({
+    status: 'live', liveKind: 'realtime', from, to, arr, toCity: last.toCity, toCountry: last.toCountry,
+    provider: carriers.join(' + ') || 'Luchtvaartmaatschappij', price: Math.round(Number(it.price) * 100) / 100,
     out: String(ob.departureTime || '').slice(0, 10) || undefined, depTime: String(ob.departureTime || '').slice(11, 16) || undefined,
-    back: ret ? String(it.inbound.departureTime || '').slice(0, 10) : undefined,
-    dur: ob.durationSeconds ? Math.round(ob.durationSeconds / 60) : null, transfers: stops, bag,
-    flight: segs.map(s => s.flightNumber).filter(Boolean).join(', '), link: typeof it.bookingUrl === 'string' && /^https:\/\//.test(it.bookingUrl) ? it.bookingUrl : undefined,
-    src: ['kiwi'], checked, book: 'kiwi',
-    note: `Live gevonden via Kiwi.com${stops ? ` met ${stops} overstap${stops > 1 ? 'pen' : ''} (${ob.route.join(' → ')})` : ', rechtstreeks'}. ${bag === 'koffer' ? 'Ruimbagage inbegrepen.' : 'Alleen een klein tasje is inbegrepen.'}`,
-  };
+    dur: mins(ob), transfers: stops, bag, flight: kiwiFlights(ob).join(', '), tag: tag || undefined,
+    ...(ib ? { back: String(ib.departureTime).slice(0, 10), backTime: String(ib.departureTime).slice(11, 16), backDur: mins(ib), backFlight: kiwiFlights(ib).join(', '), backFrom: ib.from, backTo: ib.to } : {}),
+    link: typeof it.bookingUrl === 'string' && /^https:\/\//.test(it.bookingUrl) ? it.bookingUrl : undefined, checked,
+  });
+}
+// De zoekvraag voor Kiwi.com, passend bij je keuzes (soort reis, verblijf, bagage, periode)
+function kiwiInput(o, flyTo, win, broad) {
+  const input = { flyFrom: o, flyTo, departureDate: ddmmyyyy(win.from), departureDateTo: ddmmyyyy(win.to), currency: 'EUR', locale: 'nl', sort: 'price', one_for_city: broad, adults: 1 };
+  if (state.filters.direct) input.max_sector_stopovers = 0;
+  if (state.bag === 'hand') input.adults_hand_bags = [1];
+  if (state.bag === 'koffer') input.adults_hold_bags = [1];
+  if (win.weekend) input.fly_days = '5,6';
+  if (state.trip === 'retour') {
+    const st = STAYS[state.stay];
+    const nMin = win.weekend ? 2 : st.min, nMax = win.weekend ? 3 : st.max;
+    input.nights_in_dst_from = nMin; input.nights_in_dst_to = nMax;
+    if (win.strictBack) {
+      const lastDep = addDays(win.to, -nMin);
+      if (lastDep < win.from) return null;
+      input.departureDateTo = ddmmyyyy(lastDep);
+    }
+  }
+  return input;
 }
 function mcpErrorText(err, server) {
   const code = err && err.code;
@@ -220,17 +251,18 @@ async function scanKiwi() {
   const dest = state.dest !== 'overal' ? DEST[state.dest] : null;
   const flyTo = dest ? (dest.iata || dest.en || dest.n) : 'Europe';
   const win = kiwiWindow(), origins = kiwiOrigins();
+  const tag = [state.trip === 'retour' && state.stay !== 'alle' && !(win && win.weekend) ? state.stay : '', win && win.tag ? win.tag : ''].filter(Boolean).join('-');
   const found = [];
-  let lastErr = null;
-  for (const o of origins) {
-    const input = { flyFrom: o, flyTo, departureDate: ddmmyyyy(win.from), departureDateTo: ddmmyyyy(win.to), currency: 'EUR', locale: 'nl', sort: 'price', one_for_city: !dest, adults: 1 };
-    if (state.filters.direct) input.max_sector_stopovers = 0;
-    if (win.weekend) Object.assign(input, { fly_days: '5', nights_in_dst_from: 2, nights_in_dst_to: 2, ret_fly_days: '0' });
+  let lastErr = null, asked = 0;
+  for (const o of (win ? origins : [])) {
+    const input = kiwiInput(o, flyTo, win, !dest);
+    if (!input) continue;
+    asked++;
     try {
       const res = await CLOUD.mcp.callTool(KIWI, 'search-flight', input, { cache: { staleTime: 10 * 60000, gcTime: 60 * 60000 } });
       const checked = res.cache && res.cache.storedAt ? new Date(res.cache.storedAt).toISOString() : new Date().toISOString();
       const list = (res.payload && Array.isArray(res.payload.itineraries)) ? res.payload.itineraries : [];
-      list.forEach(it => { const d = kiwiToDeal(it, o, checked); if (d) found.push(d); });
+      list.forEach(it => { const d = kiwiToDeal(it, checked, tag); if (d) found.push(d); });
     } catch (err) {
       lastErr = err;
       if (['server_not_connected', 'needs_reauth', 'not_in_manifest', 'not_granted', 'capability_disabled', 'approval_required', 'selection_required'].includes(err && err.code)) break;
@@ -238,14 +270,63 @@ async function scanKiwi() {
   }
   const best = new Map();
   found.forEach(d => { const o = best.get(d.id); if (!o || d.price < o.price) best.set(d.id, d); });
-  state.liveKiwi = [...best.values()].map(enrich).filter(Boolean);
+  // Eerdere live resultaten van het andere soort reis blijven staan; dezelfde route wordt ververst
+  const keep = (state.liveKiwi || []).filter(e => !best.has(e.id));
+  state.liveKiwi = keep.concat([...best.values()].map(enrich).filter(Boolean));
   syncLive();
-  if (state.liveKiwi.length) {
-    state.src.kiwi = { status: 'ok', text: `${state.liveKiwi.length} live vluchten` };
-    saveSearch([...best.values()], { flyTo, from: win.from, to: win.to, origins });
-  } else state.src.kiwi = lastErr ? { status: 'error', text: mcpErrorText(lastErr, KIWI) } : { status: 'ok', text: 'geen vluchten gevonden' };
+  const what = state.trip === 'retour' ? 'retourvluchten' : 'enkele vluchten';
+  if (best.size) {
+    state.src.kiwi = { status: 'ok', text: `${best.size} live ${what}` };
+    saveSearch([...best.values()], { flyTo, from: win.from, to: win.to, origins, trip: state.trip, stay: state.stay, bag: state.bag });
+  } else state.src.kiwi = lastErr ? { status: 'error', text: mcpErrorText(lastErr, KIWI) } : { status: 'ok', text: asked ? `geen ${what} gevonden` : 'deze periode is te kort of al voorbij' };
   rebuildHistory();
   renderRadar();
+}
+/* Eén deal nu live nacontroleren: zelfde route en datum(s), liefst dezelfde vlucht */
+async function verifyDeal(e, box) {
+  box.innerHTML = '<span class="small">Live controleren bij Kiwi.com…</span>';
+  try {
+    const input = { flyFrom: e.o.iata, flyTo: e.arr, departureDate: ddmmyyyy(e.out), currency: 'EUR', locale: 'nl', sort: 'price', adults: 1 };
+    if (e.trip === 'retour' && e.back) input.returnDate = ddmmyyyy(e.back);
+    if (e.transfers === 0) input.max_sector_stopovers = 0;
+    if (e.bag === 'hand') input.adults_hand_bags = [1];
+    if (e.bag === 'koffer') input.adults_hold_bags = [1];
+    const res = await CLOUD.mcp.callTool(KIWI, 'search-flight', input);
+    const now = new Date().toISOString();
+    const its = ((res.payload && res.payload.itineraries) || []).filter(it => it && it.outbound && (it.outbound.from || '') === e.o.iata && Number(it.price) > 0 && (e.trip !== 'retour' || it.tripType === 'return'));
+    if (!its.length) { box.innerHTML = `<div class="cmp-out"><b>Niet meer gevonden.</b> Kiwi.com vindt op ${esc(dateNL(e.out, { year: true }))} geen ${e.transfers === 0 ? 'rechtstreekse ' : ''}vlucht van ${esc(e.o.n)} naar ${esc(e.arr)}${e.back ? ' met deze terugdatum' : ''}. Mogelijk is hij uitverkocht of is het schema veranderd.<br><span class="small muted">Live gecontroleerd ${esc(timeNL(now))}.</span></div>`; return; }
+    const f1 = (e.flight || '').split(', ')[0], b1 = (e.backFlight || '').split(', ')[0];
+    const same = f1 ? its.find(it => kiwiFlights(it.outbound).includes(f1) && (!b1 || kiwiFlights(it.inbound).includes(b1))) : null;
+    const best = same || its.reduce((a, b) => (Number(a.price) <= Number(b.price) ? a : b));
+    const p = Math.round(Number(best.price) * 100) / 100, diff = p - e.price;
+    const link = typeof best.bookingUrl === 'string' && /^https:\/\//.test(best.bookingUrl) ? best.bookingUrl : 'https://www.kiwi.com/nl/';
+    const fl = kiwiFlights(best.outbound).join(', ') + (best.inbound ? ' / ' + kiwiFlights(best.inbound).join(', ') : '');
+    const verdict = Math.abs(diff) < 0.5 ? `<b class="down">De prijs klopt nog: ${eur(p)}.</b>` : diff < 0 ? `<b class="down">Nu ${eur(p)}: ${eur(-diff)} goedkoper</b> dan de ${eur(e.price)} hierboven.` : `<b class="up">Nu ${eur(p)}: ${eur(diff)} duurder</b> dan de ${eur(e.price)} hierboven.`;
+    box.innerHTML = `<div class="cmp-out">${verdict} ${same || !f1 ? '' : 'Let op: dit is een andere vlucht op dezelfde datum; de vlucht van deze deal staat er niet meer bij.'}<br>Kiwi.com, vlucht ${esc(fl)}${e.source ? '' : ''}. <a href="${esc(link)}" target="_blank" rel="noopener">Bekijk bij Kiwi.com</a><br><span class="small muted">Live gecontroleerd ${esc(timeNL(now))}. Controleer bagage en voorwaarden bij het boeken.</span></div>`;
+    // Een Kiwi-deal met dezelfde vlucht verversen we meteen in de lijst en in de prijsgeschiedenis
+    if (same && /^kiwi-/.test(e.id)) {
+      const d = kiwiToDeal(best, now);
+      if (d) { d.id = e.id; const en = enrich(d); if (en) { state.liveKiwi = (state.liveKiwi || []).filter(x => x.id !== e.id).concat([en]); syncLive(); rebuildHistory(); renderAll(); saveSearch([d], { verify: e.id }); } }
+    }
+  } catch (err) { box.innerHTML = `<span class="small">${esc(mcpErrorText(err, KIWI))}</span>`; }
+}
+/* Prijskalender live: de goedkoopste gevonden vlucht per dag voor één route en één maand */
+const KCAL = new Map();
+async function kiwiCalendar(from, destId, month) {
+  const dest = DEST[destId], tomorrow = addDays(todayISO(), 1);
+  const first = month + '-01', last = addDays(addDays(first, 32).slice(0, 8) + '01', -1);
+  const start = first > tomorrow ? first : tomorrow;
+  if (last < start) return {};
+  const res = await CLOUD.mcp.callTool(KIWI, 'search-flight', { flyFrom: from, flyTo: dest.iata || dest.en, departureDate: ddmmyyyy(start), departureDateTo: ddmmyyyy(last), currency: 'EUR', locale: 'nl', sort: 'price', adults: 1 }, { cache: { staleTime: 10 * 60000, gcTime: 60 * 60000 } });
+  const checked = res.cache && res.cache.storedAt ? new Date(res.cache.storedAt).toISOString() : new Date().toISOString();
+  const out = {};
+  for (const it of ((res.payload && res.payload.itineraries) || [])) {
+    const d = kiwiToDeal(it, checked);
+    if (!d || d.from !== from || d.to !== destId || !d.out || !d.out.startsWith(month)) continue;
+    if (!out[d.out] || d.price < out[d.out].price) out[d.out] = { price: d.price, airline: d.provider, transfers: d.transfers, link: d.link, checked };
+  }
+  KCAL.set(`${from}|${destId}|${month}`, out);
+  return out;
 }
 function syncLive() { state.liveDeals = [...(state.liveTP || []), ...(state.liveKiwi || [])]; }
 // Eigen zoekopdracht bewaren in de database (alleen de eigenaar), zodat de prijsgeschiedenis groeit

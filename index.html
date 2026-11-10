@@ -586,6 +586,151 @@ body.offline .offline-bar { display: block; }
 .top-card { align-content: start; }
 .hist-line > span { min-width: 0; }
 
+/* =====================================================================
+   Versie 3: retour, ideeën, nieuwe kaarten en lijstweergave
+   ===================================================================== */
+html { overflow-x: hidden; overflow-x: clip; }
+
+/* ---------- Kop: donkere radarband met de zoekkaart eroverheen ---------- */
+:root { --hero-bg: #10262C; --hero-ink: #F2F5F3; --hero-accent: #FF8F5E; --hero-ring: rgba(242, 245, 243, .07); }
+:root[data-theme="dark"] { --hero-bg: #16252B; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --hero-bg: #16252B; } }
+.hero { padding-top: 0; }
+.hero-head { position: relative; padding: 26px 0 70px; color: var(--hero-ink); isolation: isolate; }
+.hero-head::before {
+  content: ""; position: absolute; z-index: -1; top: -7px; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%);
+  background:
+    radial-gradient(circle at 88% 8%, transparent 0 58px, var(--hero-ring) 58px 60px, transparent 60px 118px, var(--hero-ring) 118px 120px, transparent 120px 188px, var(--hero-ring) 188px 190px, transparent 190px 268px, var(--hero-ring) 268px 270px, transparent 270px),
+    conic-gradient(from 20deg at 88% 8%, rgba(255, 143, 94, .22), transparent 16%, transparent),
+    var(--hero-bg);
+}
+.hero-head h1 { color: var(--hero-ink); font-size: clamp(28px, 6.4vw, 44px); max-width: 18ch; }
+.hero-head h1 em { color: var(--hero-accent); }
+.hero .hero-head .lede { color: color-mix(in srgb, var(--hero-ink) 80%, transparent); margin: 10px 0 0; }
+.search-card { margin-top: -52px; position: relative; z-index: 2; border-radius: 22px; padding: 16px; box-shadow: 0 2px 4px rgba(16, 38, 44, .08), 0 18px 44px rgba(16, 38, 44, .16); }
+
+/* Soort reis */
+.trip-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); justify-self: start; max-width: 100%; }
+.trip-tabs button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-weight: 700; font-size: 15px; cursor: pointer; }
+.trip-tabs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.trip-tabs .ic { width: 17px; height: 17px; }
+
+@media (min-width: 720px) {
+  .search-grid { grid-template-columns: repeat(12, 1fr); gap: 12px; }
+  .search-grid > .field { grid-column: span 3; }
+  .search-grid > .field:nth-child(3), .search-grid > .field:nth-child(4) { grid-column: span 6; }
+  .search-grid > #fieldStay[hidden] + .field { grid-column: span 6; }
+}
+@media (min-width: 720px) and (max-width: 1019px) {
+  .search-grid > .field { grid-column: span 6; }
+  .search-grid > .field:nth-child(3) { grid-column: span 12; }
+}
+.seg { overflow-x: auto; scrollbar-width: none; }
+.seg::-webkit-scrollbar { display: none; }
+.seg button { padding: 0 6px; white-space: nowrap; font-size: 13.5px; }
+.when-extra { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.when-extra[hidden] { display: none; }
+.mini-lbl { display: grid; gap: 2px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.mini-lbl .input { font-weight: 400; color: var(--ink); min-width: 0; }
+.origin-hint a { color: inherit; }
+.origin-hint:empty { display: none; }
+
+/* ---------- Ideeën ---------- */
+.inspire { margin: 14px 0 2px; min-width: 0; }
+.inspire-title { font-size: 17px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.inspire-title .small { font-family: var(--font-body); font-weight: 400; }
+.inspire-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(148px, 1fr); gap: 10px; overflow-x: auto; padding: 2px 2px 10px; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.tile {
+  --tc: var(--radar);
+  scroll-snap-align: start; display: grid; gap: 2px; align-content: start; text-align: left; padding: 12px 12px 11px; min-height: 118px;
+  border-radius: 16px; border: 1px solid color-mix(in srgb, var(--tc) 28%, var(--line)); cursor: pointer; color: var(--ink);
+  background: linear-gradient(155deg, color-mix(in srgb, var(--tc) 16%, var(--surface)), var(--surface) 72%);
+  box-shadow: var(--shadow); transition: transform .15s ease, border-color .15s ease;
+}
+.tile:hover { transform: translateY(-2px); border-color: var(--tc); }
+.tile-ic { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; background: color-mix(in srgb, var(--tc) 20%, var(--surface)); color: var(--tc); margin-bottom: 4px; }
+.tile b { font-family: var(--font-display); font-size: 16px; line-height: 1.15; }
+.tile-p { font-weight: 700; font-size: 14px; color: var(--tc); }
+.tile .small { color: var(--muted); }
+.tile[data-tile="zon"] { --tc: var(--m-bus); }
+.tile[data-tile="stad"], .tile[data-tile="direct"] { --tc: var(--m-vliegtuig); }
+.tile[data-tile="kerst"], .tile[data-tile="budget"] { --tc: var(--accent); }
+.tile[data-tile="trein"], .tile[data-tile="natuur"] { --tc: var(--m-trein); }
+.tile[data-tile="ski"] { --tc: var(--m-combi); }
+
+/* ---------- Deal-kaart: bestemming groot, heen en terug als blokje ---------- */
+.route h3 { display: grid; gap: 1px; }
+.route .from { font: 600 13px/1.35 var(--font-body); color: var(--muted); letter-spacing: 0; }
+.route .to { font-size: 22px; line-height: 1.12; }
+.flag { font-size: 15px; }
+.legs { display: grid; gap: 4px; padding: 9px 11px; border-radius: 11px; background: var(--surface-2); font-size: 14px; }
+.leg { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.leg-k { flex: none; width: 44px; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.nights { justify-self: start; margin-top: 2px; font-size: 12.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.badge.indic { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
+.more-opts { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: var(--surface-2); color: var(--ink); font-weight: 600; font-size: 13.5px; cursor: pointer; text-align: left; }
+.more-opts span { flex: 1; }
+.more-opts:hover { background: color-mix(in srgb, var(--mc) 16%, var(--surface-2)); }
+.calc-note { display: flex; gap: 8px; align-items: flex-start; padding: 9px 11px; border-radius: 10px; background: var(--surface-2); font-size: 14px; }
+.calc-note .ic { flex: none; margin-top: 3px; color: var(--muted); }
+.more-row { display: flex; justify-content: center; margin-top: 14px; }
+.more-row:empty { display: none; }
+.icon-btn.toggle[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.icon-btn:disabled { opacity: .45; cursor: default; }
+.trip-note .linkish { margin-left: 4px; font-weight: 700; }
+.verify-box .btn { justify-self: start; }
+.top-price small { margin-left: 2px; }
+
+/* ---------- Compacte lijst ---------- */
+.deal-grid.rows { grid-template-columns: 1fr; gap: 6px; }
+.deal-row { --mc: var(--m-trein); }
+.deal-row[data-mode="vliegtuig"] { --mc: var(--m-vliegtuig); }
+.deal-row[data-mode="bus"] { --mc: var(--m-bus); }
+.deal-row[data-mode="combi"] { --mc: var(--m-combi); }
+.row-main { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 11px; align-items: center; width: 100%; text-align: left; padding: 10px 12px; border-radius: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.row-main:hover { border-color: var(--mc); }
+.row-ic { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: color-mix(in srgb, var(--mc) 15%, var(--surface)); color: var(--mc); }
+.row-txt b { font-family: var(--font-display); font-size: 17px; }
+.row-sub { display: block; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-price { display: grid; justify-items: end; line-height: 1.15; }
+.row-price b { font-family: var(--font-display); font-size: 21px; font-weight: 800; }
+.row-price small { font-size: 12px; color: var(--muted); }
+
+/* Filters: vertrekpunten */
+.check-cols { display: grid; gap: 0 8px; }
+.filters fieldset select.input { min-height: 44px; }
+.filters legend label { font: inherit; }
+.radar.section { margin-top: 22px; }
+
+/* Zoekkaart op een telefoon: extra velden achter "Meer opties" */
+.more-opts-btn { display: none; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px dashed var(--line); border-radius: 12px; background: transparent; color: var(--ink); font-weight: 600; font-size: 14px; cursor: pointer; text-align: left; }
+@media (max-width: 719px) {
+  .more-opts-btn { display: flex; }
+  .search-grid:not(.open) > .field.extra { display: none; }
+}
+.search-grid > .field[hidden] { display: none; }
+@media (min-width: 720px) {
+  .search-grid > .field:nth-child(3), .search-grid > .field:nth-child(4) { grid-column: span 3; }
+  .search-grid > .field:nth-of-type(3) { grid-column: span 6; }
+  .search-grid > .field:nth-of-type(4) { grid-column: span 6; }
+}
+@media (min-width: 720px) and (max-width: 1019px) {
+  .search-grid > .field:nth-of-type(n) { grid-column: span 6; }
+  .search-grid > .field:nth-of-type(3) { grid-column: span 12; }
+}
+/* Korte uitleg onder de telling */
+.summary-box { display: grid; gap: 3px; min-width: 0; flex: 1 1 320px; }
+.hints { display: grid; gap: 2px; font-size: 13px; color: var(--muted); }
+.hints:empty { display: none; }
+.hints b { color: var(--ink); }
+@media (max-width: 959px) {
+  .toolbar .actions { flex-wrap: wrap; }
+  .toolbar .sort.input { flex: 1 1 150px; }
+}
+.deal { align-content: start; }
+.deal-top { padding-right: 44px; }
+.dlg-body .deal-top { padding-right: 0; }
+
 </style>
 </head>
 <body>
@@ -629,6 +774,19 @@ body.offline .offline-bar { display: block; }
   <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 1 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-retour" viewBox="0 0 24 24"><path d="M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4"/></symbol>
+  <symbol id="i-enkel" viewBox="0 0 24 24"><path d="M4 12h15M14 7l5 5-5 5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-rows" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></symbol>
+  <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.7 1.8-2.4 3.2-2.4s2.6.7 3.2 2.4M15 10h3.5M15 13.5h3.5"/></symbol>
+  <symbol id="i-snow" viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/></symbol>
+  <symbol id="i-city" viewBox="0 0 24 24"><path d="M4 20V9l6-3v14M10 20V4l9 4v12M3 20h18M13 11h3M13 15h3M6.5 12h1M6.5 16h1"/></symbol>
+  <symbol id="i-tree" viewBox="0 0 24 24"><path d="M12 3l5 7h-3l4 6H6l4-6H7zM12 16v5"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 24 24"><circle cx="17" cy="7" r="3"/><path d="M3 15c2 0 2-1.5 4.5-1.5S10 15 12 15s2-1.5 4.5-1.5S19 15 21 15M3 19.5c2 0 2-1.5 4.5-1.5S10 19.5 12 19.5s2-1.5 4.5-1.5S19 19.5 21 19.5"/></symbol>
+  <symbol id="i-euro" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5a4.3 4.3 0 1 0 0 7M7 11h6M7 13.5h5"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M3 7h18v3H3zM12 7v13M12 7c-1.5-3.5-6-3.5-5 0M12 7c1.5-3.5 6-3.5 5 0"/></symbol>
   <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l6-6"/><circle cx="16" cy="9" r="1"/></symbol>
 </svg>
 
@@ -644,7 +802,7 @@ body.offline .offline-bar { display: block; }
       </svg>
       <span class="brand-name">DealRadar <b>NL</b></span>
     </a>
-    <span class="data-pill" id="dataPill"><span class="dot"></span><span id="dataPillText">Gecontroleerd 9 nov 2026</span></span>
+    <span class="data-pill" id="dataPill"><span class="dot"></span><span id="dataPillText">Gecontroleerd 10 nov 2026</span></span>
     <button class="btn soft sm install-btn" id="btnInstall" type="button" aria-label="Installeer DealRadar als app" hidden><svg class="ic sm"><use href="#i-download"/></svg>Installeer app</button>
     <button class="icon-btn" id="btnTheme" type="button" aria-label="Thema: systeem"><svg class="ic"><use href="#i-auto"/></svg></button>
     <button class="icon-btn" id="btnSettings" type="button" aria-label="Instellingen en API-sleutels"><svg class="ic"><use href="#i-gear"/></svg></button>
@@ -664,11 +822,17 @@ body.offline .offline-bar { display: block; }
 <div class="offline-bar" role="status">Je bent offline. Je ziet de laatst bewaarde deals; prijzen kunnen veranderd zijn.</div>
 <main id="main" class="wrap" tabindex="-1">
   <section class="hero" aria-labelledby="heroTitle">
-    <h1 id="heroTitle">Waar kun je <em>goedkoop</em> of slim naartoe?</h1>
-    <p class="lede">Trein, vliegtuig en bus vanaf heel Nederland. Elke prijs heeft een bron, een link en het tijdstip van controle.</p>
+    <div class="hero-head">
+      <h1 id="heroTitle">Waar kun je <em>goedkoop</em> of slim naartoe?</h1>
+      <p class="lede">Trein, vliegtuig en bus vanaf heel Nederland, als enkele reis of retour. Elke prijs heeft een bron, een link en het tijdstip van controle.</p>
+    </div>
 
     <form class="search-card" id="searchForm" autocomplete="off" role="search" aria-label="Deals zoeken">
-      <div class="search-grid">
+      <div class="trip-tabs" role="group" aria-label="Soort reis">
+        <button type="button" data-trip="retour" aria-pressed="true"><svg class="ic sm" aria-hidden="true"><use href="#i-retour"/></svg>Retour</button>
+        <button type="button" data-trip="enkel" aria-pressed="false"><svg class="ic sm" aria-hidden="true"><use href="#i-enkel"/></svg>Enkele reis</button>
+      </div>
+      <div class="search-grid" id="searchExtra">
         <div class="field">
           <label for="inOrigin">Vertrek vanaf</label>
           <div class="input-row">
@@ -692,10 +856,24 @@ body.offline .offline-bar { display: block; }
             <button type="button" data-when="flex" aria-pressed="true">Flexibel</button>
             <button type="button" data-when="month" aria-pressed="false">Maand</button>
             <button type="button" data-when="weekend" aria-pressed="false">Weekend</button>
+            <button type="button" data-when="holiday" aria-pressed="false">Vakantie</button>
+            <button type="button" data-when="range" aria-pressed="false">Datums</button>
           </div>
           <select class="input" id="inMonth" aria-label="Kies een maand" hidden></select>
+          <div class="when-extra" id="whenHoliday" hidden>
+            <select class="input" id="inHol" aria-label="Kies een schoolvakantie"></select>
+            <select class="input" id="inRegion" aria-label="Regio van je school">
+              <option value="noord">Regio noord</option><option value="midden">Regio midden</option><option value="zuid">Regio zuid</option>
+            </select>
+          </div>
+          <div class="when-extra" id="whenRange" hidden>
+            <label class="mini-lbl">Vertrek vanaf<input class="input" id="inFrom" type="date"></label>
+            <label class="mini-lbl">Terug uiterlijk<input class="input" id="inTo" type="date"></label>
+          </div>
+          <div class="origin-hint" id="whenHint" aria-live="polite"></div>
         </div>
-        <div class="field">
+        <button class="more-opts-btn" type="button" id="btnMoreOpts" aria-expanded="false" aria-controls="searchExtra"><svg class="ic sm" aria-hidden="true"><use href="#i-plus"/></svg><span id="moreOptsText">Meer opties</span></button>
+        <div class="field extra">
           <span class="lbl" id="lblWho">Reizigers en korting</span>
           <div class="travellers">
             <div class="stepper" role="group" aria-labelledby="lblWho">
@@ -712,6 +890,23 @@ body.offline .offline-bar { display: block; }
               <option value="dal">NS Dal Voordeel (40%)</option>
             </select>
           </div>
+        </div>
+        <div class="field extra" id="fieldStay">
+          <label for="inStay">Hoe lang blijf je?</label>
+          <select class="input" id="inStay">
+            <option value="alle">Maakt niet uit</option>
+            <option value="kort">Kort: 1 tot 4 nachten</option>
+            <option value="week">Week: 5 tot 9 nachten</option>
+            <option value="lang">Lang: 10 nachten of meer</option>
+          </select>
+        </div>
+        <div class="field extra">
+          <label for="inBag">Bagage in het vliegtuig</label>
+          <select class="input" id="inBag">
+            <option value="tasje">Alleen een klein tasje</option>
+            <option value="hand">Met handbagagekoffer</option>
+            <option value="koffer">Met ruimbagage (koffer)</option>
+          </select>
         </div>
       </div>
       <div class="scan-row">
@@ -731,10 +926,8 @@ body.offline .offline-bar { display: block; }
       <button class="chip" type="button" data-type="ski" aria-pressed="false">Skiën</button>
     </div>
 
-    <section class="radar" aria-labelledby="radarTitle">
-      <div class="radar-title" id="radarTitle"><svg class="ic"><use href="#i-radar"/></svg>Bronnen</div>
-      <ul class="radar-list" id="radarList"></ul>
-    </section>
+    <section class="inspire" id="inspire" aria-label="Ideeën"></section>
+
   </section>
 
   <!-- DEALS -->
@@ -745,24 +938,30 @@ body.offline .offline-bar { display: block; }
       <div class="filters" id="filters" role="region" aria-label="Filters">
         <div class="filters-head"><h3>Filters</h3><button class="icon-btn" type="button" id="btnFiltersClose" aria-label="Filters sluiten"><svg class="ic"><use href="#i-close"/></svg></button></div>
         <fieldset><legend>Vervoer</legend><div id="fModes"></div></fieldset>
-        <fieldset><legend>Maximumprijs (per persoon, per richting)</legend>
-          <div class="range-row"><input type="range" id="fPrice" aria-label="Maximumprijs per persoon per richting" min="5" max="300" step="5" value="300" aria-describedby="fPriceOut"><output id="fPriceOut">alles</output></div></fieldset>
+        <fieldset><legend>Maximumprijs per persoon (<span id="fPriceTrip">retour</span>)</legend>
+          <div class="range-row"><input type="range" id="fPrice" aria-label="Maximumprijs per persoon" min="5" max="300" step="5" value="300" aria-describedby="fPriceOut"><output id="fPriceOut">alles</output></div></fieldset>
         <fieldset><legend>Maximale reistijd</legend>
           <div class="range-row"><input type="range" id="fHours" aria-label="Maximale reistijd in uren" min="1" max="24" step="1" value="24" aria-describedby="fHoursOut"><output id="fHoursOut">alles</output></div></fieldset>
         <fieldset><legend>Reis naar vertrekpunt (vanaf jouw plek)</legend>
           <div class="range-row"><input type="range" id="fAccess" aria-label="Maximale reistijd naar het vertrekpunt" min="30" max="300" step="15" value="300" aria-describedby="fAccessOut"><output id="fAccessOut">alles</output></div></fieldset>
+        <fieldset><legend>Vertrekpunt van de deal</legend>
+          <label class="check"><input type="checkbox" id="fNlOnly"> Alleen vertrek in Nederland</label>
+          <div id="fOrigins" class="check-cols"></div></fieldset>
+        <fieldset><legend><label for="fDepPart">Vertrektijd (als die bekend is)</label></legend>
+          <select class="input" id="fDepPart"><option value="alle">Maakt niet uit</option><option value="ochtend">Ochtend (voor 12:00)</option><option value="middag">Middag (12:00–18:00)</option><option value="avond">Avond (na 18:00)</option></select></fieldset>
         <fieldset><legend>Overstappen en bagage</legend>
           <label class="check"><input type="checkbox" id="fDirect"> Alleen rechtstreeks</label>
           <label class="check"><input type="checkbox" id="fBag"> Koffer is inbegrepen</label></fieldset>
         <fieldset><legend>Soort reis</legend><div id="fTypes"></div></fieldset>
         <fieldset><legend>Land</legend><div id="fCountries"></div></fieldset>
-        <fieldset><legend>Soort data</legend><div id="fStatus"></div></fieldset>
+        <fieldset><legend>Soort data</legend><div id="fStatus"></div>
+          <label class="check"><input type="checkbox" id="fNoIndic"> Verberg indicaties (Skyscanner)</label></fieldset>
         <button class="btn ghost block" type="button" id="btnResetFilters">Wis alle filters</button>
       </div>
 
       <div>
         <div class="toolbar">
-          <div class="summary" id="summary" aria-live="polite">…</div>
+          <div class="summary-box"><div class="summary" id="summary" aria-live="polite">…</div><div class="hints" id="dealHints"></div></div>
           <div class="actions">
             <button class="btn ghost sm filter-open-btn" type="button" id="btnFilters"><svg class="ic sm"><use href="#i-filter"/></svg>Filters <span id="filterCount"></span></button>
             <label class="sr-only" for="sortSel">Sorteren</label>
@@ -771,7 +970,11 @@ body.offline .offline-bar { display: block; }
               <option value="snel">Snelst (deur tot deur)</option>
               <option value="groen">Groenst (CO2)</option>
               <option value="score">Beste prijs-kwaliteit</option>
+              <option value="datum">Vroegste vertrek</option>
+              <option value="per100">Prijs per 100 km</option>
             </select>
+            <button class="icon-btn toggle" type="button" id="btnPerDest" aria-pressed="true" aria-label="Eén deal per bestemming" title="Eén deal per bestemming"><svg class="ic"><use href="#i-layers"/></svg></button>
+            <button class="icon-btn" type="button" id="btnLayout" aria-label="Wissel tussen kaarten en lijst" title="Kaarten of lijst"><svg class="ic"><use href="#i-rows"/></svg></button>
             <button class="icon-btn" type="button" id="btnShareList" aria-label="Deel deze lijst"><svg class="ic"><use href="#i-share"/></svg></button>
             <button class="icon-btn" type="button" id="btnExport" aria-label="Exporteer naar CSV of PDF"><svg class="ic"><use href="#i-download"/></svg></button>
           </div>
@@ -780,7 +983,13 @@ body.offline .offline-bar { display: block; }
         <div id="dealNotices"></div>
         <section class="top-deals" id="topDeals" aria-label="Topdeals" hidden></section>
         <ul class="deal-grid" id="dealGrid" aria-live="off"></ul>
+        <div class="more-row" id="moreRow"></div>
         <div id="emptyState"></div>
+
+        <section class="radar section" aria-labelledby="radarTitle">
+          <div class="radar-title" id="radarTitle"><svg class="ic"><use href="#i-radar"/></svg>Bronnen</div>
+          <ul class="radar-list" id="radarList"></ul>
+        </section>
 
         <section class="section providers-sec" aria-labelledby="provTitle">
           <div class="section-head"><h2 id="provTitle">Zoek live bij aanbieders</h2><span class="small muted" id="provHint">Opent hun zoekpagina met jouw route waar dat kan.</span></div>
@@ -802,7 +1011,7 @@ body.offline .offline-bar { display: block; }
 
   <!-- KAART -->
   <section class="view" id="view-kaart" data-view="kaart" aria-labelledby="mapTitle" hidden>
-    <div class="section-head"><h2 id="mapTitle">Kaart van Europa</h2><span class="small muted">Goedkoopste prijs per bestemming, per persoon per richting. Filters van het tabblad Deals gelden ook hier.</span></div>
+    <div class="section-head"><h2 id="mapTitle">Kaart van Europa</h2><span class="small muted" id="mapSub">Goedkoopste prijs per bestemming, per persoon. Filters van het tabblad Deals gelden ook hier.</span></div>
     <div class="map-layout">
       <div class="map-card">
         <svg class="map-svg" id="mapSvg" viewBox="0 0 1000 860" role="img" aria-labelledby="mapTitle mapDesc" tabindex="0">
@@ -867,7 +1076,7 @@ body.offline .offline-bar { display: block; }
             <option value="score">beste mix van prijs en tijd</option>
           </select></div>
       </div>
-      <p class="small muted">Per persoon kiest DealRadar de beste mix van prijs en reistijd, inclusief de reis naar het vertrekpunt. De prijzen zijn per persoon en per richting, zonder de kosten van die reis naar het vertrekpunt. De filters van het tabblad Deals gelden ook hier.</p>
+      <p class="small muted">Per persoon kiest DealRadar de beste mix van prijs en reistijd, inclusief de reis naar het vertrekpunt. De prijzen zijn per persoon, voor het soort reis dat je bij Zoeken koos (enkele reis of retour), zonder de kosten van die reis naar het vertrekpunt. De filters van het tabblad Deals gelden ook hier.</p>
     </div>
     <div id="groupResults" class="group-results" aria-live="polite"></div>
   </section>
@@ -922,10 +1131,10 @@ const MAP = {"W":1000,"H":860,"scale":1171.663493941643,"translate":[580.0934149
 /* =====================================================================
    DealRadar NL — GECONTROLEERDE DATA (snapshot)
    ---------------------------------------------------------------------
-   Elke prijs in dit bestand komt van de genoemde bron. Claude heeft de
-   bronnen gecontroleerd op maandag 9 november 2026 tussen 20:29 en 22:35
-   (Nederlandse tijd). Prijzen veranderen snel: controleer altijd bij de
-   aanbieder voordat je boekt.
+   Elke prijs in dit bestand komt van de genoemde bron. Claude heeft alle
+   bronnen opnieuw gecontroleerd op dinsdag 10 november 2026 tussen 06:33
+   en 12:50 (Nederlandse tijd). Prijzen veranderen snel: controleer altijd
+   bij de aanbieder voordat je boekt.
 
    Zelf een deal toevoegen? Kopieer een blok in SNAPSHOT_DEALS en vul in:
      id        unieke code (tekst)
@@ -938,6 +1147,9 @@ const MAP = {"W":1000,"H":860,"scale":1171.663493941643,"translate":[580.0934149
      trip      'enkel' of 'retour'
      priceType 'vanaf' (laagste prijs, datum vrij) of 'gevonden' (prijs voor de genoemde data)
      out/back  reisdata (JJJJ-MM-DD) als de prijs voor vaste data geldt
+     depTime/backTime  vertrektijd heen/terug (UU:MM), als de bron die noemt
+     backDur/backFlight/backFrom  reistijd, vluchtnummer en vertrekvliegveld van de terugreis
+     indic     true = indicatie (prijs die de bron in de laatste dagen zag, geen live prijs)
      dur       reistijd in minuten (null = onbekend, de app schat dan)
      transfers aantal overstappen (null = onbekend)
      bag       'koffer' (inbegrepen) | 'tasje' (alleen klein tasje gratis) | 'onbekend'
@@ -950,8 +1162,9 @@ const MAP = {"W":1000,"H":860,"scale":1171.663493941643,"translate":[580.0934149
      who       'jongeren' | 'groep' (alleen voor bepaalde reizigers)
    ===================================================================== */
 
-const CHECK_WINDOW = 'maandag 9 november 2026, 20:29–22:35';
-const T = hhmm => `2026-11-09T${hhmm}:00+01:00`;
+const CHECK_WINDOW = 'dinsdag 10 november 2026, 06:33–12:50';
+const T = hhmm => `2026-11-10T${hhmm}:00+01:00`;
+const T9 = hhmm => `2026-11-09T${hhmm}:00+01:00`; // kaartjes en kortingen: gecontroleerd op 9 november
 
 /* ---------- Bronnen ---------- */
 const SRC = {
@@ -987,6 +1200,8 @@ const SRC = {
   skyAMS:     { name: 'Skyscanner – goedkope vluchten vanaf Schiphol', url: 'https://www.skyscanner.nl/nl/en-gb/eur/flights-from/AMS' },
   skyGRQ:     { name: 'Skyscanner – goedkope vluchten vanaf Groningen', url: 'https://skyscanner.nl/nl/en-gb/eur/flights-from/grq/cheap-flights-from-groningen-airport.html' },
   kiwi:       { name: 'Kiwi.com – live zoekresultaat (via de Claude-connector)', url: 'https://www.kiwi.com/nl/' },
+  vakanties:  { name: 'Rijksoverheid – schoolvakanties 2026-2027', url: 'https://www.rijksoverheid.nl/onderwerpen/schoolvakanties/overzicht-schoolvakanties-per-schooljaar/overzicht-schoolvakanties-2026-2027' },
+  reisadvies: { name: 'Nederland Wereldwijd – reisadviezen en reisdocumenten', url: 'https://www.nederlandwereldwijd.nl/reisadvies' },
   nsPrijzen:  { name: 'NS – prijzen 2026 (losse kaartjes en abonnementen)', url: 'https://www.ns.nl/klantenservice/betalen/tarieven-consumenten.html' },
   groepGeldig:{ name: 'AmsterdamTips – NS Groepsticket (geldigheid 2026)', url: 'https://www.amsterdamtips.com/?p=2759' },
   jongNS:     { name: 'Treinreiziger.nl – jongeren 20% extra korting op PrijsTijd Deals', url: 'https://www.treinreiziger.nl/vanaf-maandag-nieuw-kortingsproduct-voor-jongeren-bij-ns-extra-korting-op-prijs-tijd-deal/amp/' },
@@ -1020,6 +1235,8 @@ const ORIGINS = {
   MST:  { n: 'Maastricht Aachen Airport', kind: 'airport', iata: 'MST', lat: 50.9111, lon: 5.7694, uic: '8400424', via: 'Maastricht + bus' },
   GRQ:  { n: 'Groningen Airport Eelde', kind: 'airport', iata: 'GRQ', lat: 53.1191, lon: 6.5777, uic: '8400263', via: 'Groningen + bus/taxi' },
   NRN:  { n: 'Weeze (net over de grens)', full: 'Airport Weeze (Duitsland), ongeveer 30 km van Nijmegen en Venlo', kind: 'airport', iata: 'NRN', lat: 51.6024, lon: 6.1422, abroad: true },
+  BRU:  { n: 'Brussel-Zaventem', full: 'Brussels Airport in Zaventem (België)', kind: 'airport', iata: 'BRU', lat: 50.9014, lon: 4.4844, abroad: true },
+  DUS:  { n: 'Düsseldorf Airport', full: 'Flughafen Düsseldorf (Duitsland)', kind: 'airport', iata: 'DUS', lat: 51.2895, lon: 6.7668, abroad: true },
   CRL:  { n: 'Brussel-Charleroi', full: 'Brussels South Charleroi Airport (België), ongeveer 45 km ten zuiden van Brussel', kind: 'airport', iata: 'CRL', lat: 50.4592, lon: 4.4538, abroad: true },
 };
 
@@ -1036,265 +1253,321 @@ const ARR_AIRPORTS = {
   TSF: { n: 'Venetië Treviso', lat: 45.6484, lon: 12.1944 },
   CIA: { n: 'Rome Ciampino', lat: 41.7994, lon: 12.5949 },
   LIN: { n: 'Milaan Linate', lat: 45.4451, lon: 9.2767 },
+  MXP: { n: 'Milaan Malpensa', lat: 45.6306, lon: 8.7281 },
 };
+
+/* ---------- Vluchten als korte rijen (worden hieronder uitgepakt tot deals) ---------- */
+// Vertrekpunt, aankomst, stad, land, prijs, vertrek, minuten, vlucht, maatschappij, code van de boeklink
+const KIWI_ONEWAY = [
+    ["AMS", "DUB", "Dublin", "Ierland", 28, "2026-12-09T14:40", 100, "FR3103", "Ryanair", "x7745z"],
+    ["AMS", "AGP", "Málaga", "Spanje", 41, "2027-01-10T18:55", 185, "FR5692", "Ryanair", "x72wjn"],
+    ["AMS", "VLC", "Valencia", "Spanje", 67, "2027-01-17T06:55", 145, "HV6335", "Transavia", "x7ch64z"],
+    ["AMS", "SVQ", "Sevilla", "Spanje", 67, "2027-01-04T07:05", 175, "HV6727", "Transavia", "nuj6v4j"],
+    ["AMS", "BCN", "Barcelona", "Spanje", 73, "2027-01-20T10:30", 140, "VY1053", "Vueling", "k8ddqj"],
+    ["AMS", "SEN", "Londen", "Verenigd Koninkrijk", 76, "2027-01-09T10:00", 55, "U25708", "easyJet", "xkkh9j"],
+    ["AMS", "PMI", "Palma de Mallorca", "Spanje", 77, "2027-01-17T05:00", 145, "HV5625", "Transavia", "twubxpf"],
+    ["AMS", "MAN", "Manchester", "Verenigd Koninkrijk", 78, "2027-01-21T10:00", 85, "U22162", "easyJet", "n2y5mbj"],
+    ["AMS", "EDI", "Edinburgh", "Verenigd Koninkrijk", 79, "2026-12-31T18:20", 90, "U27837", "easyJet", "xn7j5qr"],
+    ["AMS", "BHX", "Birmingham", "Verenigd Koninkrijk", 81, "2026-12-27T07:15", 80, "U27849", "easyJet", "yd7md7h"],
+    ["AMS", "PRG", "Praag", "Tsjechië", 83, "2027-01-10T18:30", 90, "U27927", "easyJet", "9ph36xb"],
+    ["AMS", "LIN", "Milaan", "Italië", 83, "2027-01-23T09:40", 95, "U25406", "easyJet", "shhymm9"],
+    ["EIN", "TIA", "Tirana", "Albanië", 17, "2026-12-09T09:10", 160, "FR9940", "Ryanair", "234b95p"],
+    ["EIN", "STN", "Londen", "Verenigd Koninkrijk", 19, "2026-12-05T19:25", 65, "FR2538", "Ryanair", "sdkfwqm"],
+    ["EIN", "ZAG", "Zagreb", "Kroatië", 21, "2027-01-01T14:40", 110, "FR5869", "Ryanair", "8fydzt"],
+    ["EIN", "SOF", "Sofia", "Bulgarije", 21, "2027-01-13T16:45", 155, "FR6014", "Ryanair", "5tzmxmr"],
+    ["EIN", "CTA", "Catania", "Italië", 21, "2027-01-01T14:20", 165, "FR4062", "Ryanair", "9xzqqm"],
+    ["EIN", "AGP", "Málaga", "Spanje", 21, "2026-12-01T18:05", 175, "FR2576", "Ryanair", "36jjtt"],
+    ["EIN", "FCO", "Rome", "Italië", 22, "2027-01-01T09:20", 130, "FR5815", "Ryanair", "u2w78s"],
+    ["EIN", "PMI", "Palma de Mallorca", "Spanje", 22, "2027-01-18T08:45", 140, "FR3532", "Ryanair", "rzstfh"],
+    ["EIN", "BGY", "Milaan", "Italië", 23, "2026-12-02T17:20", 90, "FR3461", "Ryanair", "ffqyuu"],
+    ["EIN", "BLQ", "Bologna", "Italië", 23, "2027-01-12T09:55", 100, "FR787", "Ryanair", "u9fmzk"],
+    ["EIN", "GRO", "Girona", "Spanje", 24, "2027-01-11T09:25", 115, "FR2119", "Ryanair", "bv78svv"],
+    ["EIN", "KRK", "Krakau", "Polen", 26, "2027-01-11T19:45", 110, "FR5891", "Ryanair", "n3g899"],
+    ["RTM", "SVQ", "Sevilla", "Spanje", 67, "2027-01-24T17:30", 170, "HV6855", "Transavia", "c4gcqx"],
+    ["RTM", "AGP", "Málaga", "Spanje", 67, "2027-01-17T07:30", 170, "HV5021", "Transavia", "3v5vwz"],
+    ["RTM", "STN", "Londen", "Verenigd Koninkrijk", 70, "2027-01-05T18:00", 60, "HV6993", "Transavia", "wfr7hkh"],
+    ["RTM", "INN", "Innsbruck", "Oostenrijk", 70, "2027-01-10T14:15", 85, "HV6925", "Transavia", "h6cr4s"],
+    ["RTM", "BCN", "Barcelona", "Spanje", 70, "2027-01-01T07:25", 120, "HV6063", "Transavia", "ttmn5x"],
+    ["RTM", "FCO", "Rome", "Italië", 70, "2027-01-11T17:35", 130, "HV6035", "Transavia", "dxcgqck"],
+    ["RTM", "SZG", "Salzburg", "Oostenrijk", 71, "2027-01-01T06:55", 85, "HV5605", "Transavia", "jj3h89g"],
+    ["RTM", "VLC", "Valencia", "Spanje", 71, "2026-12-14T07:30", 135, "HV6443", "Transavia", "7t3gp3"],
+    ["RTM", "LIS", "Lissabon", "Portugal", 72, "2027-01-14T15:00", 175, "HV5241", "Transavia", "8nbb9d"],
+    ["RTM", "FAO", "Faro", "Portugal", 72, "2027-01-17T16:00", 180, "HV6091", "Transavia", "zjuzjq8"],
+    ["RTM", "EGC", "Bergerac", "Frankrijk", 73, "2027-01-09T16:35", 90, "HV6073", "Transavia", "um7tsy"],
+    ["RTM", "ALC", "Alicante", "Spanje", 75, "2027-01-18T16:10", 145, "HV5053", "Transavia", "kk36pc"],
+    ["NRN", "TIA", "Tirana", "Albanië", 17, "2026-12-07T07:15", 145, "FR8332", "Ryanair", "hyw28n"],
+    ["NRN", "OPO", "Porto", "Portugal", 17, "2026-11-22T07:15", 160, "FR5489", "Ryanair", "c2kh4mw"],
+    ["NRN", "SVQ", "Sevilla", "Spanje", 17, "2026-11-30T21:20", 175, "FR8632", "Ryanair", "j35hyv"],
+    ["NRN", "TFS", "Tenerife", "Spanje", 17, "2026-12-06T21:05", 280, "FR7605", "Ryanair", "kdgjq8"],
+    ["NRN", "ALC", "Alicante", "Spanje", 18, "2026-11-29T06:30", 155, "FR6212", "Ryanair", "uj2kfg"],
+    ["NRN", "GRO", "Girona", "Spanje", 20, "2027-01-17T06:10", 120, "FR6390", "Ryanair", "zsvnx83"],
+    ["NRN", "BRI", "Bari", "Italië", 21, "2027-01-17T06:25", 140, "FR7524", "Ryanair", "vmnb4w"],
+    ["NRN", "PMI", "Palma de Mallorca", "Spanje", 21, "2027-01-04T13:05", 140, "FR6218", "Ryanair", "38wfq5s"],
+    ["NRN", "EDI", "Edinburgh", "Verenigd Koninkrijk", 22, "2027-01-01T06:10", 100, "FR5688", "Ryanair", "7z8nb5"],
+    ["NRN", "FUE", "Fuerteventura", "Spanje", 22, "2026-11-25T07:35", 270, "FR9642", "Ryanair", "wwb889"],
+    ["NRN", "ZAG", "Zagreb", "Kroatië", 23, "2026-12-11T12:40", 110, "FR2126", "Ryanair", "mgntvd"],
+    ["NRN", "AGP", "Málaga", "Spanje", 23, "2027-01-04T06:05", 180, "FR8612", "Ryanair", "gvfcpgu"],
+    ["CRL", "MAN", "Manchester", "Verenigd Koninkrijk", 17, "2026-11-19T06:50", 85, "FR3223", "Ryanair", "gjw45f"],
+    ["CRL", "BGY", "Milaan", "Italië", 17, "2027-01-17T14:05", 90, "FR4522", "Ryanair", "63dht79"],
+    ["CRL", "TSF", "Venetië", "Italië", 17, "2027-01-19T10:05", 90, "FR1522", "Ryanair", "szqxb4h"],
+    ["CRL", "TRN", "Turijn", "Italië", 17, "2026-12-06T09:05", 90, "FR4864", "Ryanair", "gbm8p8"],
+    ["CRL", "MRS", "Marseille", "Frankrijk", 17, "2026-12-01T06:30", 100, "FR4838", "Ryanair", "2m73pt"],
+    ["CRL", "TRS", "Triëst", "Italië", 17, "2026-12-04T07:45", 100, "FR4496", "Ryanair", "hwxdd6"],
+    ["CRL", "DUB", "Dublin", "Ierland", 17, "2026-12-03T16:40", 105, "FR47", "Ryanair", "2bsqvq"],
+    ["CRL", "WRO", "Wrocław", "Polen", 17, "2026-12-31T15:35", 105, "FR8372", "Ryanair", "x8476hn"],
+    ["CRL", "GRO", "Girona", "Spanje", 17, "2026-12-06T06:50", 105, "FR1670", "Ryanair", "b3q5fy"],
+    ["CRL", "CIA", "Rome", "Italië", 17, "2026-12-31T17:40", 120, "FR5650", "Ryanair", "sg9747"],
+    ["CRL", "PSR", "Pescara", "Italië", 17, "2026-12-02T10:40", 120, "FR5016", "Ryanair", "hb55dm"],
+    ["CRL", "EDI", "Edinburgh", "Verenigd Koninkrijk", 18, "2026-12-16T12:45", 100, "FR7323", "Ryanair", "nuwfnm"]
+];
+// Vertrekpunt, aankomst, stad, land, retourprijs, heen (vertrek, minuten, vlucht), terug (vertrek, minuten, vlucht), maatschappij, boeklink, controle-tijd, ander vliegveld terug
+const KIWI_RETURN = [
+  // Schiphol
+  ['AMS', 'DUB', 'Dublin', 'Ierland', 52, '2026-12-09T14:40', 100, 'FR3103', '2026-12-14T09:35', 100, 'FR5505', 'Ryanair', '99mcj7', '12:29'],
+  ['AMS', 'AGP', 'Málaga', 'Spanje', 75, '2027-01-10T18:55', 185, 'FR5692', '2027-01-15T18:55', 185, 'U27890', 'Ryanair + easyJet', 'r8b3n6', '12:29'],
+  ['AMS', 'VLC', 'Valencia', 'Spanje', 96, '2027-01-23T07:00', 155, 'U27899', '2027-01-28T06:35', 160, 'VY7907', 'easyJet + Vueling', 'rz8h4g', '12:29'],
+  ['AMS', 'SEN', 'Londen', 'Verenigd Koninkrijk', 108, '2027-01-16T10:00', 55, 'U25708', '2027-01-23T07:15', 60, 'U25707', 'easyJet', 'zjqqhrr', '12:29'],
+  ['AMS', 'LIN', 'Milaan', 'Italië', 110, '2027-01-01T09:35', 100, 'U25406', '2027-01-07T06:00', 125, 'U23851', 'easyJet', '9yzzx9', '12:29', 'MXP'],
+  // Eindhoven
+  ['EIN', 'TIA', 'Tirana', 'Albanië', 35, '2026-12-10T11:40', 160, 'FR9940', '2026-12-17T08:30', 160, 'FR9939', 'Ryanair', '467jvhu', '12:30'],
+  ['EIN', 'BGY', 'Milaan', 'Italië', 41, '2026-12-02T11:10', 90, 'FR3538', '2026-12-09T09:00', 105, 'FR3537', 'Ryanair', 'nfn8bb', '12:30'],
+  ['EIN', 'STN', 'Londen', 'Verenigd Koninkrijk', 43, '2026-12-05T19:25', 65, 'FR2538', '2026-12-12T09:30', 65, 'FR8534', 'Ryanair', 'xnuybz', '12:30'],
+  ['EIN', 'GRO', 'Girona', 'Spanje', 45, '2026-12-07T09:25', 115, 'FR2119', '2026-12-14T06:50', 130, 'FR2120', 'Ryanair', 'g5gh5q', '12:31'],
+  ['EIN', 'BLQ', 'Bologna', 'Italië', 50, '2027-01-12T09:55', 100, 'FR787', '2027-01-19T07:40', 110, 'FR788', 'Ryanair', 'jk42t8', '12:33'],
+  ['EIN', 'PSA', 'Pisa', 'Italië', 50, '2026-12-06T12:50', 105, 'FR9924', '2026-12-13T10:30', 115, 'FR9923', 'Ryanair', 'h6xh4x', '12:33'],
+  ['EIN', 'SOF', 'Sofia', 'Bulgarije', 52, '2027-01-13T16:45', 155, 'FR6014', '2027-01-20T06:40', 165, 'W64325', 'Ryanair + Wizz Air', '3rsqzj', '12:33'],
+  ['EIN', 'TSF', 'Venetië', 'Italië', 53, '2026-12-05T10:30', 90, 'FR1549', '2026-12-12T08:20', 100, 'FR1548', 'Ryanair', '4mfqjsg', '12:33'],
+  // Weeze (Duitsland)
+  ['NRN', 'TIA', 'Tirana', 'Albanië', 35, '2026-12-07T07:15', 145, 'FR8332', '2026-12-14T10:05', 155, 'FR8333', 'Ryanair', '34s7js8', '12:30'],
+  ['NRN', 'FAO', 'Faro', 'Portugal', 41, '2026-12-11T06:15', 185, 'FR5781', '2026-12-18T08:45', 185, 'FR5780', 'Ryanair', '86t8sc', '12:31'],
+  ['NRN', 'SVQ', 'Sevilla', 'Spanje', 44, '2027-01-18T21:20', 175, 'FR8632', '2027-01-25T18:00', 175, 'FR8633', 'Ryanair', 'j8jcruq', '12:31'],
+  ['NRN', 'OPO', 'Porto', 'Portugal', 46, '2026-12-07T06:20', 160, 'FR5489', '2026-12-14T08:25', 160, 'FR5488', 'Ryanair', 'j7pfp86', '12:31'],
+  ['NRN', 'ALC', 'Alicante', 'Spanje', 51, '2026-12-06T06:30', 155, 'FR6212', '2026-12-10T18:40', 165, 'FR6213', 'Ryanair', 'pqcf57', '12:31'],
+  ['NRN', 'AGP', 'Málaga', 'Spanje', 55, '2027-01-17T16:20', 180, 'FR8612', '2027-01-23T08:45', 180, 'FR8635', 'Ryanair', 'wdnwuf', '12:31'],
+  ['NRN', 'PMI', 'Palma de Mallorca', 'Spanje', 56, '2026-12-14T11:25', 140, 'FR6218', '2026-12-17T19:40', 145, 'FR6219', 'Ryanair', '945dhk', '12:31'],
+  ['NRN', 'FUE', 'Fuerteventura', 'Spanje', 57, '2026-12-13T06:00', 270, 'FR9642', '2026-12-16T11:40', 265, 'FR9643', 'Ryanair', 'vynwwzq', '12:31'],
+  ['NRN', 'EDI', 'Edinburgh', 'Verenigd Koninkrijk', 58, '2027-01-16T06:05', 100, 'FR5688', '2027-01-23T07:10', 95, 'FR5687', 'Ryanair', 'jpuprbm', '12:31'],
+  ['NRN', 'ACE', 'Lanzarote', 'Spanje', 59, '2026-12-09T13:40', 265, 'FR9645', '2026-12-16T07:55', 260, 'FR9644', 'Ryanair', 'vmbu9t', '12:31'],
+  // Brussel-Charleroi (België)
+  ['CRL', 'CLJ', 'Cluj-Napoca', 'Roemenië', 32, '2026-12-04T06:30', 145, 'FR9547', '2026-12-11T06:10', 150, 'W43351', 'Ryanair + Wizz Air', 's954b5', '12:31'],
+  ['CRL', 'BGY', 'Milaan', 'Italië', 35, '2027-01-17T14:05', 90, 'FR4522', '2027-01-20T09:05', 95, 'FR3659', 'Ryanair', 'xd76pm', '12:31'],
+  ['CRL', 'TSF', 'Venetië', 'Italië', 35, '2026-12-06T07:15', 90, 'FR4938', '2026-12-12T16:00', 95, 'FR4939', 'Ryanair', 'q2gt5kd', '12:31'],
+  ['CRL', 'TIA', 'Tirana', 'Albanië', 35, '2026-12-09T06:30', 150, 'FR8236', '2026-12-15T20:15', 160, 'FR8299', 'Ryanair', 'qqkmf3', '12:31'],
+  // Kerstvakantie (vertrek vanaf 18 dec 2026, uiterlijk 3 jan 2027 terug), apart gezocht
+  ['EIN', 'STN', 'Londen', 'Verenigd Koninkrijk', 81, '2026-12-26T09:10', 65, 'FR5682', '2027-01-01T07:05', 65, 'FR5681', 'Ryanair', 'mz8cws', '12:50', undefined, 'kerst'],
+  ['CRL', 'MAN', 'Manchester', 'Verenigd Koninkrijk', 53, '2026-12-21T06:40', 85, 'FR614', '2026-12-23T08:10', 85, 'FR3222', 'Ryanair', 'b66yp4', '12:50', undefined, 'kerst'],
+  // Rotterdam The Hague
+  ['RTM', 'BCN', 'Barcelona', 'Spanje', 110, '2027-01-21T17:00', 120, 'HV6063', '2027-01-28T19:50', 135, 'HV6064', 'Transavia', 'hnfyutt', '12:33'],
+  ['RTM', 'LIS', 'Lissabon', 'Portugal', 111, '2027-01-14T15:00', 175, 'HV5241', '2027-01-21T17:55', 170, 'HV5242', 'Transavia', 'vmfy5wg', '12:33'],
+  ['RTM', 'FAO', 'Faro', 'Portugal', 111, '2027-01-15T15:45', 180, 'HV6093', '2027-01-22T18:35', 180, 'HV6094', 'Transavia', '5z3jhqh', '12:33'],
+  ['RTM', 'STN', 'Londen', 'Verenigd Koninkrijk', 114, '2027-01-20T09:00', 55, 'HV6991', '2027-01-27T09:35', 60, 'HV6992', 'Transavia', '3ukjqn', '12:33'],
+  ['RTM', 'FCO', 'Rome', 'Italië', 114, '2027-01-24T16:45', 130, 'HV6035', '2027-01-31T19:45', 145, 'HV6036', 'Transavia', 'wrhpx4', '12:33'],
+  ['RTM', 'SVQ', 'Sevilla', 'Spanje', 114, '2027-01-24T17:30', 170, 'HV6855', '2027-01-29T19:35', 175, 'HV6856', 'Transavia', 'x2wrn9', '12:33'],
+  ['RTM', 'AGP', 'Málaga', 'Spanje', 116, '2027-01-17T07:30', 170, 'HV5021', '2027-01-23T11:00', 175, 'HV5022', 'Transavia', '8j74sx', '12:33'],
+  ['RTM', 'VLC', 'Valencia', 'Spanje', 118, '2026-12-07T07:30', 135, 'HV6443', '2026-12-11T19:45', 145, 'HV6442', 'Transavia', 'z8umvv', '12:33'],
+  ['RTM', 'ALC', 'Alicante', 'Spanje', 123, '2027-01-25T07:00', 145, 'HV5051', '2027-01-28T19:40', 155, 'HV5052', 'Transavia', 'sgy66hf', '12:33'],
+  ['RTM', 'SZG', 'Salzburg', 'Oostenrijk', 125, '2027-01-01T06:55', 85, 'HV5605', '2027-01-06T20:00', 90, 'HV5606', 'Transavia', '5dbs7d', '12:33'],
+  ['RTM', 'INN', 'Innsbruck', 'Oostenrijk', 132, '2027-01-03T14:15', 85, 'HV6925', '2027-01-09T09:25', 90, 'HV6834', 'Transavia', '2d7ym3', '12:33'],
+];
+// id, vertrekpunt, bestemming (id of { toCity, toCountry }), aankomst, prijs, heen, terug, maatschappij, overstappen, extra
+const SKY_DEALS = [
+  // Eindhoven, retour
+  ['ein-tia', 'EIN', 'tirana', 'TIA', 30, '2026-12-09', '2026-12-16', 'Ryanair', 0],
+  ['ein-bgy', 'EIN', 'milaan', 'BGY', 36, '2026-12-02', '2026-12-09', 'Ryanair', 0],
+  ['ein-stn', 'EIN', 'londen', 'STN', 36, '2026-12-05', '2026-12-12', 'Ryanair', 0],
+  ['ein-fao', 'EIN', 'faro', 'FAO', 42, '2026-11-30', '2026-12-10', 'Ryanair', 0],
+  ['ein-gro', 'EIN', 'girona', 'GRO', 43, '2026-12-07', '2026-12-14', 'Ryanair', 0],
+  ['ein-krk', 'EIN', 'krakau', 'KRK', 44, '2026-12-08', '2026-12-09', 'Ryanair', 0],
+  ['ein-bts', 'EIN', 'bratislava', 'BTS', 45, '2026-11-16', '2026-12-07', 'Ryanair', 0],
+  ['ein-sof', 'EIN', 'sofia', 'SOF', 48, '2026-12-03', '2026-12-16', 'Ryanair', 0],
+  ['ein-zag', 'EIN', 'zagreb', 'ZAG', 51, '2026-12-04', '2026-12-11', 'Ryanair', 0],
+  ['ein-vno', 'EIN', 'vilnius', 'VNO', 54, '2026-12-05', '2026-12-12', 'Ryanair', 0],
+  ['ein-pfo', 'EIN', 'paphos', 'PFO', 65, '2026-12-02', '2026-12-12', 'Ryanair', 0],
+  ['ein-vie', 'EIN', 'wenen', 'VIE', 68, '2026-12-07', '2026-12-14', 'Ryanair', 0],
+  ['ein-deb', 'EIN', 'debrecen', 'DEB', 69, '2027-01-22', '2027-01-29', 'Wizz Air', 0],
+  ['ein-clj', 'EIN', 'cluj', 'CLJ', 70, '2026-12-31', '2027-01-19', 'Wizz Air', 0],
+  ['ein-mla', 'EIN', 'malta', 'MLA', 72, '2026-12-10', '2026-12-13', 'Ryanair', 1],
+  ['ein-beg', 'EIN', 'belgrado', 'BEG', 73, '2027-01-20', '2027-01-21', 'Wizz Air', 0],
+  // Schiphol, enkele reis
+  ['ams-dub', 'AMS', 'dublin', 'DUB', 25, '2026-12-09', null, 'Ryanair', 0, { tip: 'Skyscanner noemt ook een retour vanaf €48 (9 tot 14 dec 2026).' }],
+  ['ams-agp', 'AMS', 'malaga', 'AGP', 37, '2027-01-10', null, 'Ryanair', 0],
+  ['ams-nap', 'AMS', 'napels', 'NAP', 48, '2026-12-02', null, 'Ryanair', 1],
+  ['ams-fao', 'AMS', 'faro', 'FAO', 50, '2026-12-09', null, 'Ryanair', 1],
+  ['ams-bva', 'AMS', 'parijs', 'BVA', 52, '2026-12-12', null, 'Ryanair', 1, { tip: 'Aankomst Parijs Beauvais (ver buiten de stad). Ter vergelijking: de trein naar Parijs kost vanaf €35.' }],
+  ['ams-dbv', 'AMS', 'dubrovnik', 'DBV', 54, '2026-12-12', null, 'Ryanair', 1],
+  ['ams-rba', 'AMS', { toCity: 'Rabat', toCountry: 'Marokko' }, 'RBA', 54, '2026-12-05', null, 'Ryanair', 1],
+  ['ams-ham', 'AMS', 'hamburg', 'HAM', 58, '2026-12-09', null, 'Ryanair', 1, { tip: 'De trein naar Hamburg kost vanaf €33 en heeft geen overstap op een vliegveld.' }],
+  ['ams-tia', 'AMS', 'tirana', 'TIA', 59, '2026-12-01', null, 'Ryanair', 1],
+  ['ams-mla', 'AMS', 'malta', 'MLA', 60, '2027-01-25', null, 'easyJet', 0],
+  ['ams-tos', 'AMS', 'tromso', 'TOS', 62, '2027-01-24', null, 'easyJet', 0, { tip: 'Noorderlicht-seizoen.' }],
+  ['ams-vce', 'AMS', 'venetie', 'VCE', 62, '2027-03-03', null, 'easyJet', 0],
+  ['ams-prg', 'AMS', 'praag', 'PRG', 64, '2027-02-25', null, 'easyJet', 0],
+  ['ams-rak', 'AMS', { toCity: 'Marrakech', toCountry: 'Marokko' }, 'RAK', 65, '2026-11-23', null, 'easyJet', 0],
+  ['ams-wmi', 'AMS', 'warschau', 'WMI', 66, '2027-01-16', null, 'Ryanair', 1, { tip: 'Aankomst Warschau Modlin (buiten de stad).' }],
+  // Groningen, enkele reis
+  ['grq-her', 'GRQ', 'heraklion', 'HER', 152, '2027-08-26', null, 'Corendon', 0],
+  ['grq-ayt', 'GRQ', 'antalya', 'AYT', 155, '2027-05-18', null, 'Corendon', 0, { tip: 'Skyscanner noemt ook een retour naar Antalya vanaf €303.' }],
+  ['grq-bzo', 'GRQ', 'bolzano', 'BZO', 180, '2027-05-10', null, 'Sky Alps', 0, { tip: 'Rechtstreeks naar de Dolomieten.' }],
+  ['grq-lpa', 'GRQ', 'gran-canaria', 'LPA', 222, '2026-11-13', null, 'TUI', 0],
+];
+const AIRPORT_NAMES = { MXP: 'Milaan Malpensa', LIN: 'Milaan Linate', BGY: 'Milaan Bergamo', STN: 'Londen Stansted', SEN: 'Londen Southend', LGW: 'Londen Gatwick', LTN: 'Londen Luton', LHR: 'Londen Heathrow', BVA: 'Parijs Beauvais', CDG: 'Parijs Charles de Gaulle', ORY: 'Parijs Orly', FCO: 'Rome Fiumicino', CIA: 'Rome Ciampino', TSF: 'Venetië Treviso', VCE: 'Venetië Marco Polo', WMI: 'Warschau Modlin', WAW: 'Warschau Chopin', BCN: 'Barcelona', GRO: 'Girona' };
+// Een Kiwi.com-vlucht aanvullen tot een volledige deal (ook gebruikt voor de dagelijkse controle en live zoeken)
+function kiwiDeal(r) {
+  const ret = !!r.back, n = r.transfers || 0;
+  const bagKey = r.bag === 'hand' ? '-hb' : r.bag === 'koffer' ? '-kb' : '';
+  const d = { mode: 'vliegtuig', trip: ret ? 'retour' : 'enkel', priceType: 'gevonden', transfers: 0, bag: 'tasje', src: ['kiwi'], book: 'kiwi', ...r };
+  if (!d.id) d.id = `kiwi-${d.from}-${d.arr}${ret ? '-r' : ''}${bagKey}${d.tag ? '-' + d.tag : ''}`.toLowerCase();
+  if (!d.note) {
+    const bag = { koffer: 'Ruimbagage (koffer) is inbegrepen.', hand: 'Een handbagagekoffer is inbegrepen.', tasje: 'Alleen een klein tasje is inbegrepen.' }[d.bag] || '';
+    const fl = ret ? `heen ${d.flight || '?'}, terug ${d.backFlight || '?'}` : `vlucht ${d.flight || '?'}`;
+    d.note = `Live gevonden via Kiwi.com${d.via ? ' door ' + d.via : ''}: ${fl}, ${n ? `${n} overstap${n > 1 ? 'pen' : ''}` : 'rechtstreeks'}. ${bag}`
+      + (d.backFrom && d.backFrom !== d.arr ? ` Let op: de terugvlucht vertrekt vanaf ${AIRPORT_NAMES[d.backFrom] || d.backFrom} (${d.backFrom}), niet vanaf het vliegveld waar je aankomt.` : '')
+      + (d.backTo && d.backTo !== d.from ? ` Let op: de terugvlucht landt op ${(ORIGINS[d.backTo] || {}).n || d.backTo}, niet op het vliegveld waar je vertrekt.` : '')
+      + (d.from === 'NRN' ? ' Weeze ligt net over de grens in Duitsland; reken op extra reistijd om er te komen.' : '')
+      + (d.from === 'CRL' ? ' Charleroi ligt ongeveer 45 km ten zuiden van Brussel; reken op extra reistijd om er te komen.' : '');
+  }
+  return d;
+}
 
 /* ---------- Gecontroleerde deals ---------- */
 const SNAPSHOT_DEALS = [
   // ===== TREIN: NS International (vanafprijs, enkele reis p.p., 2e klas, vanaf Amsterdam Centraal) =====
   { id: 'nsi-parijs', mode: 'trein', provider: 'Eurostar', from: 'ASDS', to: 'parijs', price: 35, trip: 'enkel', priceType: 'vanaf', dur: 205, transfers: 0, bag: 'koffer',
-    note: 'Standard/2e klas, enkele reis. Eurostar noemt dezelfde vanafprijs ook vanaf Schiphol en Rotterdam C. Afhankelijk van beschikbaarheid.', src: ['nsiGroep', 'eurostar'], checked: T('20:44'), book: 'eurostar' },
+    note: 'Standard/2e klas, enkele reis. Eurostar noemt dezelfde vanafprijs ook vanaf Schiphol en Rotterdam C. Afhankelijk van beschikbaarheid.', src: ['nsiGroep', 'eurostar'], checked: T('12:29'), book: 'eurostar' },
   { id: 'nsi-londen', mode: 'trein', provider: 'Eurostar', from: 'ASD', to: 'londen', price: 88, trip: 'retour', priceType: 'vanaf', dur: 260, transfers: 0, bag: 'koffer',
-    note: 'Retour vanaf €88 (NS International). Eurostar: vanaf €44 per reis met verplichte terugreis, voor reizen tussen 18 nov 2026 en 14 feb 2027.', src: ['nsiGroep', 'eurostar'], checked: T('20:44'), book: 'eurostar' },
+    note: 'Retour vanaf €88 (NS International). Eurostar: vanaf €44 per reis met verplichte terugreis, voor reizen tussen 18 nov 2026 en 14 feb 2027.', src: ['nsiGroep', 'eurostar'], checked: T('12:29'), book: 'eurostar' },
   { id: 'nsi-berlijn', mode: 'trein', provider: 'NS International (ICE/IC)', from: 'ASD', to: 'berlijn', price: 38, trip: 'enkel', priceType: 'vanaf', dur: 351, transfers: 0, bag: 'koffer',
-    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 5.51 uur.', src: ['nsiGroep'], checked: T('20:30'), book: 'nsi' },
+    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 5.51 uur.', src: ['nsiGroep'], checked: T('12:29'), book: 'nsi' },
   { id: 'nsi-disney', mode: 'trein', provider: 'Eurostar (via NS International)', from: 'ASD', to: 'disneyland', price: 35, trip: 'enkel', priceType: 'vanaf', dur: 230, transfers: null, bag: 'koffer',
-    note: 'Marne-la-Vallée (Disneyland Paris). Enkele reis, 2e klas.', src: ['nsiGroep'], checked: T('20:30'), book: 'eurostar' },
+    note: 'Marne-la-Vallée (Disneyland Paris). Enkele reis, 2e klas.', src: ['nsiGroep'], checked: T('12:29'), book: 'eurostar' },
   { id: 'nsi-hamburg', mode: 'trein', provider: 'NS International', from: 'ASD', to: 'hamburg', price: 33, trip: 'enkel', priceType: 'vanaf', dur: 315, transfers: null, bag: 'koffer',
-    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 5.15 uur.', src: ['nsiGroep'], checked: T('20:30'), book: 'nsi' },
+    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 5.15 uur.', src: ['nsiGroep'], checked: T('12:29'), book: 'nsi' },
   { id: 'nsi-brussel', mode: 'trein', provider: 'NS International', from: 'ASD', to: 'brussel', price: 25, trip: 'enkel', priceType: 'vanaf', dur: 116, transfers: 0, bag: 'koffer',
-    note: 'Enkele reis, 2e klas. Eurostar noemt Brussel vanaf €29 (Standard).', src: ['nsiGroep', 'eurostar'], checked: T('20:44'), book: 'nsi' },
+    note: 'Enkele reis, 2e klas. Eurostar noemt Brussel vanaf €29 (Standard).', src: ['nsiGroep', 'eurostar'], checked: T('12:29'), book: 'nsi' },
   { id: 'nsi-munchen', mode: 'trein', provider: 'NS International (ICE)', from: 'ASD', to: 'munchen', price: 38, trip: 'enkel', priceType: 'vanaf', dur: 417, transfers: null, bag: 'koffer',
-    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 6.57 uur.', src: ['nsiGroep'], checked: T('20:30'), book: 'nsi' },
+    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 6.57 uur.', src: ['nsiGroep'], checked: T('12:29'), book: 'nsi' },
   { id: 'nsi-antwerpen', mode: 'trein', provider: 'NS International', from: 'ASD', to: 'antwerpen', price: 20, trip: 'enkel', priceType: 'vanaf', dur: 75, transfers: 0, bag: 'koffer',
-    note: 'Enkele reis, 2e klas. Op de homepage staat ook €21; de tabel noemt €20.', src: ['nsiGroep', 'nsiHome'], checked: T('20:30'), book: 'nsi' },
+    note: 'Enkele reis, 2e klas. De tabel en de stadskaart noemen €20; in het blok met topbestemmingen op de homepage staat €21.', src: ['nsiGroep', 'nsiHome'], checked: T('12:29'), book: 'nsi' },
   { id: 'nsi-antwerpen-rtd', mode: 'trein', provider: 'NS International (Eurocity Direct)', from: 'RTD', to: 'antwerpen', price: 12, trip: 'enkel', priceType: 'vanaf', dur: null, transfers: 0, bag: 'koffer',
-    note: 'Actie "Met korting naar Antwerpen": vanaf €12 vanuit Rotterdam. Voorwaarden en periode staan op de actiepagina van NS International.', src: ['nsiHome'], checked: T('20:30'), book: 'nsi' },
+    note: 'Actie "Met korting naar Antwerpen": vanaf €12 vanuit Rotterdam. Voorwaarden en periode staan op de actiepagina van NS International.', src: ['nsiHome'], checked: T('12:33'), book: 'nsi' },
   { id: 'nsi-frankfurt', mode: 'trein', provider: 'NS International (ICE)', from: 'ASD', to: 'frankfurt', price: 38, trip: 'enkel', priceType: 'vanaf', dur: 233, transfers: 0, bag: 'koffer',
-    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 3.53 uur.', src: ['nsiGroep'], checked: T('20:30'), book: 'nsi' },
+    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 3.53 uur.', src: ['nsiGroep'], checked: T('12:29'), book: 'nsi' },
   { id: 'nsi-wenen', mode: 'trein', provider: 'NS International', from: 'ASD', to: 'wenen', price: 35, trip: 'enkel', priceType: 'vanaf', dur: 727, transfers: null, bag: 'koffer',
-    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 12.07 uur (nachttrein).', src: ['nsiGroep'], checked: T('20:30'), book: 'nsi' },
+    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 12.07 uur (nachttrein).', src: ['nsiGroep'], checked: T('12:29'), book: 'nsi' },
   { id: 'nsi-keulen', mode: 'trein', provider: 'NS International (ICE)', from: 'ASD', to: 'keulen', price: 20, trip: 'enkel', priceType: 'vanaf', dur: 157, transfers: 0, bag: 'koffer',
-    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 2.37 uur.', src: ['nsiGroep'], checked: T('20:30'), book: 'nsi' },
+    note: 'Enkele reis, 2e klas. Reistijd volgens NS International: 2.37 uur.', src: ['nsiGroep'], checked: T('12:29'), book: 'nsi' },
   { id: 'nsi-dusseldorf', mode: 'trein', provider: 'NS International (ICE)', from: 'ASD', to: 'dusseldorf', price: 20, trip: 'enkel', priceType: 'vanaf', dur: null, transfers: 0, bag: 'koffer',
-    note: 'Vanafprijs van de homepage van NS International. De bron noemt geen reistijd; de app schat die.', src: ['nsiHome'], checked: T('20:30'), book: 'nsi' },
+    note: 'Vanafprijs van de homepage van NS International. De bron noemt geen reistijd; de app schat die.', src: ['nsiHome'], checked: T('12:33'), book: 'nsi' },
 
   // ===== TREIN: Deutsche Bahn =====
   { id: 'db-keulen', mode: 'trein', provider: 'Deutsche Bahn', from: 'ASD', to: 'keulen', price: 24.99, trip: 'enkel', priceType: 'vanaf', dur: 157, transfers: 0, bag: 'koffer',
-    note: 'Voordelig tarief Europa: vanaf €24,99 op korte trajecten, bv. Keulen–Amsterdam. Tot 12 maanden vooruit te boeken. Kinderen onder 14 reizen vaak gratis mee.', src: ['dbNL'], checked: T('20:44'), book: 'db' },
+    note: 'Voordelig tarief Europa: vanaf €24,99 op korte trajecten, bv. Keulen–Amsterdam. Tot 12 maanden vooruit te boeken. Kinderen onder 14 reizen in veel gevallen gratis mee met iemand van 15 jaar of ouder.', src: ['dbNL'], checked: T('12:33'), book: 'db' },
   { id: 'db-berlijn', mode: 'trein', provider: 'Deutsche Bahn', from: 'ASD', to: 'berlijn', price: 44.99, trip: 'enkel', priceType: 'vanaf', dur: 351, transfers: 0, bag: 'koffer',
-    note: 'Voordelig tarief Europa: vanaf €44,99 op langere trajecten, bv. Berlijn–Amsterdam.', src: ['dbNL'], checked: T('20:44'), book: 'db' },
+    note: 'Voordelig tarief Europa: vanaf €44,99 op langere trajecten, bv. Berlijn–Amsterdam.', src: ['dbNL'], checked: T('12:33'), book: 'db' },
   { id: 'db-young-keulen', mode: 'trein', provider: 'Deutsche Bahn (Young)', from: 'ASD', to: 'keulen', price: 18.99, trip: 'enkel', priceType: 'vanaf', dur: 157, transfers: 0, bag: 'koffer', who: 'jongeren',
-    note: 'Super Sparpreis Europa Young: vanaf €18,99 in de 2e klas op korte trajecten, bv. Keulen–Amsterdam. Alleen voor jongeren (leeftijdsgrens: zie DB).', src: ['dbYoung'], checked: T('20:44'), book: 'db' },
+    note: 'Super Sparpreis Europa Young: vanaf €18,99 in de 2e klas op korte trajecten, bv. Keulen–Amsterdam. Alleen voor jongeren (leeftijdsgrens: zie DB).', src: ['dbYoung'], checked: T('12:34'), book: 'db' },
   { id: 'db-young-berlijn', mode: 'trein', provider: 'Deutsche Bahn (Young)', from: 'ASD', to: 'berlijn', price: 29.99, trip: 'enkel', priceType: 'vanaf', dur: 351, transfers: 0, bag: 'koffer', who: 'jongeren',
-    note: 'Super Sparpreis Europa Young: vanaf €29,99 op lange trajecten, bv. Berlijn of Frankfurt–Amsterdam. Alleen voor jongeren.', src: ['dbYoung'], checked: T('20:44'), book: 'db' },
+    note: 'Super Sparpreis Europa Young: vanaf €29,99 op lange trajecten, bv. Berlijn of Frankfurt–Amsterdam. Alleen voor jongeren.', src: ['dbYoung'], checked: T('12:34'), book: 'db' },
   { id: 'db-young-frankfurt', mode: 'trein', provider: 'Deutsche Bahn (Young)', from: 'ASD', to: 'frankfurt', price: 29.99, trip: 'enkel', priceType: 'vanaf', dur: 233, transfers: 0, bag: 'koffer', who: 'jongeren',
-    note: 'Super Sparpreis Europa Young: vanaf €29,99 op lange trajecten, bv. Frankfurt–Amsterdam. Alleen voor jongeren.', src: ['dbYoung'], checked: T('20:44'), book: 'db' },
+    note: 'Super Sparpreis Europa Young: vanaf €29,99 op lange trajecten, bv. Frankfurt–Amsterdam. Alleen voor jongeren.', src: ['dbYoung'], checked: T('12:34'), book: 'db' },
 
   // ===== TREIN: nachttreinen en wintersport =====
   { id: 'es-berlijn', mode: 'trein', provider: 'European Sleeper (nachttrein)', from: 'ASD', to: 'berlijn', price: 39, trip: 'enkel', priceType: 'vanaf', dur: null, transfers: 0, bag: 'koffer',
-    note: 'Nachttrein Brussel–Amsterdam–Berlijn: zitplaats vanaf €39, couchette vanaf €69, slaapcoupé vanaf €109. Rijdt 3 keer per week.', src: ['nsiES'], checked: T('20:44'), book: 'es' },
+    note: 'Nachttrein Brussel–Amsterdam–Berlijn: zitplaats vanaf €39, couchette vanaf €69, slaapcoupé vanaf €109. Rijdt 3 keer per week.', src: ['nsiES'], checked: T('12:33'), book: 'es' },
   { id: 'es-brussel', mode: 'trein', provider: 'European Sleeper (nachttrein)', from: 'ASD', to: 'brussel', price: 14, trip: 'enkel', priceType: 'vanaf', dur: null, transfers: 0, bag: 'koffer',
-    note: 'Zitplaats tussen Nederland en België vanaf €14. Rijdt 3 keer per week; tijden wisselen, controleer het boekingssysteem.', src: ['nsiES'], checked: T('20:44'), book: 'es' },
+    note: 'Zitplaats tussen Nederland en België vanaf €14. Rijdt 3 keer per week; tijden wisselen, controleer het boekingssysteem.', src: ['nsiES'], checked: T('12:33'), book: 'es' },
   { id: 'nj-innsbruck', mode: 'trein', provider: 'ÖBB Nightjet (via NS International)', from: 'NJ', to: 'innsbruck', price: 35, trip: 'enkel', priceType: 'vanaf', dur: null, transfers: 0, bag: 'koffer',
-    note: 'Nachttrein, rechtstreeks. Zitplaats vanaf €35, ligplaats vanaf €55. Vanaf Amsterdam, Amersfoort of Deventer. Let op: wintersporttickets voor reizen na 12 dec 2026 zijn nog niet te koop.', src: ['nsiInn', 'nsiWinter'], checked: T('20:44'), book: 'nsi' },
+    note: 'Nachttrein, rechtstreeks. Zitplaats vanaf €35, ligplaats vanaf €55, slaapplaats vanaf €100. Vanaf Amsterdam, Amersfoort of Deventer.', src: ['nsiInn', 'nsiWinter'], checked: T('12:34'), book: 'nsi' },
   { id: 'ice-innsbruck', mode: 'trein', provider: 'NS International (ICE)', from: 'ASD', to: 'innsbruck', price: 38, trip: 'enkel', priceType: 'vanaf', dur: null, transfers: 2, bag: 'koffer',
-    note: 'Overdag met ICE, 2 overstappen vanaf Amsterdam Centraal.', src: ['nsiInn'], checked: T('20:44'), book: 'nsi' },
-  { id: 'nj-salzburg', mode: 'trein', provider: 'ÖBB Nightjet (via NS International)', from: 'ASD', to: 'salzburg', price: 38, trip: 'enkel', priceType: 'vanaf', dur: 765, transfers: 0, bag: 'koffer',
-    note: 'Rechtstreeks in 12.45 uur (sinds 13 juni 2026). NS International weet nog niet of deze directe trein in 2027 blijft rijden.', src: ['nsiSzg'], checked: T('20:44'), book: 'nsi' },
+    note: 'Overdag met ICE, 2 overstappen vanaf Amsterdam Centraal.', src: ['nsiInn'], checked: T('12:34'), book: 'nsi' },
+  { id: 'nj-salzburg', mode: 'trein', provider: 'ÖBB Nightjet (via NS International)', from: 'ASD', to: 'salzburg', price: 38, trip: 'enkel', priceType: 'vanaf', dur: null, transfers: 0, bag: 'koffer',
+    note: 'Nachttrein, rechtstreeks (sinds 13 juni 2026): je komt de volgende ochtend aan. De bron noemt geen duidelijke reistijd; de app schat die. NS International weet nog niet of deze directe trein in 2027 blijft rijden.', src: ['nsiSzg'], checked: T('12:34'), book: 'nsi' },
   { id: 'ice-salzburg', mode: 'trein', provider: 'NS International (ICE)', from: 'ASD', to: 'salzburg', price: 40, trip: 'enkel', priceType: 'vanaf', dur: 561, transfers: 2, bag: 'koffer',
-    note: 'Overdag met ICE: 9 uur 21 minuten met 1 tot 2 overstappen.', src: ['nsiSzg'], checked: T('20:44'), book: 'nsi' },
+    note: 'Overdag met ICE: 9 uur 21 minuten met 1 tot 2 overstappen.', src: ['nsiSzg'], checked: T('12:34'), book: 'nsi' },
   { id: 'nj-westendorf', mode: 'trein', provider: 'ÖBB Nightjet (via NS International)', from: 'ASD', to: 'westendorf', price: 37, trip: 'enkel', priceType: 'vanaf', dur: null, transfers: 1, bag: 'koffer',
-    note: 'Nachttrein naar Wörgl, daar overstappen op de trein naar Westendorf. Vroeg boeken is voordelig.', src: ['nsiWest', 'nsiWinter'], checked: T('20:44'), book: 'nsi' },
-
-  // ===== COMBINATIE: trein + trein =====
-  { id: 'combi-marseille', mode: 'combi', provider: 'Eurostar + OUIGO', from: 'ASDS', to: 'marseille', price: 51, trip: 'enkel', priceType: 'vanaf', dur: null, transfers: 1, bag: 'koffer',
-    parts: [ { label: 'Eurostar Amsterdam → Parijs', price: 35, src: 'eurostar' }, { label: 'OUIGO Parijs → Marseille', price: 16, src: 'everyrail' } ],
-    note: 'Totaal = €35 + €16. In Parijs wissel je van station (Gare du Nord → meestal Gare de Lyon); die metrorit zit niet in de prijs. De OUIGO-prijs komt uit een pagina van juli 2026.', src: ['eurostar', 'everyrail'], checked: T('20:44'), book: 'sncf' },
+    note: 'Nachttrein naar Wörgl, daar overstappen op de trein naar Westendorf. Vroeg boeken is voordelig.', src: ['nsiWest', 'nsiWinter'], checked: T('12:34'), book: 'nsi' },
 
   // ===== BUS: FlixBus en BlaBlaCar Bus (via Kombo) =====
   { id: 'bla-parijs', mode: 'bus', provider: 'BlaBlaCar Bus', from: 'BUSA', to: 'parijs', price: 17.99, trip: 'enkel', priceType: 'vanaf', dur: 370, transfers: 0, bag: 'koffer', km: 431, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). Ongeveer 6 uur 10 minuten.', src: ['kPar'], checked: T('20:34'), book: 'kombo-par' },
+    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). Ongeveer 6 uur 10 minuten.', src: ['kPar'], checked: T('12:32'), book: 'kombo-par' },
   { id: 'flix-parijs', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'parijs', price: 18.24, trip: 'enkel', priceType: 'vanaf', dur: 370, transfers: 0, bag: 'koffer', km: 431, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026).', src: ['kPar'], checked: T('20:34'), book: 'flixbus' },
-  { id: 'flix-berlijn', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'berlijn', price: 25.98, trip: 'enkel', priceType: 'vanaf', dur: 435, transfers: 0, bag: 'koffer', km: 577, srcDate: '2026-10-22',
-    note: 'Laagste prijs volgens Kombo. Let op: Kombo noteerde deze prijzen op 22 okt 2026.', src: ['kBer'], checked: T('20:34'), book: 'flixbus' },
+    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026).', src: ['kPar'], checked: T('12:32'), book: 'flixbus' },
+  { id: 'flix-berlijn', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'berlijn', price: 25.98, trip: 'enkel', priceType: 'vanaf', dur: 495, transfers: 0, bag: 'koffer', km: 577, srcDate: '2026-11-10',
+    note: 'Laagste prijs volgens Kombo (prijzen van 10 nov 2026). Goedkoopste datum: dinsdag 24 nov 2026, vanaf €26. Rit van ongeveer 8 uur 15 minuten.', src: ['kBer'], checked: T('12:32'), book: 'flixbus' },
   { id: 'flix-brussel', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'brussel', price: 8.19, trip: 'enkel', priceType: 'vanaf', dur: 160, transfers: 0, bag: 'koffer', km: 175, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo. Goedkoopste datum in de kalender: donderdag 12 nov 2026, vanaf €9.', src: ['kBru'], checked: T('20:34'), book: 'kombo-bru' },
+    note: 'Laagste prijs volgens Kombo. Goedkoopste datum in de kalender: donderdag 12 nov 2026, vanaf €9.', src: ['kBru'], checked: T('12:32'), book: 'kombo-bru' },
   { id: 'bla-brussel', mode: 'bus', provider: 'BlaBlaCar Bus', from: 'BUSA', to: 'brussel', price: 8.99, trip: 'enkel', priceType: 'vanaf', dur: 160, transfers: 0, bag: 'koffer', km: 175, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026).', src: ['kBru'], checked: T('20:34'), book: 'kombo-bru' },
+    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026).', src: ['kBru'], checked: T('12:32'), book: 'kombo-bru' },
   { id: 'flix-praag', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'praag', price: 37.98, trip: 'enkel', priceType: 'vanaf', dur: 795, transfers: 0, bag: 'koffer', km: 710, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo. Goedkoopste datum: maandag 23 nov 2026, vanaf €38. Rit van ongeveer 13 uur.', src: ['kPrg'], checked: T('20:34'), book: 'kombo-prg' },
+    note: 'Laagste prijs volgens Kombo. Goedkoopste data: maandag 23 en woensdag 25 nov 2026, vanaf €38. Rit van ongeveer 13 uur 15 minuten.', src: ['kPrg'], checked: T('12:32'), book: 'kombo-prg' },
   { id: 'flix-zurich', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'zurich', price: 46.98, trip: 'enkel', priceType: 'vanaf', dur: 745, transfers: 0, bag: 'koffer', km: 614, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo. Goedkoopste datum: zaterdag 21 nov 2026, vanaf €47. BlaBlaCar Bus vanaf €49,99.', src: ['kZrh'], checked: T('20:44'), book: 'kombo-zrh' },
+    note: 'Laagste prijs volgens Kombo. Goedkoopste datum: zaterdag 21 nov 2026, vanaf €47. BlaBlaCar Bus vanaf €49,99.', src: ['kZrh'], checked: T('12:32'), book: 'kombo-zrh' },
   { id: 'bla-lille', mode: 'bus', provider: 'BlaBlaCar Bus', from: 'BUSA', to: 'lille', price: 9.99, trip: 'enkel', priceType: 'vanaf', dur: 225, transfers: 0, bag: 'koffer', km: 232, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo. Goedkoopste datum: zaterdag 14 nov 2026, vanaf €10. FlixBus vanaf €10,49.', src: ['kLil'], checked: T('20:44'), book: 'kombo-lil' },
+    note: 'Laagste prijs volgens Kombo. Goedkoopste datum: zaterdag 14 nov 2026, vanaf €10. FlixBus vanaf €10,49.', src: ['kLil'], checked: T('12:32'), book: 'kombo-lil' },
 
   // ===== BUS: extra routes en vertrekplaatsen (Kombo, gecontroleerd 9 nov 2026 rond 22:28) =====
   { id: 'bla-rtd-parijs', mode: 'bus', provider: 'BlaBlaCar Bus', from: 'BUSR', to: 'parijs', price: 19.99, trip: 'enkel', priceType: 'vanaf', dur: 398, transfers: 0, bag: 'koffer', km: 372, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). FlixBus vanaf €20,98. Goedkoopste datum in de kalender: dinsdag 10 nov 2026, vanaf €20. Ongeveer 6 uur 38 minuten.', src: ['kRtdPar'], checked: T('22:27'), book: 'kombo-route' },
+    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). FlixBus vanaf €20,98. Goedkoopste datum in de kalender: dinsdag 10 nov 2026, vanaf €20. Ongeveer 6 uur 38 minuten.', src: ['kRtdPar'], checked: T('12:33'), book: 'kombo-route' },
   { id: 'flix-hamburg', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'hamburg', price: 23.48, trip: 'enkel', priceType: 'vanaf', dur: 325, transfers: 0, bag: 'koffer', km: 367, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). Goedkoopste datum: dinsdag 24 nov 2026, vanaf €24. Ongeveer 5 uur 25 minuten.', src: ['kAmsHam'], checked: T('22:27'), book: 'kombo-route' },
-  { id: 'flix-londen', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'londen', price: 36.98, trip: 'enkel', priceType: 'vanaf', dur: 630, transfers: 0, bag: 'koffer', srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). Goedkoopste datum: vrijdag 8 jan 2027, vanaf €37. Rit van ongeveer 10,5 uur.', src: ['kAmsLon'], checked: T('22:27'), book: 'kombo-route' },
+    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). Goedkoopste datum: dinsdag 24 nov 2026, vanaf €24. Ongeveer 5 uur 25 minuten.', src: ['kAmsHam'], checked: T('12:33'), book: 'kombo-route' },
+  { id: 'flix-londen', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'londen', price: 36.98, trip: 'enkel', priceType: 'vanaf', dur: 630, transfers: 0, bag: 'koffer', km: 358, srcDate: '2026-11-09',
+    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). Goedkoopste datum: vrijdag 8 jan 2027, vanaf €37. Rit van ongeveer 10,5 uur.', src: ['kAmsLon'], checked: T('12:33'), book: 'kombo-route' },
   { id: 'flix-utr-brussel', mode: 'bus', provider: 'FlixBus', from: 'BUSU', to: 'brussel', price: 10.98, trip: 'enkel', priceType: 'vanaf', dur: 155, transfers: 0, bag: 'koffer', km: 147, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). Goedkoopste datum: vrijdag 13 nov 2026, vanaf €11. Vertrek vanaf Utrecht Centraal.', src: ['kUtrBru'], checked: T('22:27'), book: 'kombo-route' },
+    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). Goedkoopste datum: vrijdag 13 nov 2026, vanaf €11. Vertrek vanaf Utrecht Centraal.', src: ['kUtrBru'], checked: T('12:33'), book: 'kombo-route' },
   { id: 'flix-kopenhagen', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'kopenhagen', price: 42.98, trip: 'enkel', priceType: 'vanaf', dur: 745, transfers: 0, bag: 'koffer', km: 622, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). Goedkoopste datum: maandag 7 dec 2026, vanaf €44. Rit van ruim 12 uur.', src: ['kAmsCph'], checked: T('22:27'), book: 'kombo-route' },
+    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). Goedkoopste datum: maandag 7 dec 2026, vanaf €44. Rit van ruim 12 uur.', src: ['kAmsCph'], checked: T('12:33'), book: 'kombo-route' },
   { id: 'flix-luxemburg', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'luxemburg', price: 22.98, trip: 'enkel', priceType: 'vanaf', dur: 345, transfers: 0, bag: 'koffer', km: 320, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). BlaBlaCar Bus vanaf €25,99. Goedkoopste datum: woensdag 25 nov 2026, vanaf €23.', src: ['kAmsLux'], checked: T('22:29'), book: 'kombo-route' },
+    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). BlaBlaCar Bus vanaf €25,99. Goedkoopste datum: woensdag 25 nov 2026, vanaf €23.', src: ['kAmsLux'], checked: T('12:33'), book: 'kombo-route' },
   { id: 'flix-straatsburg', mode: 'bus', provider: 'FlixBus', from: 'BUSA', to: 'straatsburg', price: 29.98, trip: 'enkel', priceType: 'vanaf', dur: 525, transfers: 0, bag: 'koffer', km: 469, srcDate: '2026-11-09',
-    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). BlaBlaCar Bus vanaf €31,99. Goedkoopste datum: vrijdag 8 jan 2027, vanaf €30. Leuk in december: de kerstmarkt.', src: ['kAmsStr'], checked: T('22:29'), book: 'kombo-route' },
-  { id: 'flix-ein-parijs', mode: 'bus', provider: 'FlixBus', from: 'BUSE', to: 'parijs', price: 17.69, trip: 'enkel', priceType: 'vanaf', dur: 285, transfers: 0, bag: 'koffer', km: 363, srcDate: '2026-10-25',
-    note: 'Laagste prijs volgens Kombo. Let op: Kombo noteerde deze prijzen op 25 okt 2026. Goedkoopste datum: vrijdag 4 dec 2026, vanaf €18. Vertrek vanaf Eindhoven Centraal of Eindhoven Airport.', src: ['kEinPar'], checked: T('22:29'), book: 'kombo-route' },
+    note: 'Laagste prijs volgens Kombo (prijzen van 9 nov 2026). BlaBlaCar Bus vanaf €31,99. Goedkoopste datum: vrijdag 8 jan 2027, vanaf €30. Leuk in december: de kerstmarkt.', src: ['kAmsStr'], checked: T('12:33'), book: 'kombo-route' },
+  { id: 'flix-ein-parijs', mode: 'bus', provider: 'FlixBus', from: 'BUSE', to: 'parijs', price: 17.99, trip: 'enkel', priceType: 'vanaf', dur: 345, transfers: 0, bag: 'koffer', km: 363, srcDate: '2026-11-10',
+    note: 'Laagste prijs volgens Kombo (prijzen van 10 nov 2026). Goedkoopste datum: woensdag 2 dec 2026, vanaf €18. Ongeveer 5 uur 45 minuten. Vertrek vanaf Eindhoven Centraal of Eindhoven Airport.', src: ['kEinPar'], checked: T('12:33'), book: 'kombo-route' },
 
-  // ===== VLIEGTUIG vanaf Eindhoven (retour, gevonden door Skyscanner in de laatste 4 dagen) =====
-  { id: 'ein-tia', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'tirana', arr: 'TIA', price: 34, trip: 'retour', priceType: 'gevonden', out: '2026-11-18', back: '2026-11-25', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-stn', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'londen', arr: 'STN', price: 35, trip: 'retour', priceType: 'gevonden', out: '2026-12-05', back: '2026-12-12', transfers: 0, bag: 'tasje', note: 'Aankomst Londen Stansted (buiten de stad).', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-bgy', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'milaan', arr: 'BGY', price: 41, trip: 'retour', priceType: 'gevonden', out: '2026-12-02', back: '2026-12-14', transfers: 0, bag: 'tasje', note: 'Aankomst Milaan Bergamo (buiten de stad).', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-fao', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'faro', arr: 'FAO', price: 43, trip: 'retour', priceType: 'gevonden', out: '2026-11-30', back: '2026-12-10', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-gro', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'girona', arr: 'GRO', price: 45, trip: 'retour', priceType: 'gevonden', out: '2026-12-07', back: '2026-12-14', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-krk', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'krakau', arr: 'KRK', price: 46, trip: 'retour', priceType: 'gevonden', out: '2026-12-08', back: '2026-12-16', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-bts', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'bratislava', arr: 'BTS', price: 47, trip: 'retour', priceType: 'gevonden', out: '2026-11-23', back: '2026-12-07', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-sof', mode: 'vliegtuig', provider: 'Ryanair + Wizz Air', from: 'EIN', to: 'sofia', arr: 'SOF', price: 48, trip: 'retour', priceType: 'gevonden', out: '2027-01-12', back: '2027-01-21', transfers: 0, bag: 'tasje', note: 'Heen met Ryanair, terug met Wizz Air.', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-zag', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'zagreb', arr: 'ZAG', price: 51, trip: 'retour', priceType: 'gevonden', out: '2026-12-04', back: '2026-12-11', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-vno', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'vilnius', arr: 'VNO', price: 57, trip: 'retour', priceType: 'gevonden', out: '2026-12-31', back: '2027-01-16', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-vie', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'wenen', arr: 'VIE', price: 68, trip: 'retour', priceType: 'gevonden', out: '2026-12-07', back: '2026-12-14', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-deb', mode: 'vliegtuig', provider: 'Wizz Air', from: 'EIN', to: 'debrecen', arr: 'DEB', price: 69, trip: 'retour', priceType: 'gevonden', out: '2027-01-22', back: '2027-01-29', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-clj', mode: 'vliegtuig', provider: 'Wizz Air', from: 'EIN', to: 'cluj', arr: 'CLJ', price: 70, trip: 'retour', priceType: 'gevonden', out: '2027-01-12', back: '2027-01-23', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-beg', mode: 'vliegtuig', provider: 'Wizz Air', from: 'EIN', to: 'belgrado', arr: 'BEG', price: 73, trip: 'retour', priceType: 'gevonden', out: '2027-01-20', back: '2027-01-21', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-pfo', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'paphos', arr: 'PFO', price: 73, trip: 'retour', priceType: 'gevonden', out: '2026-11-25', back: '2026-12-12', transfers: 0, bag: 'tasje', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
-  { id: 'ein-mla', mode: 'vliegtuig', provider: 'Ryanair', from: 'EIN', to: 'malta', arr: 'MLA', price: 74, trip: 'retour', priceType: 'gevonden', out: '2026-12-03', back: '2026-12-13', transfers: 1, bag: 'tasje', note: 'Met 1 overstap per richting.', src: ['skyEIN'], checked: T('20:32'), book: 'sky' },
+  // ===== VLIEGTUIG: live gevonden met de Kiwi.com-connector =====
+  // Enkele reis: de dagelijkse controle van 10 nov 2026, 06:33. Retour: live opgehaald op 10 nov 2026 tussen 12:29 en 12:33
+  // (2 tot 7 nachten, vertrek tussen 12 nov 2026 en 25 jan 2027; plus twee retourvluchten binnen de kerstvakantie). Altijd 1 volwassene, rechtstreeks, alleen een klein tasje inbegrepen.
+  ...KIWI_ONEWAY.map(([from, arr, toCity, toCountry, price, dep, dur, flight, provider, code]) => kiwiDeal({
+    from, arr, toCity, toCountry, price, out: dep.slice(0, 10), depTime: dep.slice(11, 16), dur, flight, provider,
+    link: `https://kiwi.com/u/${code}`, checked: T('06:33'), via: 'de dagelijkse controle' })),
+  ...KIWI_RETURN.map(([from, arr, toCity, toCountry, price, dep, dur, flight, back, backDur, backFlight, provider, code, hhmm, backFrom, tag]) => kiwiDeal({
+    tag,
+    from, arr, toCity, toCountry, price, out: dep.slice(0, 10), depTime: dep.slice(11, 16), dur, flight, provider,
+    back: back.slice(0, 10), backTime: back.slice(11, 16), backDur, backFlight, backFrom,
+    link: `https://kiwi.com/u/${code}`, checked: T(hhmm) })),
 
-  // ===== VLIEGTUIG vanaf Schiphol (enkele reis, door Skyscanner gevonden) =====
-  { id: 'ams-dub', mode: 'vliegtuig', provider: 'Ryanair', from: 'AMS', to: 'dublin', arr: 'DUB', price: 25, trip: 'enkel', priceType: 'gevonden', out: '2026-12-02', transfers: 0, bag: 'tasje', note: 'Skyscanner: beste retourprijs naar Dublin €51.', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-agp', mode: 'vliegtuig', provider: 'Ryanair', from: 'AMS', to: 'malaga', arr: 'AGP', price: 37, trip: 'enkel', priceType: 'gevonden', out: '2027-01-10', transfers: 0, bag: 'tasje', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-opo', mode: 'vliegtuig', provider: 'Ryanair', from: 'AMS', to: 'porto', arr: 'OPO', price: 52, trip: 'enkel', priceType: 'gevonden', out: '2026-12-05', transfers: 1, bag: 'tasje', note: 'Met overstap.', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-bva', mode: 'vliegtuig', provider: 'Ryanair', from: 'AMS', to: 'parijs', arr: 'BVA', price: 52, trip: 'enkel', priceType: 'gevonden', out: '2027-01-04', transfers: 1, bag: 'tasje', note: 'Met overstap, aankomst Parijs Beauvais (ver buiten de stad). Ter vergelijking: de trein naar Parijs kost vanaf €35.', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-dbv', mode: 'vliegtuig', provider: 'Ryanair', from: 'AMS', to: 'dubrovnik', arr: 'DBV', price: 54, trip: 'enkel', priceType: 'gevonden', out: '2026-12-12', transfers: 1, bag: 'tasje', note: 'Met overstap.', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-sen', mode: 'vliegtuig', provider: 'easyJet', from: 'AMS', to: 'londen', arr: 'SEN', price: 57, trip: 'enkel', priceType: 'gevonden', out: '2027-01-01', transfers: 0, bag: 'tasje', note: 'Aankomst Londen Southend (buiten de stad).', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-nap', mode: 'vliegtuig', provider: 'Ryanair', from: 'AMS', to: 'napels', arr: 'NAP', price: 58, trip: 'enkel', priceType: 'gevonden', out: '2026-12-02', transfers: 1, bag: 'tasje', note: 'Met overstap.', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-tia', mode: 'vliegtuig', provider: 'Ryanair', from: 'AMS', to: 'tirana', arr: 'TIA', price: 59, trip: 'enkel', priceType: 'gevonden', out: '2026-12-01', transfers: 1, bag: 'tasje', note: 'Met overstap.', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-mla', mode: 'vliegtuig', provider: 'easyJet', from: 'AMS', to: 'malta', arr: 'MLA', price: 62, trip: 'enkel', priceType: 'gevonden', out: '2027-01-04', transfers: 0, bag: 'tasje', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-tos', mode: 'vliegtuig', provider: 'easyJet', from: 'AMS', to: 'tromso', arr: 'TOS', price: 62, trip: 'enkel', priceType: 'gevonden', out: '2027-01-24', transfers: 0, bag: 'tasje', note: 'Noorderlicht-seizoen.', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-pmo', mode: 'vliegtuig', provider: 'easyJet', from: 'AMS', to: 'palermo', arr: 'PMO', price: 64, trip: 'enkel', priceType: 'gevonden', out: '2027-01-01', transfers: 0, bag: 'tasje', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-prg', mode: 'vliegtuig', provider: 'easyJet', from: 'AMS', to: 'praag', arr: 'PRG', price: 64, trip: 'enkel', priceType: 'gevonden', out: '2027-02-25', transfers: 0, bag: 'tasje', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-  { id: 'ams-cgn', mode: 'vliegtuig', provider: 'Ryanair', from: 'AMS', to: 'keulen', arr: 'CGN', price: 64, trip: 'enkel', priceType: 'gevonden', out: '2026-12-12', transfers: 1, bag: 'tasje', note: 'Met overstap. De trein naar Keulen kost vanaf €20 en is sneller.', src: ['skyAMS'], checked: T('20:33'), book: 'sky' },
-
-  // ===== VLIEGTUIG: live gevonden met de Kiwi.com-connector (9 nov 2026, 22:33–22:35) =====
-  // Enkele reis, 1 volwassene, rechtstreeks, alleen een klein tasje inbegrepen. Vertrek tussen 16 nov 2026 en 31 jan 2027.
-  ...[
-    // Schiphol
-    ['AMS', 'DUB', 'dublin', 28, '2026-12-02T14:40', 100, 'Ryanair', 'FR3103', 'u2trjv'],
-    ['AMS', 'AGP', 'malaga', 41, '2027-01-10T18:55', 185, 'Ryanair', 'FR5692', 'hwscpss'],
-    ['AMS', 'VLC', 'valencia', 67, '2027-01-10T17:35', 145, 'Transavia', 'HV6331', 'wfchh3'],
-    ['AMS', 'SVQ', 'sevilla', 67, '2027-01-13T16:30', 175, 'Transavia', 'HV6729', '3mdnub'],
-    ['AMS', 'BCN', 'barcelona', 73, '2027-01-10T14:50', 140, 'Vueling', 'VY1055', 'x5vphnn'],
-    ['AMS', 'PMI', 'palma', 77, '2027-01-19T17:20', 145, 'Transavia', 'HV5623', 'vjj74x'],
-    ['AMS', 'MAN', 'manchester', 78, '2027-01-28T16:00', 80, 'easyJet', 'U22166', 'tjxj99'],
-    ['AMS', 'EDI', 'edinburgh', 79, '2026-12-31T18:20', 90, 'easyJet', 'U27837', '3wjjfj4'],
-    ['AMS', 'BHX', 'birmingham', 81, '2026-12-31T10:45', 80, 'easyJet', 'U27849', 'qr89uqw'],
-    ['AMS', 'LIN', 'milaan', 83, '2027-01-23T21:20', 95, 'easyJet', 'U25408', 'pq4tk4s'],
-    ['AMS', 'INN', 'innsbruck', 84, '2027-01-24T17:20', 100, 'Transavia', 'HV6603', 'pk9zsyr'],
-    ['AMS', 'GVA', 'geneve', 86, '2026-12-31T21:05', 85, 'easyJet', 'U21516', '3w788p4'],
-    ['AMS', 'CPH', 'kopenhagen', 87, '2027-01-29T17:05', 80, 'Norwegian', 'D83541', 't2ppn6t'],
-    // Eindhoven
-    ['EIN', 'TIA', 'tirana', 17, '2026-12-10T11:40', 160, 'Ryanair', 'FR9940', 'ssr5m7'],
-    ['EIN', 'STN', 'londen', 19, '2026-12-05T19:25', 65, 'Ryanair', 'FR2538', '5t8bj4'],
-    ['EIN', 'ZAG', 'zagreb', 21, '2027-01-01T14:40', 110, 'Ryanair', 'FR5869', '9p3gyqw'],
-    ['EIN', 'SOF', 'sofia', 21, '2027-01-13T16:45', 155, 'Ryanair', 'FR6014', 'rf6wgz'],
-    ['EIN', 'CTA', 'catania', 21, '2027-01-01T14:20', 165, 'Ryanair', 'FR4062', 't87yc3k'],
-    ['EIN', 'AGP', 'malaga', 21, '2026-12-01T18:05', 175, 'Ryanair', 'FR2576', 'yydpp6'],
-    ['EIN', 'FAO', 'faro', 21, '2027-01-29T13:15', 180, 'Ryanair', 'FR5769', 'p9q9bzs'],
-    ['EIN', 'FCO', 'rome', 22, '2027-01-01T09:20', 130, 'Ryanair', 'FR5815', 'kc6fu4k'],
-    ['EIN', 'PMI', 'palma', 22, '2027-01-18T08:45', 140, 'Ryanair', 'FR3532', 'tchw2kh'],
-    ['EIN', 'BGY', 'milaan', 23, '2026-12-02T17:20', 90, 'Ryanair', 'FR3461', 'd5cr4z'],
-    ['EIN', 'BLQ', 'bologna', 23, '2027-01-12T09:55', 100, 'Ryanair', 'FR787', '4qmjvp7'],
-    ['EIN', 'GRO', 'girona', 24, '2027-01-11T09:25', 115, 'Ryanair', 'FR2119', 'sjyvykj'],
-    ['EIN', 'KRK', 'krakau', 25, '2027-01-11T19:45', 110, 'Ryanair', 'FR5891', 'cj889pr'],
-    ['EIN', 'ALC', 'alicante', 29, '2026-12-01T09:25', 150, 'Ryanair', 'FR7523', '9px4pp', '22:33'],
-    ['EIN', 'PSA', 'pisa', 30, '2026-12-06T12:50', 105, 'Ryanair', 'FR9924', 'qq86hg'],
-    ['EIN', 'WMI', 'warschau', 30, '2027-01-22T19:55', 110, 'Ryanair', 'FR4021', 'nxtgsc'],
-    ['EIN', 'SVQ', 'sevilla', 33, '2026-11-30T10:45', 170, 'Ryanair', 'FR5269', 'ugpy2s', '22:33'],
-    ['EIN', 'TFS', 'tenerife', 46, '2026-11-27T16:50', 280, 'Ryanair', 'FR9576', '52dkb3', '22:33'],
-    ['EIN', 'VLC', 'valencia', 50, '2026-11-26T21:10', 140, 'Ryanair', 'FR1718', '59tb7h', '22:33'],
-    ['EIN', 'IBZ', 'ibiza', 53, '2026-12-01T07:00', 145, 'Transavia', 'HV6513', 'r8q3n6', '22:33'],
-    ['EIN', 'ACE', 'lanzarote', 75, '2026-12-15T06:55', 255, 'Transavia', 'HV6357', 'wxq9vt', '22:33'],
-    ['EIN', 'LPA', 'gran-canaria', 76, '2026-11-25T06:55', 275, 'Transavia', 'HV6365', '2g6nnzg', '22:33'],
-    // Rotterdam The Hague
-    ['RTM', 'SVQ', 'sevilla', 67, '2027-01-24T17:30', 170, 'Transavia', 'HV6855', 'b2y43m'],
-    ['RTM', 'AGP', 'malaga', 67, '2027-01-17T07:30', 170, 'Transavia', 'HV5021', '9xmc68q'],
-    ['RTM', 'STN', 'londen', 69, '2027-01-26T14:30', 55, 'Transavia', 'HV6991', 'rj9juz'],
-    ['RTM', 'INN', 'innsbruck', 70, '2027-01-03T14:15', 85, 'Transavia', 'HV6925', '7hchrc'],
-    ['RTM', 'BCN', 'barcelona', 70, '2027-01-28T17:00', 120, 'Transavia', 'HV6063', 'vrtkcfy'],
-    ['RTM', 'FCO', 'rome', 70, '2027-01-11T17:35', 130, 'Transavia', 'HV6035', '3b9kq3'],
-    ['RTM', 'SZG', 'salzburg', 71, '2027-01-04T19:15', 85, 'Transavia', 'HV6781', '6s4b9g'],
-    ['RTM', 'VLC', 'valencia', 71, '2026-12-14T07:30', 135, 'Transavia', 'HV6443', 'bhybb6h'],
-    ['RTM', 'ALC', 'alicante', 72, '2027-01-28T07:00', 145, 'Transavia', 'HV5053', 'rvpmq2u'],
-    ['RTM', 'LIS', 'lissabon', 72, '2027-01-14T15:00', 175, 'Transavia', 'HV5241', 'cwut72s'],
-    ['RTM', 'FAO', 'faro', 72, '2027-01-17T16:00', 180, 'Transavia', 'HV6091', 'rmsrnwz'],
-    ['RTM', 'EGC', 'bergerac', 73, '2027-01-09T16:35', 90, 'Transavia', 'HV6073', 'tugmpu'],
-    ['RTM', 'LPA', 'gran-canaria', 77, '2026-12-02T06:55', 270, 'Transavia', 'HV6301', 'c5b5x5'],
-    ['RTM', 'TFS', 'tenerife', 77, '2026-12-14T06:55', 275, 'Transavia', 'HV6213', 'wr4232v'],
-    // Weeze (Duitsland)
-    ['NRN', 'GRO', 'girona', 17, '2027-01-31T06:10', 120, 'Ryanair', 'FR6390', '59fktf9'],
-    ['NRN', 'TIA', 'tirana', 17, '2026-12-07T07:15', 145, 'Ryanair', 'FR8332', '6hyp5n'],
-    ['NRN', 'OPO', 'porto', 17, '2026-11-22T07:15', 160, 'Ryanair', 'FR5489', 'nv3y9r'],
-    ['NRN', 'TFS', 'tenerife', 17, '2026-12-06T21:05', 280, 'Ryanair', 'FR7605', 's22fhp'],
-    ['NRN', 'SVQ', 'sevilla', 18, '2026-11-30T21:20', 175, 'Ryanair', 'FR8632', '5cgd9kt'],
-    ['NRN', 'BRI', 'bari', 21, '2027-01-17T06:25', 140, 'Ryanair', 'FR7524', 'nwykj3'],
-    ['NRN', 'PMI', 'palma', 21, '2026-11-26T16:45', 140, 'Ryanair', 'FR6218', '6v736h'],
-    ['NRN', 'ALC', 'alicante', 21, '2027-01-01T07:00', 155, 'Ryanair', 'FR6212', 'xmtr9v'],
-    ['NRN', 'EDI', 'edinburgh', 22, '2027-01-01T06:10', 100, 'Ryanair', 'FR5688', '3kd5v2q'],
-    ['NRN', 'FUE', 'fuerteventura', 22, '2026-11-25T07:35', 270, 'Ryanair', 'FR9642', 'gjnfq4h'],
-    ['NRN', 'ZAG', 'zagreb', 23, '2027-01-01T12:40', 110, 'Ryanair', 'FR2126', '2qk652h'],
-    ['NRN', 'AGP', 'malaga', 23, '2027-01-04T06:05', 180, 'Ryanair', 'FR8612', 'wpzr9ut'],
-    ['NRN', 'FAO', 'faro', 23, '2026-12-11T06:15', 185, 'Ryanair', 'FR5781', 'dx229x'],
-    ['NRN', 'PFO', 'paphos', 26, '2027-01-01T14:10', 235, 'Ryanair', 'FR3878', 'rn49uud'],
-    ['NRN', 'ACE', 'lanzarote', 28, '2026-12-06T13:20', 265, 'Ryanair', 'FR9645', '52mkry'],
-    // Brussel-Charleroi (België)
-    ['CRL', 'MAN', 'manchester', 17, '2026-11-19T06:50', 85, 'Ryanair', 'FR3223', 'cjq84yf'],
-    ['CRL', 'BGY', 'milaan', 17, '2027-01-17T14:05', 90, 'Ryanair', 'FR4522', 'g6z88x4'],
-    ['CRL', 'TSF', 'venetie', 17, '2026-12-06T07:15', 90, 'Ryanair', 'FR4938', '3jz9yg'],
-    ['CRL', 'TRS', 'triest', 17, '2026-12-04T07:45', 100, 'Ryanair', 'FR4496', 'qbvd3n'],
-    ['CRL', 'MRS', 'marseille', 17, '2026-11-17T06:30', 100, 'Ryanair', 'FR4838', 'fh9mc8'],
-    ['CRL', 'PSA', 'pisa', 17, '2026-11-21T21:30', 100, 'Ryanair', 'FR3745', 'kr2h44'],
-    ['CRL', 'DUB', 'dublin', 17, '2026-12-10T16:40', 105, 'Ryanair', 'FR47', '32brsg'],
-    ['CRL', 'GRO', 'girona', 17, '2026-12-06T06:50', 105, 'Ryanair', 'FR1670', '5rwzbg6'],
-    ['CRL', 'VIE', 'wenen', 17, '2027-01-25T19:10', 105, 'Ryanair', 'FR86', 'hh88fd'],
-    ['CRL', 'ZAG', 'zagreb', 17, '2027-01-30T20:30', 110, 'Ryanair', 'FR2124', 'y34966'],
-    ['CRL', 'CIA', 'rome', 17, '2026-12-31T17:40', 120, 'Ryanair', 'FR5650', 'f2fhvw'],
-    ['CRL', 'TRN', 'turijn', 18, '2026-12-31T20:55', 90, 'Ryanair', 'FR4864', 'v92fk5'],
-    ['CRL', 'EDI', 'edinburgh', 18, '2026-12-16T12:45', 100, 'Ryanair', 'FR7323', 'r7x8wdb'],
-    ['CRL', 'WRO', 'wroclaw', 18, '2026-11-23T21:25', 105, 'Ryanair', 'FR8372', '6pytt8j'],
-    ['CRL', 'BIQ', 'biarritz', 19, '2027-01-08T13:25', 105, 'Ryanair', 'FR5331', 'v6q6mdt'],
-  ].map(([from, arr, to, price, dep, dur, provider, flight, code, hhmm]) => ({
-    id: `kiwi-${from}-${arr}`.toLowerCase(), mode: 'vliegtuig', provider, from, to, arr, price, trip: 'enkel', priceType: 'gevonden',
-    out: dep.slice(0, 10), depTime: dep.slice(11, 16), dur, transfers: 0, bag: 'tasje', flight,
-    link: `https://kiwi.com/u/${code}`, src: ['kiwi'], checked: T(hhmm || (from === 'AMS' ? '22:34' : '22:35')), book: 'kiwi',
-    note: `Live gevonden via Kiwi.com: vlucht ${flight}, rechtstreeks. Alleen een klein tasje is inbegrepen.` +
-      (from === 'NRN' ? ' Weeze ligt net over de grens in Duitsland; reken op extra reistijd om er te komen.' : '') +
-      (from === 'CRL' ? ' Charleroi ligt ongeveer 45 km ten zuiden van Brussel; reken op extra reistijd om er te komen.' : ''),
+  // ===== VLIEGTUIG: indicaties van Skyscanner (gelezen op 10 nov 2026, 12:32) =====
+  // Skyscanner noemt dit zelf een schatting op basis van prijzen van de laatste 4 dagen. Daarom staan ze als "Indicatie" in de app.
+  ...SKY_DEALS.map(([id, from, to, arr, price, out, back, provider, transfers, extra]) => ({
+    id, mode: 'vliegtuig', provider, from, arr, price, trip: back ? 'retour' : 'enkel', priceType: 'gevonden', indic: true,
+    out, back: back || undefined, transfers, bag: from === 'GRQ' ? 'onbekend' : 'tasje',
+    src: [{ EIN: 'skyEIN', AMS: 'skyAMS', GRQ: 'skyGRQ' }[from]], checked: T('12:32'), book: 'sky',
+    ...(typeof to === 'string' ? { to } : to), ...(extra || {}),
+    note: `Indicatie van Skyscanner: een schatting op basis van prijzen van de laatste 4 dagen${transfers ? `, met ${transfers} overstap${back ? ' per richting' : ''}` : ', rechtstreeks'}. De prijs kan al anders zijn.${extra && extra.tip ? ' ' + extra.tip : ''}`,
   })),
-
-  // ===== VLIEGTUIG vanaf Groningen (enkele reis, door Skyscanner gevonden) =====
-  { id: 'grq-lpa', mode: 'vliegtuig', provider: 'TUI', from: 'GRQ', to: 'gran-canaria', arr: 'LPA', price: 220, trip: 'enkel', priceType: 'gevonden', out: '2026-11-16', transfers: 0, bag: 'onbekend', src: ['skyGRQ'], checked: T('20:33'), book: 'sky' },
-  { id: 'grq-her', mode: 'vliegtuig', provider: 'Corendon', from: 'GRQ', to: 'heraklion', arr: 'HER', price: 146, trip: 'enkel', priceType: 'gevonden', out: '2027-08-26', transfers: 0, bag: 'onbekend', src: ['skyGRQ'], checked: T('20:33'), book: 'sky' },
-  { id: 'grq-ayt', mode: 'vliegtuig', provider: 'Corendon', from: 'GRQ', to: 'antalya', arr: 'AYT', price: 155, trip: 'enkel', priceType: 'gevonden', out: '2027-05-18', transfers: 0, bag: 'onbekend', note: 'Skyscanner: beste retourprijs naar Antalya €303.', src: ['skyGRQ'], checked: T('20:33'), book: 'sky' },
-  { id: 'grq-bzo', mode: 'vliegtuig', provider: 'Sky Alps', from: 'GRQ', to: 'bolzano', arr: 'BZO', price: 180, trip: 'enkel', priceType: 'gevonden', out: '2027-05-10', transfers: 0, bag: 'onbekend', note: 'Rechtstreeks naar de Dolomieten.', src: ['skyGRQ'], checked: T('20:33'), book: 'sky' },
 ];
 
 /* ---------- Slimme kaartjes en kortingen (echte prijzen 2026) ---------- */
 const PASSES = [
   { id: 'ns-groep', title: 'NS Groepsticket', price: '€38,50 voor 2–3 personen', sub: '+ €4,50 per persoon (4 t/m 7). Met 7 personen ≈ €8,07 p.p. per enkele reis.',
-    who: ['groep'], body: 'Eén enkele reis naar dezelfde bestemming in heel Nederland. Doordeweeks in de daluren en het hele weekend.', src: ['nsPrijzen', 'groepGeldig'], checked: T('20:33'), book: 'ns' },
+    who: ['groep'], body: 'Eén enkele reis naar dezelfde bestemming in heel Nederland. Doordeweeks in de daluren en het hele weekend.', src: ['nsPrijzen', 'groepGeldig'], checked: T9('20:33'), book: 'ns' },
   { id: 'ns-dal', title: 'NS Flex Dal Voordeel', price: '€6,35 per maand', sub: '40% korting buiten de spits. Gratis voor jongeren van 12 t/m 17 jaar.',
-    who: ['jongeren', 'iedereen'], body: 'Handig als je vaker buiten de spits reist. Jaarabonnement op saldo: €76,20 per jaar.', src: ['nsPrijzen', 'jongNS'], checked: T('20:33'), book: 'ns' },
+    who: ['jongeren', 'iedereen'], body: 'Handig als je vaker buiten de spits reist. Jaarabonnement op saldo: €76,20 per jaar.', src: ['nsPrijzen', 'jongNS'], checked: T9('20:33'), book: 'ns' },
   { id: 'ns-ptd', title: 'NS PrijsTijd Deals voor jongeren', price: '20% extra korting', sub: 'Voor 12 t/m 17 jaar, bovenop de PrijsTijd Deal.',
-    who: ['jongeren'], body: 'Vroegboekkorting voor rustige treinen; koop je kaartje minstens een dag van tevoren. (Bericht van okt 2025.)', src: ['jongNS'], checked: T('20:37'), book: 'ns' },
+    who: ['jongeren'], body: 'Vroegboekkorting voor rustige treinen; koop je kaartje minstens een dag van tevoren. (Bericht van okt 2025.)', src: ['jongNS'], checked: T9('20:37'), book: 'ns' },
   { id: 'ns-railrunner', title: 'Railrunner', price: '€2,50', sub: 'Kinderen van 4 t/m 11 jaar die met een volwassene reizen.',
-    who: ['kinderen'], body: 'Een vaste lage prijs per reisdag voor kinderen in de trein.', src: ['nsPrijzen'], checked: T('20:33'), book: 'ns' },
+    who: ['kinderen'], body: 'Een vaste lage prijs per reisdag voor kinderen in de trein.', src: ['nsPrijzen'], checked: T9('20:33'), book: 'ns' },
   { id: 'ns-weekendvrij', title: 'NS Flex Weekend Vrij', price: '€39,50 per maand', sub: 'Onbeperkt reizen in het weekend (2e klas). 65+: €28,95 per maand.',
-    who: ['iedereen', '65plus'], body: 'Slim als je vaak in het weekend reist, bijvoorbeeld voor stedentrips binnen Nederland.', src: ['nsPrijzen'], checked: T('20:33'), book: 'ns' },
+    who: ['iedereen', '65plus'], body: 'Slim als je vaak in het weekend reist, bijvoorbeeld voor stedentrips binnen Nederland.', src: ['nsPrijzen'], checked: T9('20:33'), book: 'ns' },
   { id: 'ns-60', title: 'NS Keuzedagen 60+', price: '€34,95 per jaar', sub: 'Alleen in combinatie met Dal Voordeel. NS Flex Dal Vrij 65+: €59,95 per maand.',
-    who: ['65plus'], body: 'Extra reisdagen voor ouderen; zie de voorwaarden bij NS.', src: ['nsPrijzen'], checked: T('20:33'), book: 'ns' },
+    who: ['65plus'], body: 'Extra reisdagen voor ouderen; zie de voorwaarden bij NS.', src: ['nsPrijzen'], checked: T9('20:33'), book: 'ns' },
   { id: 'db-groep', title: 'DB supervoordelig groepstarief Europa', price: 'vanaf €14,99 p.p.', sub: 'Vanaf 6 personen. Gratis zitplaatsreservering; kinderen vanaf 6 jaar halve prijs.',
-    who: ['groep'], body: 'Voor groepsreizen met Deutsche Bahn tussen Nederland en Duitsland (niet voor regionaal vervoer).', src: ['dbGroep'], checked: T('20:44'), book: 'db' },
+    who: ['groep'], body: 'Voor groepsreizen met Deutsche Bahn tussen Nederland en Duitsland (niet voor regionaal vervoer).', src: ['dbGroep'], checked: T9('20:44'), book: 'db' },
   { id: 'db-young', title: 'DB Super Sparpreis Europa Young', price: 'vanaf €18,99', sub: 'Kort traject (bv. Keulen); vanaf €29,99 voor lange trajecten (bv. Berlijn).',
-    who: ['jongeren'], body: 'Goedkope enkele reis in de 2e klas tussen Nederland en Duitsland voor jongeren.', src: ['dbYoung'], checked: T('20:44'), book: 'db' },
+    who: ['jongeren'], body: 'Goedkope enkele reis in de 2e klas tussen Nederland en Duitsland voor jongeren.', src: ['dbYoung'], checked: T9('20:44'), book: 'db' },
   { id: 'eurostar-kids', title: 'Eurostar met kinderen', price: '30% tot 50% korting', sub: 'Kinderen 4–11 jaar: 30% in de spits, tot 50% daarbuiten. Onder 4 jaar gratis.',
-    who: ['kinderen'], body: 'Volgens de pagina met speciale tarieven van Eurostar (gezien via zoekresultaat).', src: ['eurostarKids'], checked: T('20:36'), book: 'eurostar' },
+    who: ['kinderen'], body: 'Volgens de pagina met speciale tarieven van Eurostar (gezien via zoekresultaat).', src: ['eurostarKids'], checked: T9('20:36'), book: 'eurostar' },
   { id: 'eurostar-snap', title: 'Eurostar Snap', price: 'tot 50% korting', sub: 'Last-minute naar Parijs of Londen als je flexibel bent met je reistijd.',
-    who: ['iedereen'], body: 'Je kiest de dag, Eurostar kiest de trein. Alleen zinvol als je flexibel bent.', src: ['eurostarAll'], checked: T('20:36'), book: 'eurostar' },
+    who: ['iedereen'], body: 'Je kiest de dag, Eurostar kiest de trein. Alleen zinvol als je flexibel bent.', src: ['eurostarAll'], checked: T9('20:36'), book: 'eurostar' },
 ];
 
 /* ---------- Tips zonder vaste prijs ---------- */
@@ -1303,6 +1576,15 @@ const TIPS = [
   { title: 'Skitrein naar de Franse Alpen', body: 'De Travelski Night Express rijdt op vrijdagavond van 18 dec 2026 tot en met 26 mrt 2027 vanaf Amsterdam (ook Rotterdam, Antwerpen en Brussel).', src: ['nightride'], type: 'ski' },
   { title: 'Nightjet wintersport 2026–2027', body: 'Volgens Snowplaza: minicabine of couchette vanaf €54,90 en slaapcoupé vanaf €89,90 als je vroeg boekt. De Nightjet naar Innsbruck stopt ook in Kufstein, Wörgl en Jenbach.', src: ['snowplaza'], type: 'ski' },
   { title: 'Wintersport na 12 december', body: 'NS International verkoopt nog geen treintickets voor wintersport na 12 dec 2026. Houd de site in de gaten.', src: ['nsiWinter'], type: 'ski' },
+];
+
+/* ---------- Schoolvakanties 2026-2027 (Rijksoverheid; gelezen op 10 nov 2026) ---------- */
+// Kerst-, mei- en zomervakantie liggen vast. De voorjaarsvakantie is een advies: je school mag afwijken.
+const HOLIDAYS = [
+  { id: 'kerst', n: 'Kerstvakantie', all: ['2026-12-19', '2027-01-03'] },
+  { id: 'voorjaar', n: 'Voorjaarsvakantie', noord: ['2027-02-20', '2027-02-28'], midden: ['2027-02-20', '2027-02-28'], zuid: ['2027-02-13', '2027-02-21'] },
+  { id: 'mei', n: 'Meivakantie', all: ['2027-04-24', '2027-05-02'] },
+  { id: 'zomer', n: 'Zomervakantie', noord: ['2027-07-10', '2027-08-22'], midden: ['2027-07-17', '2027-08-29'], zuid: ['2027-07-24', '2027-09-05'] },
 ];
 
 /* ---------- Meldingen per vliegveld ---------- */
@@ -1420,12 +1702,19 @@ function saveSettings() { store.set('settings', settings); }
 /* ---------- 4. Toestand ---------- */
 const UTRECHT = STATIONS.find(s => s.n === 'Utrecht Centraal') || STATIONS[0];
 function defaultFilters() {
-  return { modes: new Set(['trein', 'vliegtuig', 'bus', 'combi']), maxPrice: 300, maxHours: 24, maxAccess: 300, direct: false, bagIncl: false, countries: new Set(), types: new Set(), status: new Set(['snapshot', 'live']) };
+  return { modes: new Set(['trein', 'vliegtuig', 'bus', 'combi']), maxPrice: 300, maxHours: 24, maxAccess: 300, direct: false, bagIncl: false, countries: new Set(), types: new Set(), status: new Set(['snapshot', 'live']),
+    origins: new Set(), nlOnly: false, depPart: 'alle', noIndic: false };
 }
 const state = {
   origin: store.get('origin', { n: UTRECHT.n, lat: UTRECHT.lat, lon: UTRECHT.lon, kind: 'station', uic: UTRECHT.uic }),
   dest: 'overal',
-  when: { mode: 'flex', month: null },
+  trip: ['enkel', 'retour'].includes(store.get('trip')) ? store.get('trip') : 'retour', // soort reis: enkele reis of retour
+  stay: 'alle',      // verblijf bij retour: alle | kort (1–4 nachten) | week (5–9) | lang (10+)
+  bag: 'tasje',      // bagage bij live zoeken: tasje | hand | koffer
+  when: { mode: 'flex', month: null, hol: 'kerst', region: store.get('region', 'midden'), from: '', to: '' },
+  perDest: store.get('perDest', true),   // één (beste) deal per bestemming tonen
+  layout: store.get('layout', 'cards'),  // cards | rows
+  shown: 24,
   travellers: 1,
   profile: store.get('profile', 'volwassene'),
   sort: 'prijs',
@@ -1497,6 +1786,7 @@ function enrich(deal) {
   const isFlight = deal.mode === 'vliegtuig';
   const routeKm = deal.km || (isFlight ? gcd * CO2.upliftFlight : gcd * CO2.routeGround);
   const durEst = deal.dur == null;
+  const nights = deal.out && deal.back ? Math.round((new Date(deal.back + 'T12:00:00') - new Date(deal.out + 'T12:00:00')) / 86400000) : null;
   const duration = deal.dur ?? estTravel(deal.mode === 'combi' ? 'trein' : deal.mode, gcd, deal.transfers);
   const fac = isFlight ? (gcd < 700 ? CO2.vliegKort : CO2.vlieg) : (deal.mode === 'bus' ? CO2.bus : CO2.trein);
   const legs = deal.trip === 'retour' ? 2 : 1;
@@ -1507,7 +1797,7 @@ function enrich(deal) {
   } else egress = deal.mode === 'bus' ? 20 : 15;
   return {
     status: 'snapshot', ...deal, dest, o, gcd, routeKm, dur: duration, durEst,
-    co2f: fac, co2One: routeKm * fac.f, legs, perDir: deal.price / legs, egress,
+    co2f: fac, co2One: routeKm * fac.f, legs, perDir: deal.price / legs, egress, nights,
   };
 }
 function door(e, home) {
@@ -1518,27 +1808,92 @@ function door(e, home) {
 function score(e, dd) { return e.perDir + settings.hourValue * dd.total / 60 + settings.co2Value * e.co2One + 4 * (e.transfers || 0); }
 
 let SNAP = [];
-function buildSnapshot() { SNAP = SNAPSHOT_DEALS.map(enrich).filter(Boolean); }
+// Deals zonder vaste bestemmings-id (bv. vluchten met alleen een vliegveldcode) krijgen hier hun bestemming
+function resolveDest(d) {
+  if (d.to && DEST[d.to]) return d;
+  const id = destForAirport(d.arr, d.toCity, d.toCountry);
+  return id ? { ...d, to: id } : null;
+}
+function buildSnapshot() { SNAP = SNAPSHOT_DEALS.map(resolveDest).filter(Boolean).map(enrich).filter(Boolean); }
+
+/* Soort reis: welke prijs hoort bij "enkele reis" of "retour"?
+   - Retour gekozen: echte retourprijzen tellen zoals ze zijn. Een vanafprijs zonder vaste datum (trein, bus)
+     rekenen we als 2 × de enkele reis en dat staat er dan bij als "berekend". Losse vluchten op één datum doen niet mee.
+   - Enkele reis gekozen: alleen prijzen die je los voor één richting kunt kopen. */
+function tripPrice(e) {
+  if (state.trip === 'retour') {
+    if (e.trip === 'retour') return { p: e.price, calc: false };
+    if (!e.out) return { p: e.price * 2, calc: true };
+    return null;
+  }
+  return e.trip === 'enkel' ? { p: e.price, calc: false } : null;
+}
+const tripWord = () => (state.trip === 'retour' ? 'retour' : 'enkele reis');
+const STAYS = { alle: { label: 'Maakt niet uit', min: 2, max: 7 }, kort: { label: 'Kort: 1 tot 4 nachten', min: 1, max: 4 }, week: { label: 'Week: 5 tot 9 nachten', min: 5, max: 9 }, lang: { label: 'Lang: 10 nachten of meer', min: 10, max: 21 } };
+function stayOk(e) {
+  if (state.trip !== 'retour' || state.stay === 'alle' || e.nights == null) return true;
+  const s = STAYS[state.stay];
+  return e.nights >= s.min && (state.stay === 'lang' || e.nights <= s.max);
+}
+// Periode waarin je wilt vertrekken (maand, schoolvakantie of eigen datums); null = flexibel
+function holidayRange(id = state.when.hol, region = state.when.region) {
+  const h = HOLIDAYS.find(x => x.id === id);
+  if (!h) return null;
+  const r = h.all || h[region] || h.midden;
+  return { from: r[0], to: r[1], name: h.n };
+}
+function whenWindow() {
+  const w = state.when;
+  if (w.mode === 'month' && w.month) {
+    const first = w.month + '-01';
+    return { from: first, to: addDays(addDays(first, 32).slice(0, 8) + '01', -1) };
+  }
+  if (w.mode === 'holiday') {
+    const r = holidayRange();
+    // Vertrek mag op de vrijdag voor de vakantie; je bent uiterlijk op de laatste dag terug
+    return r ? { from: addDays(r.from, -1), to: r.to, strictBack: true, name: r.name } : null;
+  }
+  if (w.mode === 'range' && (w.from || w.to)) return { from: w.from || todayISO(), to: w.to || '2099-12-31', strictBack: !!w.to };
+  return null;
+}
 
 /* ---------- 6. Filteren en sorteren ---------- */
-function allDeals() { return SNAP.concat(state.liveDeals); }
+// Alle deals: gecontroleerd + live. Staat een deal in beide, dan telt de live versie (die is nieuwer).
+let _all = null, _allKey = null;
+function allDeals() {
+  if (_all && _allKey === SNAP && _all.live === state.liveDeals) return _all;
+  const liveIds = new Set(state.liveDeals.map(e => e.id));
+  _all = SNAP.filter(e => !liveIds.has(e.id)).concat(state.liveDeals);
+  _allKey = SNAP; _all.live = state.liveDeals;
+  return _all;
+}
 function isWeekendStart(iso) { const g = new Date(iso + 'T12:00:00').getDay(); return g === 5 || g === 6; }
 function filterDeals(opts = {}) {
   const f = state.filters, today = todayISO();
-  let hiddenYouth = 0, expired = 0;
-  const out = [];
+  let hiddenYouth = 0, expired = 0, otherTrip = 0;
+  const out = [], win = whenWindow();
   for (const e of allDeals()) {
     if (e.out && e.out < today) { expired++; continue; }
+    const tp = opts.anyTrip ? { p: e.perDir, calc: false } : tripPrice(e);
+    if (!tp) { otherTrip++; continue; }
     if (!f.modes.has(e.mode)) continue;
     if (!f.status.has(e.status)) continue;
     if (!opts.ignoreDest && state.dest !== 'overal' && e.to !== state.dest) continue;
-    if (!noLimit(f.maxPrice, 300) && e.perDir > f.maxPrice) continue;
+    if (!noLimit(f.maxPrice, 300) && tp.p > f.maxPrice) continue;
+    if (!stayOk(e)) continue;
+    if (f.origins.size && !f.origins.has(e.from)) continue;
+    if (f.nlOnly && e.o.abroad) continue;
+    if (f.noIndic && e.indic) continue;
+    if (f.depPart !== 'alle' && e.depTime) {
+      const h = +e.depTime.slice(0, 2), part = h < 12 ? 'ochtend' : h < 18 ? 'middag' : 'avond';
+      if (part !== f.depPart) continue;
+    }
     if (!noLimit(f.maxHours, 24) && e.dur > f.maxHours * 60) continue;
     if (f.direct && e.transfers !== 0) continue;
     if (f.bagIncl && e.bag !== 'koffer') continue;
     if (f.countries.size && !f.countries.has(e.dest.cc)) continue;
     if (f.types.size && !e.dest.t.some(t => f.types.has(t))) continue;
-    if (state.when.mode === 'month' && state.when.month && e.out && e.out.slice(0, 7) !== state.when.month) continue;
+    if (win && e.out && (e.out < win.from || e.out > win.to || (win.strictBack && e.back && e.back > win.to))) continue;
     if (state.when.mode === 'weekend') {
       if (e.out && !isWeekendStart(e.out)) continue;
       if (e.out && e.back && (new Date(e.back) - new Date(e.out)) / 86400000 > 4) continue;
@@ -1547,23 +1902,26 @@ function filterDeals(opts = {}) {
     const dd = door(e, opts.home);
     if (!noLimit(f.maxAccess, 300) && dd.access > f.maxAccess) continue;
     if (e.who === 'jongeren' && !isYouth()) { hiddenYouth++; continue; }
-    out.push({ e, dd, s: score(e, dd) });
+    out.push({ e, dd, s: score(e, dd), tp });
   }
-  return { list: sortDeals(out), hiddenYouth, expired };
+  return { list: sortDeals(out), hiddenYouth, expired, otherTrip };
 }
 function sortDeals(arr) {
   const by = {
-    prijs: (a, b) => a.e.perDir - b.e.perDir || a.dd.total - b.dd.total,
+    prijs: (a, b) => a.tp.p - b.tp.p || a.dd.total - b.dd.total,
+    datum: (a, b) => (a.e.out || '9999').localeCompare(b.e.out || '9999') || a.tp.p - b.tp.p,
+    per100: (a, b) => per100(a.e) - per100(b.e),
     snel: (a, b) => a.dd.total - b.dd.total || a.e.perDir - b.e.perDir,
     groen: (a, b) => a.e.co2One - b.e.co2One || a.e.perDir - b.e.perDir,
     score: (a, b) => a.s - b.s,
-  }[state.sort] || ((a, b) => a.e.perDir - b.e.perDir);
+  }[state.sort] || ((a, b) => a.tp.p - b.tp.p);
   return arr.sort(by);
 }
 function activeFilterCount() {
   const f = state.filters;
   return (f.modes.size < 4 ? 1 : 0) + (!noLimit(f.maxPrice, 300) ? 1 : 0) + (!noLimit(f.maxHours, 24) ? 1 : 0) + (!noLimit(f.maxAccess, 300) ? 1 : 0)
-    + (f.direct ? 1 : 0) + (f.bagIncl ? 1 : 0) + f.countries.size + f.types.size + (f.status.size < 2 ? 1 : 0);
+    + (f.direct ? 1 : 0) + (f.bagIncl ? 1 : 0) + f.countries.size + f.types.size + (f.status.size < 2 ? 1 : 0)
+    + f.origins.size + (f.nlOnly ? 1 : 0) + (f.noIndic ? 1 : 0) + (f.depPart !== 'alle' ? 1 : 0);
 }
 
 /* ---------- 7. Links naar aanbieders ---------- */
@@ -1788,6 +2146,16 @@ const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-mo
 const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 function dealById(id) { return allDeals().find(d => d.id === id); }
 function routeText(e) { return `${e.o.n} → ${e.dest.n}`; }
+// Vlaggetje bij een land (twee letters → emoji); op systemen zonder vlaggen zie je de landcode
+const flag = cc => (/^[A-Z]{2}$/.test(cc || '') ? String.fromCodePoint(...[...cc].map(c => 0x1F1A5 + c.charCodeAt(0))) : '');
+const nightsText = n => (n == null ? '' : n === 0 ? 'zelfde dag terug' : `${n} nacht${n === 1 ? '' : 'en'}`);
+// Reisdocumenten: algemene regel per land (voor Nederlanders); details staan bij de bron
+const EU_SCHENGEN = new Set(['NL', 'BE', 'DE', 'FR', 'ES', 'PT', 'IT', 'IE', 'AT', 'CH', 'PL', 'CZ', 'SK', 'HU', 'HR', 'SI', 'GR', 'BG', 'RO', 'LT', 'LV', 'EE', 'FI', 'SE', 'NO', 'DK', 'IS', 'LU', 'MT', 'CY', 'LI']);
+function docInfo(cc) {
+  if (EU_SCHENGEN.has(cc)) return 'Een geldige ID-kaart of een geldig paspoort is genoeg (EU/Schengen).';
+  if (cc === 'GB') return 'Paspoort verplicht; een ID-kaart is niet genoeg. Je hebt ook een ETA nodig: een digitale reistoestemming die je vooraf online aanvraagt.';
+  return 'Buiten de EU en Schengen: controleer vooraf welk reisdocument (en soms visum) je nodig hebt.';
+}
 
 /* ---------- 9. Basis ---------- */
 const hostTheme = document.documentElement.getAttribute('data-theme');
@@ -1845,7 +2213,8 @@ function renderAll() { renderDeals(); renderView(state.tab === 'deals' ? 'none' 
 function renderHeaderPill() {
   const live = state.liveDeals.length;
   $('#dataPillText').textContent = `${SNAP.length} gecontroleerde deals${live ? ` · ${live} live` : ''}`;
-  $('#footSnapshot').textContent = `Gecontroleerde deals: ${SNAP.length}, gecontroleerd op ${CHECK_WINDOW}. Live prijzen komen via je Claude-connectors of je eigen API-sleutels.`;
+  const newest = SNAP.reduce((m, e) => (Date.parse(e.checked) > m ? Date.parse(e.checked) : m), 0);
+  $('#footSnapshot').textContent = `Gecontroleerde deals: ${SNAP.length}. Ingebouwde controle: ${CHECK_WINDOW}${newest ? `; nieuwste controle: ${timeNL(new Date(newest).toISOString())}` : ''}. Live prijzen komen via je Claude-connectors of je eigen API-sleutels.`;
 }
 
 /* ---------- 10. Zoeken ---------- */
@@ -1953,16 +2322,55 @@ function initSearch() {
     const v = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     monthSel.insertAdjacentHTML('beforeend', `<option value="${v}">${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}</option>`);
   }
-  $$('.seg [data-when]').forEach(b => b.addEventListener('click', () => {
-    state.when.mode = b.dataset.when;
-    $$('.seg [data-when]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-    monthSel.hidden = state.when.mode !== 'month';
-    state.when.month = state.when.mode === 'month' ? monthSel.value : null;
-    renderAll();
-  }));
+  const holSel = $('#inHol'), regSel = $('#inRegion'), inFrom = $('#inFrom'), inTo = $('#inTo');
+  const today = todayISO();
+  holSel.innerHTML = HOLIDAYS.filter(h => (h.all || h.zuid)[1] >= today).map(h => `<option value="${h.id}">${esc(h.n)}</option>`).join('');
+  if (![...holSel.options].some(o => o.value === state.when.hol) && holSel.options.length) state.when.hol = holSel.options[0].value;
+  holSel.value = state.when.hol; regSel.value = state.when.region;
+  inFrom.min = inTo.min = today;
+  const syncWhen = () => {
+    const m = state.when.mode;
+    $$('.seg [data-when]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.when === m)));
+    monthSel.hidden = m !== 'month';
+    $('#whenHoliday').hidden = m !== 'holiday';
+    $('#whenRange').hidden = m !== 'range';
+    state.when.month = m === 'month' ? monthSel.value : null;
+    const h = $('#whenHint'), r = m === 'holiday' ? holidayRange() : null;
+    const voorjaar = state.when.hol === 'voorjaar';
+    h.innerHTML = r ? `${esc(r.name)}: ${esc(dateNL(r.from, { year: true }))} t/m ${esc(dateNL(r.to, { year: true }))}.${voorjaar ? ' Dit is een adviesdatum: je school mag afwijken.' : ''} <a href="${SRC.vakanties.url}" target="_blank" rel="noopener">Bron: Rijksoverheid</a>`
+      : m === 'weekend' ? 'Vertrek op vrijdag of zaterdag, binnen 4 dagen terug.' : '';
+  };
+  $$('.seg [data-when]').forEach(b => b.addEventListener('click', () => { state.when.mode = b.dataset.when; syncWhen(); renderAll(); }));
   monthSel.addEventListener('change', () => { state.when.month = monthSel.value; renderAll(); });
+  holSel.addEventListener('change', () => { state.when.hol = holSel.value; syncWhen(); renderAll(); });
+  regSel.addEventListener('change', () => { state.when.region = regSel.value; store.set('region', regSel.value); syncWhen(); renderAll(); });
+  inFrom.addEventListener('change', () => { state.when.from = inFrom.value; if (inTo.value && inTo.value < inFrom.value) { inTo.value = ''; state.when.to = ''; } inTo.min = inFrom.value || today; renderAll(); });
+  inTo.addEventListener('change', () => { state.when.to = inTo.value; renderAll(); });
+  window.setWhen = (mode, extra = {}) => { Object.assign(state.when, extra, { mode }); if (extra.hol) holSel.value = extra.hol; syncWhen(); };
+  // Soort reis: retour of enkele reis
+  const syncTrip = () => {
+    $$('.trip-tabs [data-trip]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.trip === state.trip)));
+    $('#fieldStay').hidden = state.trip !== 'retour';
+    if (window.syncMoreOpts) syncMoreOpts();
+    $('#fPriceTrip').textContent = tripWord();
+  };
+  window.setTrip = t => { state.trip = t === 'enkel' ? 'enkel' : 'retour'; store.set('trip', state.trip); syncTrip(); };
+  $$('.trip-tabs [data-trip]').forEach(b => b.addEventListener('click', () => {
+    if (state.trip === b.dataset.trip) return;
+    setTrip(b.dataset.trip); renderAll();
+    if (CLOUD.kiwi && !state.scanning) scan({ onlyKiwi: true, initial: true });
+  }));
+  syncTrip();
+  // Op een telefoon staan reizigers, verblijf en bagage achter "Meer opties"
+  const moreBtn = $('#btnMoreOpts'), grid = $('#searchExtra');
+  const moreText = () => { $('#moreOptsText').textContent = grid.classList.contains('open') ? 'Minder opties' : `Meer opties: ${state.travellers} reiziger${state.travellers === 1 ? '' : 's'}${state.trip === 'retour' ? ', verblijf' : ''}, korting en bagage`; };
+  moreBtn.addEventListener('click', () => { const o = grid.classList.toggle('open'); moreBtn.setAttribute('aria-expanded', String(o)); moreText(); });
+  window.syncMoreOpts = moreText; moreText();
+  const staySel = $('#inStay'), bagSel = $('#inBag');
+  staySel.addEventListener('change', () => { state.stay = staySel.value; renderAll(); });
+  bagSel.addEventListener('change', () => { state.bag = bagSel.value; renderAll(); });
   // Reizigers en korting
-  const setTrav = n => { state.travellers = Math.max(1, Math.min(9, n)); $('#travCount').textContent = state.travellers; renderAll(); renderPasses(); };
+  const setTrav = n => { state.travellers = Math.max(1, Math.min(9, n)); $('#travCount').textContent = state.travellers; syncMoreOpts(); renderAll(); renderPasses(); };
   $('#travMinus').addEventListener('click', () => setTrav(state.travellers - 1));
   $('#travPlus').addEventListener('click', () => setTrav(state.travellers + 1));
   const prof = $('#inProfile');
@@ -2015,10 +2423,8 @@ $('#radarList').addEventListener('click', ev => {
 
 /* ---------- 12. Deals ---------- */
 function initFiltersUI() {
-  $('#fModes').innerHTML = Object.entries(MODES).map(([k, m]) => `<label class="check"><input type="checkbox" data-f="mode" value="${k}" checked><span class="mode-dot" style="background:var(--m-${k})"></span>${m.label}</label>`).join('');
+  $('#fModes').innerHTML = Object.entries(MODES).filter(([k]) => k !== 'combi' || SNAP.some(e => e.mode === 'combi')).map(([k, m]) => `<label class="check"><input type="checkbox" data-f="mode" value="${k}" checked><span class="mode-dot" style="background:var(--m-${k})"></span>${m.label}</label>`).join('');
   $('#fTypes').innerHTML = Object.entries(TYPES).map(([k, l]) => `<label class="check"><input type="checkbox" data-f="type" value="${k}">${l}</label>`).join('');
-  const ccs = [...new Set(SNAP.map(e => e.dest.cc))].sort((a, b) => COUNTRIES[a].localeCompare(COUNTRIES[b], 'nl'));
-  $('#fCountries').innerHTML = ccs.map(cc => `<label class="check"><input type="checkbox" data-f="country" value="${cc}">${esc(COUNTRIES[cc])}</label>`).join('');
   $('#fStatus').innerHTML = `<label class="check"><input type="checkbox" data-f="status" value="snapshot" checked>Gecontroleerd (met bron)</label><label class="check"><input type="checkbox" data-f="status" value="live" checked>Live (via API)</label>`;
   $('#filters').addEventListener('change', ev => {
     const t = ev.target, f = state.filters;
@@ -2026,8 +2432,12 @@ function initFiltersUI() {
     if (t.dataset.f === 'type') t.checked ? f.types.add(t.value) : f.types.delete(t.value);
     if (t.dataset.f === 'country') t.checked ? f.countries.add(t.value) : f.countries.delete(t.value);
     if (t.dataset.f === 'status') t.checked ? f.status.add(t.value) : f.status.delete(t.value);
+    if (t.dataset.f === 'origin') t.checked ? f.origins.add(t.value) : f.origins.delete(t.value);
     if (t.id === 'fDirect') f.direct = t.checked;
     if (t.id === 'fBag') f.bagIncl = t.checked;
+    if (t.id === 'fNlOnly') f.nlOnly = t.checked;
+    if (t.id === 'fNoIndic') f.noIndic = t.checked;
+    if (t.id === 'fDepPart') f.depPart = t.value;
     syncFilterUI(); renderAll();
   });
   const ranges = [['fPrice', 'maxPrice', v => noLimit(v, 300) ? 'alles' : `≤ ${eur(v)}`], ['fHours', 'maxHours', v => noLimit(v, 24) ? 'alles' : `≤ ${v} uur`], ['fAccess', 'maxAccess', v => noLimit(v, 300) ? 'alles' : `≤ ${dur(v)}`]];
@@ -2045,8 +2455,31 @@ function initFiltersUI() {
   $('#sortSel').addEventListener('change', ev => { state.sort = ev.target.value; renderDeals(); });
 }
 const debouncedRender = debounce(() => renderAll(), 120);
+// Lijst met vertrekpunten in het filter: alleen punten waar nu deals vanaf gaan
+let originSig = '';
+function renderOriginFilter() {
+  const count = {};
+  for (const e of allDeals()) count[e.from] = (count[e.from] || 0) + 1;
+  const keys = Object.keys(count).sort((a, b) => ORIGINS[a].kind.localeCompare(ORIGINS[b].kind) || ORIGINS[a].n.localeCompare(ORIGINS[b].n, 'nl'));
+  const sig = keys.join(',');
+  if (sig === originSig) return;
+  originSig = sig;
+  $('#fOrigins').innerHTML = keys.map(k => `<label class="check"><input type="checkbox" data-f="origin" value="${k}">${esc(ORIGINS[k].n)}</label>`).join('');
+}
+let countrySig = '';
+function renderCountryFilter() {
+  const ccs = [...new Set(allDeals().map(e => e.dest.cc))].sort((a, b) => (COUNTRIES[a] || a).localeCompare(COUNTRIES[b] || b, 'nl'));
+  const sig = ccs.join(',');
+  if (sig === countrySig) return;
+  countrySig = sig;
+  $('#fCountries').innerHTML = ccs.map(cc => `<label class="check"><input type="checkbox" data-f="country" value="${cc}"><span aria-hidden="true">${flag(cc)}</span> ${esc(COUNTRIES[cc] || cc)}</label>`).join('');
+}
 function syncFilterUI() {
   const f = state.filters;
+  renderOriginFilter(); renderCountryFilter();
+  $$('#filters [data-f="origin"]').forEach(c => { c.checked = f.origins.has(c.value); });
+  $('#fNlOnly').checked = f.nlOnly; $('#fNoIndic').checked = f.noIndic; $('#fDepPart').value = f.depPart;
+  $('#fPriceTrip').textContent = tripWord();
   $$('#filters [data-f="mode"]').forEach(c => { c.checked = f.modes.has(c.value); });
   $$('#filters [data-f="type"]').forEach(c => { c.checked = f.types.has(c.value); });
   $$('#filters [data-f="country"]').forEach(c => { c.checked = f.countries.has(c.value); });
@@ -2063,60 +2496,82 @@ function syncFilterUI() {
 function renderActiveFilters() {
   const f = state.filters, chips = [];
   if (state.dest !== 'overal') chips.push({ label: `Naar: ${DEST[state.dest].n}`, fn: () => setDest('overal') });
-  if (state.when.mode !== 'flex') chips.push({ label: state.when.mode === 'weekend' ? 'Weekend' : `Maand: ${$('#inMonth').selectedOptions[0]?.textContent || ''}`, fn: () => $('.seg [data-when="flex"]').click() });
+  if (state.when.mode !== 'flex') {
+    const w = state.when, r = w.mode === 'holiday' ? holidayRange() : null;
+    const label = w.mode === 'weekend' ? 'Weekend' : w.mode === 'month' ? `Maand: ${$('#inMonth').selectedOptions[0]?.textContent || ''}`
+      : w.mode === 'holiday' ? (r ? r.name : 'Vakantie') : `Datums: ${w.from ? dateNL(w.from, { dow: false }) : '…'} – ${w.to ? dateNL(w.to, { dow: false }) : '…'}`;
+    chips.push({ label, fn: () => $('.seg [data-when="flex"]').click() });
+  }
+  if (state.trip === 'retour' && state.stay !== 'alle') chips.push({ label: STAYS[state.stay].label, fn: () => { state.stay = 'alle'; $('#inStay').value = 'alle'; } });
+  f.origins.forEach(o => chips.push({ label: `Vanaf ${ORIGINS[o].n}`, fn: () => f.origins.delete(o) }));
+  if (f.nlOnly) chips.push({ label: 'Vertrek in Nederland', fn: () => { f.nlOnly = false; } });
+  if (f.depPart !== 'alle') chips.push({ label: `Vertrek: ${f.depPart}`, fn: () => { f.depPart = 'alle'; } });
+  if (f.noIndic) chips.push({ label: 'Zonder indicaties', fn: () => { f.noIndic = false; } });
   if (f.modes.size < 4) chips.push({ label: `Vervoer: ${[...f.modes].map(m => MODES[m].label).join(', ') || 'geen'}`, fn: () => { f.modes = new Set(Object.keys(MODES)); } });
-  if (!noLimit(f.maxPrice, 300)) chips.push({ label: `Max ${eur(f.maxPrice)}`, fn: () => { f.maxPrice = 300; } });
+  if (!noLimit(f.maxPrice, 300)) chips.push({ label: `Max ${eur(f.maxPrice)} ${tripWord()}`, fn: () => { f.maxPrice = 300; } });
   if (!noLimit(f.maxHours, 24)) chips.push({ label: `Max ${f.maxHours} uur`, fn: () => { f.maxHours = 24; } });
   if (!noLimit(f.maxAccess, 300)) chips.push({ label: `Naar vertrekpunt ≤ ${dur(f.maxAccess)}`, fn: () => { f.maxAccess = 300; } });
   if (f.direct) chips.push({ label: 'Rechtstreeks', fn: () => { f.direct = false; } });
   if (f.bagIncl) chips.push({ label: 'Koffer inbegrepen', fn: () => { f.bagIncl = false; } });
   f.types.forEach(t => chips.push({ label: TYPES[t], fn: () => f.types.delete(t) }));
-  f.countries.forEach(c => chips.push({ label: COUNTRIES[c], fn: () => f.countries.delete(c) }));
+  f.countries.forEach(c => chips.push({ label: COUNTRIES[c] || c, fn: () => f.countries.delete(c) }));
   if (f.status.size < 2) chips.push({ label: f.status.has('live') ? 'Alleen live' : 'Alleen gecontroleerd', fn: () => { f.status = new Set(['snapshot', 'live']); } });
   const box = $('#activeFilters');
   box.innerHTML = chips.map((c, i) => `<button type="button" class="chip" data-i="${i}" aria-label="Filter weghalen: ${esc(c.label)}">${esc(c.label)} ${icon('i-close', 'sm')}</button>`).join('');
   box.onclick = ev => { const b = ev.target.closest('[data-i]'); if (!b) return; chips[+b.dataset.i].fn(); syncFilterUI(); renderAll(); };
 }
-function dealCard({ e, dd }) {
+// Prijsblok: bedrag + uitleg, passend bij enkele reis of retour
+function priceBlock(e, tp) {
+  const notes = [];
+  if (tp.calc) notes.push(`retour p.p., <b>berekend</b>: 2 × ${eur(e.price)}`);
+  else if (e.trip === 'retour') { notes.push('retour p.p.'); notes.push(`≈ ${eur(e.perDir)} per richting`); }
+  else notes.push('enkele reis p.p.');
+  if (state.travellers > 1) notes.push(`${state.travellers} pers.: <b>${eur(tp.p * state.travellers)}</b>`);
+  return `<div class="price-row"><div class="price">${e.priceType === 'vanaf' ? '<small>vanaf</small>' : ''}${eur(tp.p)}</div><div class="price-note">${notes.join('<br>')}</div></div>`;
+}
+// Heen en terug als twee regels (alleen als de data vastliggen)
+function legsBlock(e) {
+  if (!e.out) return `<div class="dates">${icon('i-cal', 'sm')} Datum naar keuze, zolang beschikbaar</div>`;
+  const leg = (k, d, t, extra) => `<div class="leg"><span class="leg-k">${k}</span><b>${esc(dateNL(d))}</b>${t ? `<span>${esc(t)}</span>` : ''}${extra ? `<span class="muted">${extra}</span>` : ''}</div>`;
+  return `<div class="legs">${leg('Heen', e.out, e.depTime, e.flight ? esc(e.flight.split(', ')[0]) : '')}${e.back ? leg('Terug', e.back, e.backTime, e.backFlight ? esc(e.backFlight.split(', ')[0]) : '') : ''}${e.nights != null ? `<span class="nights">${nightsText(e.nights)}</span>` : ''}</div>`;
+}
+const statusBadge = e => (e.indic ? '<span class="badge indic">Indicatie</span>' : `<span class="badge ${e.status}">${e.status === 'live' ? 'Live' : 'Gecontroleerd'}</span>`);
+function bagLabel(e) {
+  if (e.mode === 'vliegtuig' && state.bag !== 'tasje' && e.bag === 'tasje') return 'Zonder koffer: die kost extra';
+  return { koffer: 'Koffer inbegrepen', hand: 'Handbagagekoffer inbegrepen', tasje: 'Alleen klein tasje gratis', onbekend: 'Bagage: check bij boeken' }[e.bag] || 'Bagage: check';
+}
+function dealCard(x) {
+  const { e, dd } = x, tp = x.tp || tripPrice(e) || { p: e.price, calc: false };
   const m = MODES[e.mode], fav = isFav(e.id);
   const arrName = e.arr && ARR_AIRPORTS[e.arr] ? ` <span class="small muted">(${esc(ARR_AIRPORTS[e.arr].n)})</span>` : '';
   const route = `${e.o.n} naar ${e.dest.n}`;
-  const tripLabel = e.trip === 'retour' ? 'retour p.p.' : 'enkele reis p.p.';
-  const notes = [];
-  notes.push(tripLabel);
-  if (e.trip === 'retour') notes.push(`≈ ${eur(e.perDir)} per richting`);
-  if (state.travellers > 1) notes.push(`${state.travellers} pers.: <b>${eur(e.price * state.travellers)}</b>`);
-  const dates = e.out ? `${dateNL(e.out)}${e.depTime ? ' om ' + e.depTime : ''}${e.back ? ' – ' + dateNL(e.back) : ''}` : 'Datum naar keuze, zolang beschikbaar';
   const tr = e.transfers === 0 ? 'Rechtstreeks' : e.transfers == null ? 'Overstappen: onbekend' : `${e.transfers} overstap${e.transfers > 1 ? 'pen' : ''}`;
-  const bag = { koffer: 'Koffer inbegrepen', tasje: 'Alleen klein tasje gratis', onbekend: 'Bagage: check bij boeken' }[e.bag] || 'Bagage: check';
   const src = srcOf(e);
   const age = ageOf(e.checked);
   const book = bookLink(e);
   const acc = dd.a;
+  const more = x.more && x.more.n ? `<button class="more-opts" type="button" data-act="more">${icon('i-layers', 'sm')}<span>Nog ${x.more.n} andere optie${x.more.n === 1 ? '' : 's'} naar ${esc(e.dest.n)}</span>${icon('i-enkel', 'sm')}</button>` : '';
   return `<li class="deal" data-mode="${e.mode}" data-id="${esc(e.id)}">
     <div class="deal-top">
       <span class="mode-tag">${icon(m.icon)}${m.label}</span>
       <span class="provider">${esc(e.provider)}</span>
-      <span class="badge ${e.status}">${e.status === 'live' ? 'Live' : 'Gecontroleerd'}</span>
+      ${statusBadge(e)}
       ${TOP_IDS.has(e.id) ? '<span class="badge top">Topdeal</span>' : ''}
       ${e.who === 'jongeren' ? '<span class="badge who">Jongerentarief</span>' : ''}
     </div>
     <button class="icon-btn fav" type="button" data-act="fav" aria-pressed="${fav}" aria-label="${fav ? 'Haal uit favorieten' : 'Bewaar als favoriet'}: ${esc(route)}">${icon('i-star')}</button>
     <div class="route">
-      <h3>${esc(e.o.n)} <span class="arrow" aria-hidden="true">→</span><span class="sr-only">naar</span> ${esc(e.dest.n)}${arrName}</h3>
-      <div class="sub">${esc(e.dest.c)} · ${e.dest.t.map(t => TYPES[t]).join(', ')}</div>
+      <h3><span class="from">${esc(e.o.n)} <span class="arrow" aria-hidden="true">→</span><span class="sr-only"> naar</span></span> <span class="to">${esc(e.dest.n)}${arrName}</span></h3>
+      <div class="sub"><span class="flag" aria-hidden="true">${flag(e.dest.cc)}</span> ${esc(e.dest.c)}${e.dest.t.length ? ' · ' + e.dest.t.map(t => TYPES[t]).join(', ') : ''}</div>
     </div>
-    <div class="price-row">
-      <div class="price">${e.priceType === 'vanaf' ? '<small>vanaf</small>' : ''}${eur(e.price)}</div>
-      <div class="price-note">${notes.join('<br>')}</div>
-    </div>
-    <div class="dates">${icon('i-cal', 'sm')} ${dates}</div>
+    ${priceBlock(e, tp)}
+    ${legsBlock(e)}
     ${histLine(e)}
     <ul class="facts">
       <li>${icon('i-clock')}${dur(e.dur)}${e.durEst ? ` <span class="est">(geschat${e.transfers ? ', incl. overstap' : ''})</span>` : ''}</li>
       <li>${icon('i-route')}${tr}</li>
       <li title="CO2 per persoon, per richting">${icon('i-leaf')}${kg(e.co2One)} CO2</li>
-      <li>${icon('i-bag')}${bag}</li>
+      <li>${icon('i-bag')}${bagLabel(e)}</li>
     </ul>
     <div class="d2d">Deur tot deur vanaf ${esc(state.origin.n)}: <b>ca. ${dur(dd.total)}</b> · naar ${esc(e.o.n)} ${acc.live ? 'met NS: ' + dur(acc.min) + (acc.eur != null ? ', ' + eur(acc.eur) : '') : 'ca. ' + dur(acc.min)}</div>
     <div class="src-line">Bron: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.name)}</a>${e.status === 'live' && e.srcLive ? `<span>· opgehaald ${esc(timeNL(e.checked))}</span><span class="age">(prijs door gebruikers gevonden in de 48 uur ervoor)</span>` : `<span>· ${e.status === 'live' ? 'live opgehaald' : 'gecontroleerd'} ${esc(timeNL(e.checked))}</span><span class="age ${age.cls}">(${age.text})</span>`}${e.srcDate ? `<span>· bron-datum ${esc(dateNL(e.srcDate, { dow: false, year: true }))}</span>` : ''}</div>
@@ -2126,18 +2581,94 @@ function dealCard({ e, dd }) {
       <button class="icon-btn" type="button" data-act="share" aria-label="Deel ${esc(route)}">${icon('i-share')}</button>
       <button class="btn ghost sm" type="button" data-act="info">Details</button>
     </div>
+    ${more}
   </li>`;
 }
-let lastList = [];
+// Compacte regel (lijstweergave): één tik opent de details
+function dealRow(x) {
+  const { e } = x, tp = x.tp || tripPrice(e) || { p: e.price, calc: false };
+  const when = e.out ? `${dateNL(e.out)}${e.back ? ' – ' + dateNL(e.back) : ''}${e.nights != null ? ' · ' + nightsText(e.nights) : ''}` : 'datum naar keuze';
+  return `<li class="deal-row" data-mode="${e.mode}" data-id="${esc(e.id)}">
+    <button type="button" class="row-main" data-act="info" aria-label="${esc(e.o.n)} naar ${esc(e.dest.n)}, ${e.priceType === 'vanaf' ? 'vanaf ' : ''}${esc(eur(tp.p))} ${tp.calc || e.trip === 'retour' ? 'retour' : 'enkele reis'}. Open details.">
+      <span class="row-ic">${icon(MODES[e.mode].icon)}</span>
+      <span class="row-txt"><b>${esc(e.dest.n)}</b> <span class="flag" aria-hidden="true">${flag(e.dest.cc)}</span>${e.indic ? ' <span class="badge indic">Indicatie</span>' : e.status === 'live' ? ' <span class="badge live">Live</span>' : ''}
+        <span class="row-sub">${esc(e.o.n)} · ${esc(when)}</span>
+        <span class="row-sub">${esc(e.provider)} · ${e.transfers === 0 ? 'rechtstreeks' : e.transfers == null ? 'overstappen onbekend' : e.transfers + ' overstap' + (e.transfers > 1 ? 'pen' : '')}${x.more && x.more.n ? ` · nog ${x.more.n} optie${x.more.n === 1 ? '' : 's'}` : ''}</span></span>
+      <span class="row-price">${e.priceType === 'vanaf' ? '<small>vanaf</small> ' : ''}<b>${eur(tp.p)}</b><small>${tp.calc ? 'retour (2 ×)' : e.trip === 'retour' ? 'retour' : 'enkel'}</small></span>
+    </button>
+  </li>`;
+}
+/* Ideeën: tegels die in één tik een slimme selectie maken. Elke tegel telt echte deals (voor enkele reis of retour). */
+const INSPIRE = [
+  { id: 'zon', title: 'Naar de zon', icon: 'i-sun', test: e => e.dest.t.includes('strand'), apply: f => f.types.add('strand') },
+  { id: 'stad', title: 'Stedentrip', icon: 'i-city', test: e => e.dest.t.includes('stad'), apply: f => f.types.add('stad') },
+  { id: 'kerst', title: 'Kerstvakantie', icon: 'i-gift', test: e => { const r = holidayRange('kerst'); return !!(r && e.out && e.out >= addDays(r.from, -1) && e.out <= r.to && (!e.back || e.back <= r.to)); }, apply: () => setWhen('holiday', { hol: 'kerst' }), needs: () => holidayRange('kerst').to >= todayISO() },
+  { id: 'trein', title: 'Met de trein', icon: 'i-trein', test: e => e.mode === 'trein', apply: f => { f.modes = new Set(['trein']); } },
+  { id: 'ski', title: 'Wintersport', icon: 'i-snow', test: e => e.dest.t.includes('ski'), apply: f => f.types.add('ski') },
+  { id: 'natuur', title: 'Natuur', icon: 'i-tree', test: e => e.dest.t.includes('natuur'), apply: f => f.types.add('natuur') },
+  { id: 'budget', title: () => `Onder ${eur(state.trip === 'retour' ? 50 : 25)}`, icon: 'i-euro', test: (e, tp) => tp.p <= (state.trip === 'retour' ? 50 : 25), apply: f => { f.maxPrice = state.trip === 'retour' ? 50 : 25; } },
+  { id: 'direct', title: 'Rechtstreeks vliegen', icon: 'i-vliegtuig', test: e => e.mode === 'vliegtuig' && e.transfers === 0, apply: f => { f.modes = new Set(['vliegtuig']); f.direct = true; } },
+];
+function renderInspire() {
+  const box = $('#inspire'); if (!box) return;
+  const today = todayISO(), base = [];
+  for (const e of allDeals()) {
+    if ((e.out && e.out < today) || (e.who === 'jongeren' && !isYouth())) continue;
+    const tp = tripPrice(e); if (tp) base.push({ e, tp });
+  }
+  const tiles = INSPIRE.filter(t => !t.needs || t.needs()).map(t => {
+    const hit = base.filter(x => t.test(x.e, x.tp));
+    return hit.length ? { t, n: new Set(hit.map(x => x.e.to)).size, min: Math.min(...hit.map(x => x.tp.p)) } : null;
+  }).filter(Boolean);
+  box.hidden = !tiles.length;
+  box.innerHTML = tiles.length ? `<h2 class="inspire-title">Ideeën voor jou <span class="small muted">${tripWord()}, per persoon</span></h2><div class="inspire-row">${tiles.map(({ t, n, min }) => `<button type="button" class="tile" data-tile="${t.id}">
+      <span class="tile-ic">${icon(t.icon)}</span><b>${esc(typeof t.title === 'function' ? t.title() : t.title)}</b>
+      <span class="tile-p">vanaf ${eur(min)}</span><span class="small">${n} bestemming${n === 1 ? '' : 'en'}</span></button>`).join('')}</div>` : '';
+}
+$('#inspire').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-tile]'); if (!b) return;
+  const t = INSPIRE.find(x => x.id === b.dataset.tile); if (!t) return;
+  state.filters = defaultFilters();
+  setWhen('flex');
+  state.stay = 'alle'; $('#inStay').value = 'alle';
+  state.dest = 'overal'; $('#inDest').value = ''; $('#btnAnywhere').setAttribute('aria-pressed', 'true');
+  t.apply(state.filters);
+  state.sort = 'prijs'; $('#sortSel').value = 'prijs';
+  syncFilterUI(); renderAll();
+  if (state.tab !== 'deals') goTab('deals');
+  $('#view-deals').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  announce(`${typeof t.title === 'function' ? t.title() : t.title}: ${lastList.length} deals.`);
+});
+let lastList = [], lastSig = '';
 function renderDeals() {
-  const { list, hiddenYouth, expired } = filterDeals();
+  const { list, hiddenYouth, expired, otherTrip } = filterDeals();
   lastList = list;
-  const cheapest = list.reduce((m, x) => (!m || x.e.perDir < m.e.perDir ? x : m), null);
+  // Eén deal per bestemming: de beste volgens de sortering, met een teller voor de rest
+  let view = list;
+  const grouped = state.perDest && state.dest === 'overal';
+  if (grouped) {
+    // Een gecontroleerde of live deal gaat voor een indicatie: die staat dan bij de "andere opties"
+    const seen = new Map(); view = [];
+    for (const x of list) {
+      const g = seen.get(x.e.to);
+      if (!g) { x.more = { n: 0, rep: x }; seen.set(x.e.to, x.more); view.push(x); continue; }
+      g.n++;
+      if (g.rep.e.indic && !x.e.indic) { view[view.indexOf(g.rep)] = null; x.more = g; g.rep = x; view.push(x); }
+    }
+    view = view.filter(Boolean);
+  }
+  const sig = `${state.sort}|${state.trip}|${grouped}|${state.dest}|${view.length}|${view[0] ? view[0].e.id : ''}`;
+  if (sig !== lastSig) { state.shown = 24; lastSig = sig; }
+  const cheapest = list.reduce((m, x) => (!m || x.tp.p < m.tp.p ? x : m), null);
   $('#summary').innerHTML = list.length
-    ? `${list.length} deal${list.length === 1 ? '' : 's'} <span class="muted">· goedkoopst ${eur(cheapest.e.perDir)} p.p. per richting (${esc(cheapest.e.dest.n)})</span>`
+    ? `${grouped ? `${view.length} bestemming${view.length === 1 ? '' : 'en'} · ` : ''}${list.length} deal${list.length === 1 ? '' : 's'} <span class="muted">· goedkoopst ${eur(cheapest.tp.p)} ${tripWord()} p.p. (${esc(cheapest.e.dest.n)})</span>`
     : 'Geen deals <span class="muted">met deze keuzes</span>';
-  const notices = [];
-  if (hiddenYouth) notices.push(`<div class="notice info">${icon('i-info')}<div>${hiddenYouth} jongerentarie${hiddenYouth === 1 ? 'f is' : 'ven zijn'} verborgen. Kies "Jongere" bij reizigers om ze te zien.</div></div>`);
+  const notices = [], hints = [];
+  if (otherTrip) hints.push(state.trip === 'retour'
+    ? `<span class="trip-note"><b>Retourprijzen.</b> Trein en bus met een vrije datum: 2 × de enkele reis ("berekend"). ${otherTrip} losse enkele vlucht${otherTrip === 1 ? '' : 'en'} ${otherTrip === 1 ? 'doet' : 'doen'} niet mee. <button class="linkish" type="button" data-trip-switch>Toon enkele reizen</button></span>`
+    : `<span class="trip-note"><b>Enkele reizen.</b> ${otherTrip} deal${otherTrip === 1 ? '' : 's'} die alleen als retour te koop ${otherTrip === 1 ? 'is, doet' : 'zijn, doen'} niet mee. <button class="linkish" type="button" data-trip-switch>Toon retourreizen</button></span>`);
+  if (hiddenYouth) hints.push(`<span>${hiddenYouth} jongerentarie${hiddenYouth === 1 ? 'f is' : 'ven zijn'} verborgen. Kies "Jongere" bij reizigers om ze te zien.</span>`);
+  $('#dealHints').innerHTML = hints.join('');
   if (list.some(x => x.e.from === 'EIN')) notices.push(`<div class="notice">${icon('i-info')}<div><b>Let op:</b> ${esc(NOTICES.EIN.text)} <a href="${SRC.einClose.url}" target="_blank" rel="noopener">Bron</a></div></div>`);
   const newest = SNAP.reduce((m, e) => (Date.parse(e.checked) > m ? Date.parse(e.checked) : m), 0);
   const snapAge = ageOf(new Date(newest || Date.now()).toISOString());
@@ -2145,12 +2676,29 @@ function renderDeals() {
   if (expired) notices.push(`<div class="notice info">${icon('i-info')}<div>${expired} deal${expired === 1 ? '' : 's'} met een datum in het verleden ${expired === 1 ? 'is' : 'zijn'} weggelaten.</div></div>`);
   $('#dealNotices').innerHTML = notices.join('');
   renderTopDeals(list);
-  $('#dealGrid').innerHTML = list.map(dealCard).join('') + (state.scanning && (settings.tpToken || CLOUD.kiwi) ? '<li class="skeleton" aria-label="Live resultaten laden"></li><li class="skeleton" aria-hidden="true"></li>' : '');
+  const grid = $('#dealGrid'), rows = state.layout === 'rows';
+  grid.classList.toggle('rows', rows);
+  const page = view.slice(0, state.shown);
+  grid.innerHTML = page.map(rows ? dealRow : dealCard).join('') + (state.scanning && (settings.tpToken || CLOUD.kiwi) ? '<li class="skeleton" aria-label="Live resultaten laden"></li><li class="skeleton" aria-hidden="true"></li>' : '');
+  const rest = view.length - page.length;
+  $('#moreRow').innerHTML = rest > 0 ? `<button class="btn ghost" type="button" id="btnMore">Toon nog ${Math.min(24, rest)} ${grouped ? 'bestemmingen' : 'deals'} <span class="muted">(${rest} over)</span></button>` : '';
   $('#emptyState').innerHTML = list.length ? '' : emptyState();
+  const pd = $('#btnPerDest'); pd.setAttribute('aria-pressed', String(state.perDest)); pd.disabled = state.dest !== 'overal';
+  $('#btnLayout').innerHTML = icon(rows ? 'i-grid' : 'i-rows');
+  $('#btnLayout').setAttribute('aria-label', rows ? 'Toon als kaarten' : 'Toon als compacte lijst');
   renderActiveFilters();
   syncFilterUI();
   renderProviders();
+  renderInspire();
 }
+$('#moreRow').addEventListener('click', ev => { if (ev.target.closest('#btnMore')) { state.shown += 24; renderDeals(); } });
+$('#dealHints').addEventListener('click', ev => {
+  if (!ev.target.closest('[data-trip-switch]')) return;
+  setTrip(state.trip === 'retour' ? 'enkel' : 'retour'); renderAll();
+  if (CLOUD.kiwi && !state.scanning) scan({ onlyKiwi: true, initial: true });
+});
+$('#btnPerDest').addEventListener('click', () => { state.perDest = !state.perDest; store.set('perDest', state.perDest); renderDeals(); toast(state.perDest ? 'Je ziet de beste deal per bestemming.' : 'Je ziet alle deals los.', { ms: 2200 }); });
+$('#btnLayout').addEventListener('click', () => { state.layout = state.layout === 'rows' ? 'cards' : 'rows'; store.set('layout', state.layout); renderDeals(); });
 function emptyState() {
   const f = state.filters;
   const tips = [];
@@ -2210,8 +2758,9 @@ function renderPasses() {
 }
 $('#dealGrid').addEventListener('click', ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return;
-  const id = b.closest('.deal').dataset.id, e = dealById(id); if (!e) return;
+  const id = b.closest('[data-id]').dataset.id, e = dealById(id); if (!e) return;
   const act = b.dataset.act;
+  if (act === 'more') { setDest(e.to); $('#view-deals').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); return; }
   if (act === 'fav') { toggleFav(e); b.setAttribute('aria-pressed', String(isFav(e.id))); }
   if (act === 'alert') openAlertDialog(e);
   if (act === 'share') shareDeal(e);
@@ -2231,17 +2780,21 @@ function openDealDialog(e, opts = {}) {
   const ctx = linkCtx(e);
   $('#dlgDealTitle').textContent = `${e.o.n} → ${e.dest.n}`;
   $('#dlgDealBody').innerHTML = `
-    <div class="deal-top"><span class="mode-tag" style="color:var(--m-${e.mode})">${icon(MODES[e.mode].icon)}${MODES[e.mode].label}</span><span class="provider">${esc(e.provider)}</span><span class="badge ${e.status}">${e.status === 'live' ? 'Live' : 'Gecontroleerd'}</span></div>
+    <div class="deal-top"><span class="mode-tag" style="color:var(--m-${e.mode})">${icon(MODES[e.mode].icon)}${MODES[e.mode].label}</span><span class="provider">${esc(e.provider)}</span>${statusBadge(e)}</div>
     <div class="price-row"><div class="price">${e.priceType === 'vanaf' ? '<small>vanaf</small>' : ''}${eur(e.price)}</div><div class="price-note">${e.trip === 'retour' ? 'retour' : 'enkele reis'} per persoon${e.trip === 'retour' ? `<br>≈ ${eur(e.perDir)} per richting` : ''}${state.travellers > 1 ? `<br>${state.travellers} personen: <b>${eur(e.price * state.travellers)}</b>` : ''}</div></div>
+    ${e.trip === 'enkel' && !e.out ? `<p class="calc-note">${icon('i-retour', 'sm')}<span>Heen en terug: reken op <b>2 × ${eur(e.price)} = ${eur(e.price * 2)}</b> per persoon. Dat is <b>berekend</b>, niet door de bron genoemd: de vanafprijs geldt niet op elke dag en in elke richting.</span></p>` : ''}
+    ${e.indic ? `<p class="calc-note">${icon('i-info', 'sm')}<span><b>Indicatie:</b> Skyscanner schat deze prijs op basis van de laatste 4 dagen. Het is geen live prijs.</span></p>` : ''}
     ${e.note ? `<p>${esc(e.note)}</p>` : ''}
     ${e.parts ? `<div><b>Opbouw van de prijs</b><ul>${e.parts.map(p => `<li>${esc(p.label)}: ${eur(p.price)} (<a href="${SRC[p.src].url}" target="_blank" rel="noopener">${esc(SRC[p.src].name)}</a>)</li>`).join('')}</ul></div>` : ''}
     <dl class="kv">
       <dt>Vertrek</dt><dd>${esc(e.o.full || e.o.n)}</dd>
       <dt>Aankomst</dt><dd>${esc(e.dest.n)}, ${esc(e.dest.c)}${e.arr && ARR_AIRPORTS[e.arr] ? ` (vliegveld ${esc(ARR_AIRPORTS[e.arr].n)}, ${Math.round(km(ARR_AIRPORTS[e.arr], e.dest))} km van het centrum)` : ''}</dd>
-      <dt>Reisdata</dt><dd>${e.out ? `${dateNL(e.out, { year: true })}${e.depTime ? ', vertrek ' + e.depTime : ''}${e.back ? ' tot ' + dateNL(e.back, { year: true }) : ''}${e.flight ? ` (vlucht ${esc(e.flight)})` : ''}` : 'Vrij te kiezen; de vanafprijs geldt niet op elke dag'}</dd>
+      ${e.out ? `<dt>Heenreis</dt><dd>${esc(dateNL(e.out, { year: true }))}${e.depTime ? ', vertrek ' + esc(e.depTime) : ''}${e.flight ? ` (vlucht ${esc(e.flight)})` : ''}</dd>` : '<dt>Reisdata</dt><dd>Vrij te kiezen; de vanafprijs geldt niet op elke dag</dd>'}
+      ${e.back ? `<dt>Terugreis</dt><dd>${esc(dateNL(e.back, { year: true }))}${e.backTime ? ', vertrek ' + esc(e.backTime) : ''}${e.backFlight ? ` (vlucht ${esc(e.backFlight)})` : ''}${e.backDur ? `, ${dur(e.backDur)}` : ''}${e.backFrom && e.backFrom !== e.arr ? ` · <b>vanaf ${esc(AIRPORT_NAMES[e.backFrom] || e.backFrom)} (${esc(e.backFrom)})</b>` : ''}${e.nights != null ? ` · ${nightsText(e.nights)}` : ''}</dd>` : ''}
       <dt>Reistijd</dt><dd>${dur(e.dur)} ${e.durEst ? `(geschat uit de afstand${e.transfers ? `, incl. ${e.transfers} overstap${e.transfers > 1 ? 'pen' : ''}` : ''}; de bron noemt geen reistijd)` : '(volgens de bron)'}</dd>
       <dt>Overstappen</dt><dd>${e.transfers == null ? 'Onbekend' : e.transfers === 0 ? 'Geen' : e.transfers}</dd>
-      <dt>Bagage</dt><dd>${esc(bag.text)}${bag.src ? ` <a href="${SRC[bag.src].url}" target="_blank" rel="noopener">Bron</a>` : ''}</dd>
+      <dt>Bagage</dt><dd>${e.mode === 'vliegtuig' && e.bag === 'hand' ? 'Een handbagagekoffer zit in deze prijs.' : e.mode === 'vliegtuig' && e.bag === 'koffer' ? 'Ruimbagage (een koffer) zit in deze prijs.' : esc(bag.text)}${bag.src && e.bag !== 'hand' && e.bag !== 'koffer' ? ` <a href="${SRC[bag.src].url}" target="_blank" rel="noopener">Bron</a>` : ''}</dd>
+      <dt>Reisdocument</dt><dd>${esc(docInfo(e.dest.cc))} <a href="${SRC.reisadvies.url}" target="_blank" rel="noopener">Controleer bij de overheid</a></dd>
       <dt>Afstand</dt><dd>${Math.round(e.routeKm)} km ${e.km ? '(volgens de bron)' : e.mode === 'vliegtuig' ? '(hemelsbreed + 8% omweg)' : '(hemelsbreed + 20%, schatting)'}</dd>
       <dt>CO2</dt><dd>${kg(e.co2One)} per persoon per richting = ${Math.round(e.routeKm)} km × ${String(fac.f).replace('.', ',')} kg/km (<a href="${SRC[fac.src].url}" target="_blank" rel="noopener">${esc(fac.label)}</a>)</dd>
     </dl>
@@ -2253,6 +2806,7 @@ function openDealDialog(e, opts = {}) {
         <li>Naar het centrum: ${dur(e.egress)} (aanname)</li>
       </ul></div>
     ${histChart(e)}
+    ${CLOUD.kiwi && e.mode === 'vliegtuig' && e.out && e.o.iata && e.arr ? `<div class="cmp-box verify-box"><button class="btn sm" type="button" id="btnVerify">${icon('i-shield', 'sm')}Controleer de prijs nu (live)</button><div id="verifyOut" aria-live="polite"></div></div>` : ''}
     ${CLOUD.lastminute && e.mode === 'vliegtuig' && e.trip === 'enkel' && e.out && e.o.iata && e.arr ? `<div class="cmp-box"><button class="btn ghost sm" type="button" id="btnCmpLm">Vergelijk deze vlucht bij lastminute.com</button><div id="cmpLmOut" aria-live="polite"></div></div>` : ''}
     <div><b>Bronnen</b><ul class="small">${srcs.map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join('')}</ul>
       <p class="small muted">${e.status === 'live' && e.srcLive ? `Opgehaald op ${esc(timeNL(e.checked))} uit de Aviasales-cache: deze prijs is door gebruikers gevonden in de 48 uur daarvoor, dus hij kan al anders zijn` : `${e.status === 'live' ? 'Live opgehaald' : 'Gecontroleerd'} op ${esc(timeNL(e.checked))}`}${e.srcDate ? `; de bron noemt prijzen van ${esc(dateNL(e.srcDate, { dow: false, year: true }))}` : ''}. Prijzen veranderen snel: controleer bij de aanbieder.</p></div>
@@ -2262,6 +2816,8 @@ function openDealDialog(e, opts = {}) {
       ${altLinks.map(k => `<a class="btn ghost sm" href="${esc(PROVIDERS[k].url(ctx))}" target="_blank" rel="noopener">Vergelijk bij ${esc(PROVIDERS[k].name)}</a>`).join('')}
     </div>`;
   openDialog('dlgDeal');
+  const bv = $('#btnVerify');
+  if (bv) bv.addEventListener('click', () => { bv.disabled = true; verifyDeal(e, $('#verifyOut')).finally(() => { bv.disabled = false; }); });
   const bl = $('#btnCmpLm');
   if (bl) bl.addEventListener('click', () => { bl.disabled = true; compareLastminute(e, $('#cmpLmOut')).finally(() => { bl.disabled = false; }); });
 }
@@ -2275,11 +2831,16 @@ function proj(lon, lat) {
   const x = k * Math.cos(p) * Math.sin(l - l0), y = k * (Math.cos(p0) * Math.sin(p) - Math.sin(p0) * Math.cos(p) * Math.cos(l - l0));
   return [MAP.translate[0] + MAP.scale * x, MAP.translate[1] - MAP.scale * y];
 }
-function tier(v) { return v <= 30 ? 1 : v <= 60 ? 2 : v <= 120 ? 3 : 4; }
-const TIER_LABEL = { 1: 't/m €30', 2: '€31–60', 3: '€61–120', 4: 'meer dan €120' };
+// Kleur per prijsklasse; bij retour zijn de grenzen twee keer zo hoog
+const tierMul = () => (state.trip === 'retour' ? 2 : 1);
+function tier(v) { const m = tierMul(); return v <= 30 * m ? 1 : v <= 60 * m ? 2 : v <= 120 * m ? 3 : 4; }
+function renderMapLegend() {
+  const m = tierMul(), lab = [`t/m €${30 * m}`, `€${30 * m + 1}–${60 * m}`, `€${60 * m + 1}–${120 * m}`, `meer dan €${120 * m}`];
+  $('#mapLegend').innerHTML = lab.map((l, i) => `<span><i style="background:var(--tier${i + 1})"></i>${l}</span>`).join('') + `<span><i style="background:var(--line)"></i>geen deal met deze keuzes</span><span class="muted">Prijs = goedkoopste per persoon, ${tripWord()}. Een gecontroleerde deal gaat voor een indicatie.</span>`;
+}
 function initMap() {
   $('#mapBase').innerHTML = `<rect x="-2000" y="-2000" width="5000" height="5000" fill="var(--sea)"/><path class="land" d="${MAP.land}"/><path class="nl" d="${MAP.nl}"/><path class="borders" d="${MAP.borders}"/>`;
-  $('#mapLegend').innerHTML = [1, 2, 3, 4].map(t => `<span><i style="background:var(--tier${t})"></i>${TIER_LABEL[t]}</span>`).join('') + `<span><i style="background:var(--line)"></i>geen gecontroleerde deal</span><span class="muted">Prijs = goedkoopste per persoon per richting.</span>`;
+  renderMapLegend();
   const svg = $('#mapSvg');
   const ptrs = new Map();
   let last = null, lastDist = null, moved = false;
@@ -2333,13 +2894,15 @@ function applyView() {
 function cheapestPerDest() {
   const { list } = filterDeals({ ignoreDest: true });
   const best = {};
-  for (const x of list) if (!best[x.e.to] || x.e.perDir < best[x.e.to].e.perDir) best[x.e.to] = x;
+  for (const x of list) { const b = best[x.e.to]; if (!b || (b.e.indic && !x.e.indic) || (!!b.e.indic === !!x.e.indic && x.tp.p < b.tp.p)) best[x.e.to] = x; }
   return best;
 }
 function renderMarkers() {
   const best = cheapestPerDest();
   const z = MAP.W / MAPV.w, s = 1 / z;
-  const ranked = Object.values(best).sort((a, b) => a.e.perDir - b.e.perDir).map(x => x.e.to);
+  const ranked = Object.values(best).sort((a, b) => a.tp.p - b.tp.p).map(x => x.e.to);
+  renderMapLegend();
+  $('#mapSub').textContent = `Goedkoopste prijs per bestemming, per persoon (${tripWord()}). Filters van het tabblad Deals gelden ook hier.`;
   const pos = Object.fromEntries(ranked.map(id => [id, proj(DEST[id].lon, DEST[id].lat)]));
   const [ox, oy] = proj(state.origin.lon, state.origin.lat);
 
@@ -2356,7 +2919,7 @@ function renderMarkers() {
   for (const id of order) {
     if (placed >= cap) break;
     const [x, y] = pos[id];
-    const w = widths[id] = 12 + eur(best[id].e.perDir).length * 7.4;
+    const w = widths[id] = 12 + eur(best[id].tp.p).length * 7.4;
     const right = [x + 10 * s, y - 11 * s, x + (10 + w) * s, y + 11 * s];
     const left = [x - (10 + w) * s, y - 11 * s, x - 10 * s, y + 11 * s];
     for (const [k, b] of [['r', right], ['l', left]]) {
@@ -2371,10 +2934,10 @@ function renderMarkers() {
     html += `<g class="mk" data-dest="${d.id}" tabindex="-1" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})"><circle class="dot" r="4" fill="var(--line)"/></g>`;
   }
   for (const id of ranked.slice().reverse()) {
-    const x0 = best[id], d = DEST[id], [x, y] = pos[id], t = tier(x0.e.perDir);
-    const label = eur(x0.e.perDir), w = widths[id] || 0, rx = side[id] === 'l' ? -(10 + w) : 10;
+    const x0 = best[id], d = DEST[id], [x, y] = pos[id], t = tier(x0.tp.p);
+    const label = eur(x0.tp.p), w = widths[id] || 0, rx = side[id] === 'l' ? -(10 + w) : 10;
     const sel = state.mapSel === id ? ' sel' : '';
-    html += `<g class="mk${sel}" data-dest="${id}" tabindex="0" role="button" aria-label="${esc(d.n)}: vanaf ${esc(label)} per richting" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})">
+    html += `<g class="mk${sel}" data-dest="${id}" tabindex="0" role="button" aria-label="${esc(d.n)}: vanaf ${esc(label)} ${tripWord()}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})">
       <circle class="dot" r="7" fill="var(--tier${t})"/>
       ${side[id] ? `<rect class="lbl-bg" x="${rx.toFixed(0)}" y="-11" width="${w.toFixed(0)}" height="22" rx="6"/><text x="${(rx + 6).toFixed(0)}" y="4.5">${esc(label)}</text>` : `<title>${esc(d.n)}: ${esc(label)}</title>`}
     </g>`;
@@ -2387,16 +2950,16 @@ function renderDestPanel() {
   const best = cheapestPerDest();
   const panel = $('#destPanel');
   if (!state.mapSel) {
-    const ranked = Object.values(best).sort((a, b) => a.e.perDir - b.e.perDir);
-    panel.innerHTML = `<h3>Goedkoopste bestemmingen</h3><p class="small muted">Vanaf ${esc(state.origin.n)}. Klik op een bestemming of een stip op de kaart.</p>
-      <ul class="dest-list">${ranked.map(x => `<li><button type="button" data-dest="${x.e.to}"><span>${esc(x.e.dest.n)} <span class="small muted">${MODES[x.e.mode].label.toLowerCase()}</span></span><span class="p">${eur(x.e.perDir)}</span></button></li>`).join('') || '<li class="muted">Geen deals met deze filters.</li>'}</ul>`;
+    const ranked = Object.values(best).sort((a, b) => a.tp.p - b.tp.p);
+    panel.innerHTML = `<h3>Goedkoopste bestemmingen</h3><p class="small muted">Vanaf ${esc(state.origin.n)}, ${tripWord()} per persoon. Klik op een bestemming of een stip op de kaart.</p>
+      <ul class="dest-list">${ranked.map(x => `<li><button type="button" data-dest="${x.e.to}"><span>${esc(x.e.dest.n)} <span class="small muted">${MODES[x.e.mode].label.toLowerCase()}</span></span><span class="p">${eur(x.tp.p)}</span></button></li>`).join('') || '<li class="muted">Geen deals met deze filters.</li>'}</ul>`;
   } else {
     const d = DEST[state.mapSel];
-    const deals = filterDeals({ ignoreDest: true }).list.filter(x => x.e.to === d.id).sort((a, b) => a.e.perDir - b.e.perDir);
+    const deals = filterDeals({ ignoreDest: true }).list.filter(x => x.e.to === d.id).sort((a, b) => a.tp.p - b.tp.p);
     const c = { fromIata: nearestAirports(state.origin, 1)[0].iata, fromName: nearestStation(state.origin).n, dest: d };
     panel.innerHTML = `<div class="section-head" style="margin:0"><h3>${esc(d.n)}</h3><button type="button" class="linkish" data-back>Alle bestemmingen</button></div>
       <div class="small muted">${esc(d.c)} · ${d.t.map(t => TYPES[t]).join(', ')}</div>
-      ${deals.length ? deals.slice(0, 6).map(x => `<div class="mini-deal">${icon(MODES[x.e.mode].icon)}<div><b>${eur(x.e.price)}</b> ${x.e.trip === 'retour' ? 'retour' : 'enkel'} · ${esc(x.e.provider)}<div class="tiny muted">${esc(x.e.o.n)}${x.e.out ? ' · ' + dateNL(x.e.out) : ''}</div></div><button class="btn ghost sm" type="button" data-open="${esc(x.e.id)}">Details</button></div>`).join('')
+      ${deals.length ? deals.slice(0, 6).map(x => `<div class="mini-deal">${icon(MODES[x.e.mode].icon)}<div><b>${eur(x.tp.p)}</b> ${x.tp.calc ? 'retour (2 × enkel)' : x.e.trip === 'retour' ? 'retour' : 'enkel'} · ${esc(x.e.provider)}<div class="tiny muted">${esc(x.e.o.n)}${x.e.out ? ' · ' + dateNL(x.e.out) : ''}</div></div><button class="btn ghost sm" type="button" data-open="${esc(x.e.id)}">Details</button></div>`).join('')
         : '<p class="small">Geen gecontroleerde deal met de huidige filters. Zoek live bij een aanbieder:</p>'}
       <div class="card-actions">
         ${deals.length ? `<button class="btn sm" type="button" data-all="${d.id}">Alle deals naar ${esc(d.n)}</button>` : ''}
@@ -2459,15 +3022,21 @@ async function renderCalendar() {
     mode = 'demo';
   }
   if (my !== calToken) return;
+  const kc = to !== 'alle' ? KCAL.get(`${from}|${to}|${month}`) : null;
+  if (kc && mode !== 'demo') {
+    Object.entries(kc).forEach(([d, v]) => { if (!data[d] || v.price < data[d].price) data[d] = { price: v.price, status: 'live', airline: v.airline }; });
+    if (mode === 'snapshot') mode = 'kiwi';
+  }
   const dname = to === 'alle' ? 'alle bestemmingen' : DEST[to].n;
   const routeCtx = { fromIata: from, dest: to === 'alle' ? null : DEST[to] };
   const nLive = Object.values(data).filter(v => v.status === 'live').length;
   let nt = '';
   if (mode === 'demo') nt = `<div class="notice">${icon('i-info')}<div><b>DEMO:</b> dit zijn verzonnen voorbeeldprijzen om de kalender te laten zien. Gebruik ze niet om te boeken. <button class="linkish" type="button" data-cal="nodemo">Demo uitzetten</button></div></div>`;
   else if (err) nt = `<div class="notice">${icon('i-info')}<div>Live kalender lukte niet: ${esc(explainError(err))}</div></div>`;
+  else if (mode === 'kiwi') nt = `<div class="notice info">${icon('i-info')}<div><b>Live via Kiwi.com:</b> de goedkoopste gevonden enkele vlucht op ${nLive} dag${nLive === 1 ? '' : 'en'}. Een dag zonder prijs zat niet bij de zoekresultaten; dat betekent niet dat er geen vlucht is. Controleer altijd bij de aanbieder.</div></div>`;
   else if (mode === 'live') nt = `<div class="notice info">${icon('i-info')}<div><b>Live:</b> ${nLive} dagen met prijzen uit de Travelpayouts-cache (gevonden in de laatste dagen). Controleer altijd bij de aanbieder.</div></div>`;
   else if (to !== 'alle') nt = `<div class="notice info">${icon('i-info')}<div><b>Geen prijs per dag zonder live koppeling.</b> Je ziet alleen gecontroleerde data. Opties:
-      <div class="card-actions" style="margin-top:8px"><button class="btn sm" type="button" data-cal="settings">Koppel vluchtprijzen (gratis)</button>
+      <div class="card-actions" style="margin-top:8px">${CLOUD.kiwi ? `<button class="btn sm" type="button" data-cal="kiwi">${icon('i-radar', 'sm')}Zoek prijzen per dag (live via Kiwi.com)</button>` : '<button class="btn sm" type="button" data-cal="settings">Koppel vluchtprijzen (gratis)</button>'}
       <a class="btn ghost sm" href="${esc(PROVIDERS.google.url(routeCtx))}" target="_blank" rel="noopener">Google Flights</a>
       <a class="btn ghost sm" href="${esc(PROVIDERS.sky.url(routeCtx))}" target="_blank" rel="noopener">Skyscanner (hele maand)</a>
       <button class="btn ghost sm" type="button" data-cal="demo">Toon demo (geen echte prijzen)</button></div></div></div>`;
@@ -2501,6 +3070,12 @@ $('#calWrap').addEventListener('keydown', ev => { if ((ev.key === 'Enter' || ev.
 $('#calNotice').addEventListener('click', ev => {
   const b = ev.target.closest('[data-cal]'); if (!b) return;
   if (b.dataset.cal === 'settings') openSettings();
+  if (b.dataset.cal === 'kiwi') {
+    b.disabled = true; b.textContent = 'Zoeken bij Kiwi.com…';
+    kiwiCalendar($('#calFrom').value, $('#calTo').value, $('#calMonth').value)
+      .then(r => { if (!Object.keys(r).length) toast('Kiwi.com vond in deze maand geen vluchten op deze route.'); renderCalendar(); })
+      .catch(err => { toast(mcpErrorText(err, KIWI)); renderCalendar(); });
+  }
   if (b.dataset.cal === 'demo') { settings.showDemo = true; saveSettings(); renderCalendar(); }
   if (b.dataset.cal === 'nodemo') { settings.showDemo = false; saveSettings(); renderCalendar(); }
 });
@@ -2697,7 +3272,7 @@ function groupResults() {
   const sortKey = state.groupSort;
   // Per persoon: de beste mix van prijs en reistijd (incl. de reis naar het vertrekpunt),
   // zodat niemand twee uur omreist voor een paar euro. Bij "kortste reis" telt alleen de tijd.
-  const better = (x, y) => sortKey === 'snel' ? x.dd.total - y.dd.total || x.e.perDir - y.e.perDir : x.s - y.s;
+  const better = (x, y) => sortKey === 'snel' ? x.dd.total - y.dd.total || x.tp.p - y.tp.p : x.s - y.s;
   const perDest = new Map();
   people.forEach((p, pi) => {
     for (const x of filterDeals({ ignoreDest: true, home: p.place }).list) {
@@ -2709,7 +3284,7 @@ function groupResults() {
   const rows = [];
   for (const [id, arr] of perDest) {
     if (arr.some(a => !a)) continue; // iedereen moet er kunnen komen
-    const prices = arr.map(a => a.e.perDir);
+    const prices = arr.map(a => a.tp.p);
     rows.push({ id, dest: DEST[id], arr,
       total: prices.reduce((s, v) => s + v, 0),
       spread: Math.max(...prices) - Math.min(...prices),
@@ -2749,13 +3324,13 @@ function groupCard(r, people, k) {
   return `<article class="gcard${k === 0 ? ' top' : ''}">
     <header class="g-head">
       <div><h3>${esc(r.dest.n)}</h3><div class="small muted">${esc(r.dest.c)} · ${r.dest.t.map(t => TYPES[t]).join(', ')}</div></div>
-      <div class="g-total"><b>${eur(r.total)}</b><span class="small muted">samen, per richting</span></div>
+      <div class="g-total"><b>${eur(r.total)}</b><span class="small muted">samen, ${tripWord()}</span></div>
     </header>
     <div class="g-meta">${k === 0 ? '<span class="win">Beste keuze</span>' : ''}<span class="g-pill">${icon('i-clock', 'sm')}Langste reis ca. ${dur(r.maxT)}</span><span class="g-pill">Prijsverschil ${eur(r.spread)}</span></div>
     <ul class="g-list">${r.arr.map((a, i) => `<li>
       <span class="g-who"><span class="avatar sm" aria-hidden="true">${esc(personLabel(people[i], people[i].i).slice(0, 1).toUpperCase())}</span>${esc(personLabel(people[i], people[i].i))}</span>
       <span class="g-how" style="--mc:var(--m-${a.e.mode})">${icon(MODES[a.e.mode].icon, 'sm')}<span>${esc(a.e.provider)}<br><span class="small muted">vanaf ${esc(a.e.o.n)} · deur tot deur ca. ${dur(a.dd.total)}</span></span></span>
-      <span class="g-price">${a.e.priceType === 'vanaf' ? '<small>vanaf</small> ' : ''}${eur(a.e.perDir)}</span>
+      <span class="g-price">${a.e.priceType === 'vanaf' ? '<small>vanaf</small> ' : ''}${eur(a.tp.p)}${a.tp.calc ? ' <small>2 × enkel</small>' : ''}</span>
       <button class="btn ghost sm" type="button" data-open="${esc(a.e.id)}" data-who="${people[i].i}">Details</button>
     </li>`).join('')}</ul>
     ${together.length ? `<p class="g-together">${icon('i-group', 'sm')}${together.join(' ')}</p>` : ''}
@@ -2873,7 +3448,7 @@ function csvOf(list) {
   const num = v => v == null ? '' : String(Math.round(v * 100) / 100).replace('.', ',');
   const rows = list.map(({ e }) => {
     const src = srcOf(e);
-    return [e.status === 'live' ? 'live (cache, max. 48 uur oud)' : 'gecontroleerd', MODES[e.mode].label, e.provider, e.o.full || e.o.n, e.dest.n, e.dest.c, num(e.price), e.priceType, e.trip, num(e.perDir), e.out || '', e.back || '', dur(e.dur), e.durEst ? 'ja' : 'nee', e.transfers ?? '', e.bag, num(e.co2One), src.name, src.url, e.checked, bookLink(e).url].map(q).join(';');
+    return [e.indic ? 'indicatie (laatste 4 dagen)' : e.status === 'live' ? (e.srcLive ? 'live (cache, max. 48 uur oud)' : 'live (Kiwi.com)') : 'gecontroleerd', MODES[e.mode].label, e.provider, e.o.full || e.o.n, e.dest.n, e.dest.c, num(e.price), e.priceType, e.trip, num(e.perDir), e.out || '', e.back || '', dur(e.dur), e.durEst ? 'ja' : 'nee', e.transfers ?? '', e.bag, num(e.co2One), src.name, src.url, e.checked, bookLink(e).url].map(q).join(';');
   });
   return '﻿' + CSV_COLS.join(';') + '\n' + rows.join('\n');
 }
@@ -3037,12 +3612,22 @@ function openHelp(section) {
     <section id="h-use"><h3>Zo gebruik je DealRadar</h3><ol>
       <li>Kies waar je vertrekt: een station, vliegveld of adres (of tik op het richtkruis voor je locatie).</li>
       <li>Kies een bestemming, of laat "Overal" staan voor de goedkoopste plekken.</li>
-      <li>Kies flexibel, een maand of weekend, en het aantal reizigers. Ben je jonger dan 18? Kies "Jongere 12–17" voor jongerentarieven.</li>
+      <li>Kies bovenaan <b>Retour</b> of <b>Enkele reis</b>. Bij retour kun je ook kiezen hoe lang je blijft.</li>
+      <li>Kies wanneer: flexibel, een maand, een weekend, een <b>schoolvakantie</b> of je eigen datums. Kies ook het aantal reizigers. Ben je jonger dan 18? Kies "Jongere 12–17" voor jongerentarieven.</li>
       <li>Tik op <b>Scan deals</b>. Filter en sorteer. Tik op <b>Naar boeken</b> om de prijs bij de aanbieder te controleren.</li>
+      <li>Standaard zie je de <b>beste deal per bestemming</b>. Met de knoppen naast Sorteren zie je alle deals los, of een compacte lijst.</li>
       <li>Gebruik <b>Kaart</b>, <b>Kalender</b> en <b>Vergelijk</b> voor overzicht, de goedkoopste dag en trein tegen vliegtuig.</li>
       <li>Reis je met vrienden die ergens anders wonen? Vul bij <b>Samen</b> ieders vertrekpunt in. Je ziet waar jullie samen het goedkoopst of het eerlijkst naartoe kunnen.</li>
       <li>Tik op het belletje voor een <b>prijsalert</b>. In Claude controleert de dagelijkse controle je alerts elke ochtend en krijg je een pushmelding als een prijs onder je grens zakt.</li>
     </ol></section>
+    <section id="h-retour"><h3>Retour of enkele reis</h3><ul>
+      <li><b>Echte retourprijs:</b> bij vluchten is de retourprijs samen gezocht: heen en terug op de genoemde data. Je ziet beide vluchten, de vertrektijden en het aantal nachten.</li>
+      <li><b>Berekend:</b> trein- en busprijzen zijn vanafprijzen voor een enkele reis op een vrije datum. Bij retour rekent DealRadar 2 × die prijs en zet er "berekend" bij. De echte prijs hangt af van je datums.</li>
+      <li><b>Indicatie:</b> prijzen van Skyscanner zijn een schatting op basis van de laatste 4 dagen. Ze staan apart gemarkeerd en je kunt ze verbergen bij Filters. Is er voor dezelfde bestemming ook een gecontroleerde of live deal, dan zie je die eerst.</li>
+      <li><b>Controleer de prijs nu:</b> in Details van een vlucht zoekt deze knop (in Claude) dezelfde vlucht opnieuw op bij Kiwi.com. Zo zie je meteen of de prijs nog klopt.</li>
+      <li><b>Bagage:</b> kies bij Zoeken een handbagagekoffer of ruimbagage. Live zoeken in Claude vraagt dan de prijs inclusief die bagage op.</li>
+      <li><b>Schoolvakanties:</b> de data komen van de Rijksoverheid (schooljaar 2026-2027). De voorjaarsvakantie is een advies; je school mag afwijken.</li>
+    </ul></section>
     <section id="h-new"><h3>Live, dagelijks en geschiedenis</h3><ul>
       <li><b>Live vluchten (Kiwi.com):</b> in Claude zoekt <b>Scan deals</b> live via je gratis Kiwi.com-connector. Dat gebeurt vanaf de dichtstbijzijnde vliegvelden, en ook vanaf Weeze en Charleroi als die dichtbij liggen. Elke live deal heeft een eigen boeklink.</li>
       <li><b>Prijs vergelijken:</b> in het detailvenster van een vlucht vergelijk je met de lastminute.com-connector dezelfde route op dezelfde dag.</li>
@@ -3053,7 +3638,8 @@ function openHelp(section) {
     </ul></section>
     <section id="h-data"><h3>Waar komen de prijzen vandaan?</h3>
       <ul>
-        <li><span class="badge snapshot">Gecontroleerd</span> Prijzen die Claude op ${esc(CHECK_WINDOW)} heeft opgezocht en gecontroleerd op de websites van NS International, Eurostar, Deutsche Bahn, Kombo (FlixBus en BlaBlaCar Bus) en Skyscanner. Bij elke deal staan de bron, een link en het tijdstip. In Claude ververst de dagelijkse controle ze elke ochtend, met een nieuwe controletijd.</li>
+        <li><span class="badge snapshot">Gecontroleerd</span> Prijzen die Claude op ${esc(CHECK_WINDOW)} heeft opgezocht op de websites van NS International, Eurostar, Deutsche Bahn en Kombo (FlixBus en BlaBlaCar Bus), en vluchten die live via Kiwi.com zijn gevonden. Bij elke deal staan de bron, een link en het tijdstip. In Claude ververst de dagelijkse controle ze elke ochtend, met een nieuwe controletijd.</li>
+        <li><span class="badge indic">Indicatie</span> Schattingen van Skyscanner op basis van prijzen van de laatste 4 dagen. Handig om een idee te krijgen, maar geen live prijs.</li>
         <li><span class="badge live">Live</span> Live opgehaald op het moment dat je zoekt: vluchten via je Kiwi.com-connector (in Claude), of met je eigen sleutels vluchtprijzen uit de Travelpayouts-cache (laatste 48 uur) en NS-reistijden en -prijzen naar het vertrekpunt.</li>
         <li><span class="badge demo">Demo</span> Alleen in de kalender als je dat aanzet. Verzonnen voorbeeldprijzen, nooit om te boeken.</li>
       </ul>
@@ -3210,6 +3796,7 @@ function destForAirport(iata, city, country) {
   if (same) { CODE2DEST[iata] = same.id; same.codes = [...(same.codes || []), iata]; return same.id; }
   const id = 'x-' + slugify(name);
   if (!DEST[id]) DEST[id] = { id, n: name, c: country || CC_NL[a[2]] || a[2], cc: a[2], t: [], lat: a[0], lon: a[1], iata, en: name, codes: [iata], dyn: true };
+  if (!COUNTRIES[a[2]]) COUNTRIES[a[2]] = DEST[id].c;
   CODE2DEST[iata] = id;
   return id;
 }
@@ -3224,8 +3811,11 @@ const CLOUD = { db: null, mcp: null, user: null, isOwner: false, runs: [], searc
 // Alleen deals met een bekend vertrekpunt, een echte prijs en een bestemming met coördinaten komen erdoor.
 function normalizeDeal(raw) {
   if (!raw || typeof raw !== 'object' || !raw.id) return null;
-  const base = SNAP_BY_ID.get(raw.id);
-  const d = base ? { ...base, ...raw } : { ...raw };
+  // Vluchten van Kiwi.com staan er compleet in (ook als korte rij); trein en bus vullen de ingebouwde deal aan met een nieuwe prijs
+  const isKiwi = /^kiwi-/.test(raw.id);
+  const base = isKiwi ? null : SNAP_BY_ID.get(raw.id);
+  let d = base ? { ...base, ...raw } : { ...raw };
+  if (isKiwi) d = kiwiDeal({ via: 'de dagelijkse controle', ...d });
   d.price = Number(d.price);
   if (!(d.price > 0) || d.price > 5000 || !MODES[d.mode] || !ORIGINS[d.from]) return null;
   if (!DEST[d.to]) { const id = destForAirport(d.arr, d.toCity, d.toCountry); if (!id) return null; d.to = id; }
@@ -3233,7 +3823,9 @@ function normalizeDeal(raw) {
   if (!d.src.length) d.src = [d.mode === 'vliegtuig' ? 'kiwi' : 'nsiHome'];
   d.trip = d.trip === 'retour' ? 'retour' : 'enkel';
   d.priceType = d.priceType === 'vanaf' ? 'vanaf' : 'gevonden';
-  d.bag = ['koffer', 'tasje', 'onbekend'].includes(d.bag) ? d.bag : 'onbekend';
+  d.bag = ['koffer', 'hand', 'tasje', 'onbekend'].includes(d.bag) ? d.bag : 'onbekend';
+  for (const k of ['out', 'back']) if (d[k] != null && !/^\d{4}-\d{2}-\d{2}$/.test(String(d[k]))) delete d[k];
+  if (d.trip === 'retour' && d.mode === 'vliegtuig' && !d.back) return null; // een retourvlucht zonder terugdatum klopt niet
   if (!d.checked || Number.isNaN(Date.parse(d.checked))) return null;
   if (typeof d.link === 'string' && !/^https:\/\//.test(d.link)) delete d.link;
   if (!d.book || !PROVIDERS[d.book]) d.book = d.mode === 'vliegtuig' ? (d.link ? 'kiwi' : 'google') : d.mode === 'bus' ? 'kombo-route' : 'nsi';
@@ -3250,7 +3842,7 @@ function mergeCloudDeals() {
       if (!old || Date.parse(d.checked) >= Date.parse(old.checked)) byId.set(d.id, d);
     }
   }
-  SNAP = [...byId.values()].map(enrich).filter(Boolean);
+  SNAP = [...byId.values()].map(resolveDest).filter(Boolean).map(enrich).filter(Boolean);
 }
 
 /* ---------- 3. Prijsgeschiedenis en topdeals ---------- */
@@ -3321,7 +3913,7 @@ const per100 = e => e.perDir / Math.max(1, e.routeKm / 100);
 // Topdeals: laagste prijs per 100 km (reizen vanaf 300 km), één per bestemming
 function topDeals(list, n = 6) {
   const seen = new Set(), out = [];
-  for (const x of list.filter(x => x.e.routeKm >= 300).sort((a, b) => per100(a.e) - per100(b.e))) {
+  for (const x of list.filter(x => x.e.routeKm >= 300 && !x.e.indic).sort((a, b) => per100(a.e) - per100(b.e))) {
     if (seen.has(x.e.to)) continue;
     seen.add(x.e.to); out.push(x);
     if (out.length >= n) break;
@@ -3336,12 +3928,12 @@ function renderTopDeals(list) {
   TOP_IDS = new Set(top.map(x => x.e.id));
   if (top.length < 3) { box.hidden = true; box.innerHTML = ''; return; }
   box.hidden = false;
-  box.innerHTML = `<div class="top-head"><h3>${icon('i-radar')}Topdeals</h3><span class="small muted">Laagste prijs per 100 km, één per bestemming</span></div>
-    <ol class="top-list">${top.map(({ e }) => `<li><button type="button" class="top-card" data-open="${esc(e.id)}" style="--mc:var(--m-${e.mode})">
+  box.innerHTML = `<div class="top-head"><h3>${icon('i-radar')}Topdeals</h3><span class="small muted">Laagste prijs per 100 km, één per bestemming (zonder indicaties)</span></div>
+    <ol class="top-list">${top.map(({ e, tp }) => `<li><button type="button" class="top-card" data-open="${esc(e.id)}" style="--mc:var(--m-${e.mode})">
       <span class="top-mode">${icon(MODES[e.mode].icon, 'sm')}${esc(MODES[e.mode].label)}</span>
       <b class="top-dest">${esc(e.dest.n)}</b>
-      <span class="top-price">${e.priceType === 'vanaf' ? '<small>vanaf</small> ' : ''}${eur(e.perDir)}</span>
-      <span class="small muted">${eur(per100(e))} per 100 km · ${esc(e.o.n)}</span>
+      <span class="top-price">${e.priceType === 'vanaf' ? '<small>vanaf</small> ' : ''}${eur(tp.p)} <small>${tripWord()}</small></span>
+      <span class="small muted">${eur(per100(e))} per 100 km · ${esc(e.o.n)}${e.out ? ' · ' + esc(dateNL(e.out, { dow: false })) : ''}</span>
     </button></li>`).join('')}</ol>`;
 }
 
@@ -3355,39 +3947,64 @@ function kiwiOrigins() {
   if (km(state.origin, ORIGINS.CRL) <= 190) near.push('CRL');
   return [...new Set(near)].slice(0, 4);
 }
+// In welke periode zoeken we? Morgen t/m 75 dagen, of de maand, vakantie of datums die je koos.
 function kiwiWindow() {
-  const from = addDays(todayISO(), 1);
-  if (state.when.mode === 'month' && state.when.month) {
-    const first = state.when.month + '-01';
-    const last = addDays(addDays(first, 32).slice(0, 8) + '01', -1);
-    return { from: first > from ? first : from, to: last };
+  const tomorrow = addDays(todayISO(), 1), w = whenWindow();
+  if (w) {
+    const from = w.from > tomorrow ? w.from : tomorrow;
+    const to = w.to > addDays(from, 120) ? addDays(from, 60) : w.to;
+    return to >= from ? { from, to, strictBack: w.strictBack, tag: state.when.mode === 'month' ? 'm' + state.when.month.replace('-', '') : state.when.mode === 'holiday' ? state.when.hol : 'dat' } : null;
   }
-  if (state.when.mode === 'weekend') return { from, to: addDays(from, 42), weekend: true };
-  return { from, to: addDays(from, 60) };
+  if (state.when.mode === 'weekend') return { from: tomorrow, to: addDays(tomorrow, 42), weekend: true, tag: 'wknd' };
+  return { from: tomorrow, to: addDays(tomorrow, 75) };
 }
-function kiwiToDeal(it, from, checked) {
+const kiwiFlights = leg => (leg && Array.isArray(leg.segments) ? leg.segments.map(s => s.flightNumber).filter(Boolean) : []);
+// Een zoekresultaat van Kiwi.com omzetten naar een deal. Het vertrekvliegveld komt uit het resultaat zelf
+// (Kiwi zoekt soms in een hele regio: "Brussel" geeft Charleroi én Zaventem).
+function kiwiToDeal(it, checked, tag) {
   const ob = it && it.outbound;
   if (!ob || !Array.isArray(ob.route) || !(Number(it.price) > 0)) return null;
   const segs = Array.isArray(ob.segments) ? ob.segments : [];
+  const from = ob.from || ob.route[0];
+  if (!ORIGINS[from] || ORIGINS[from].kind !== 'airport') return null;
   const arr = ob.to || ob.route[ob.route.length - 1];
   const last = segs[segs.length - 1] || {};
   const to = destForAirport(arr, last.toCity, last.toCountry);
   if (!to) return null;
-  const ret = it.tripType === 'return' && it.inbound;
-  const stops = ob.stops ?? Math.max(0, ob.route.length - 2);
-  const carriers = [...new Set(segs.map(s => s.carrierName).filter(Boolean))];
-  const bag = it.baggage && it.baggage.checkedBag > 0 ? 'koffer' : 'tasje';
-  return {
-    id: `kiwi-${from}-${arr}${ret ? '-r' : ''}`.toLowerCase(), status: 'live', liveKind: 'realtime', mode: 'vliegtuig',
-    provider: carriers.join(' + ') || 'Luchtvaartmaatschappij', from, to, arr, toCity: last.toCity, toCountry: last.toCountry,
-    price: Number(it.price), trip: ret ? 'retour' : 'enkel', priceType: 'gevonden',
+  const ib = it.tripType === 'return' && it.inbound && it.inbound.departureTime ? it.inbound : null;
+  const ibSegs = ib && Array.isArray(ib.segments) ? ib.segments : [];
+  const stops = Math.max(ob.stops ?? Math.max(0, ob.route.length - 2), ib ? (ib.stops ?? 0) : 0);
+  const carriers = [...new Set([...segs, ...ibSegs].map(s => s.carrierName).filter(Boolean))];
+  const bg = it.baggage || {};
+  const bag = bg.checkedBag > 0 ? 'koffer' : bg.cabinBag > 0 ? 'hand' : 'tasje';
+  const mins = leg => (leg && leg.durationSeconds ? Math.round(leg.durationSeconds / 60) : null);
+  return kiwiDeal({
+    status: 'live', liveKind: 'realtime', from, to, arr, toCity: last.toCity, toCountry: last.toCountry,
+    provider: carriers.join(' + ') || 'Luchtvaartmaatschappij', price: Math.round(Number(it.price) * 100) / 100,
     out: String(ob.departureTime || '').slice(0, 10) || undefined, depTime: String(ob.departureTime || '').slice(11, 16) || undefined,
-    back: ret ? String(it.inbound.departureTime || '').slice(0, 10) : undefined,
-    dur: ob.durationSeconds ? Math.round(ob.durationSeconds / 60) : null, transfers: stops, bag,
-    flight: segs.map(s => s.flightNumber).filter(Boolean).join(', '), link: typeof it.bookingUrl === 'string' && /^https:\/\//.test(it.bookingUrl) ? it.bookingUrl : undefined,
-    src: ['kiwi'], checked, book: 'kiwi',
-    note: `Live gevonden via Kiwi.com${stops ? ` met ${stops} overstap${stops > 1 ? 'pen' : ''} (${ob.route.join(' → ')})` : ', rechtstreeks'}. ${bag === 'koffer' ? 'Ruimbagage inbegrepen.' : 'Alleen een klein tasje is inbegrepen.'}`,
-  };
+    dur: mins(ob), transfers: stops, bag, flight: kiwiFlights(ob).join(', '), tag: tag || undefined,
+    ...(ib ? { back: String(ib.departureTime).slice(0, 10), backTime: String(ib.departureTime).slice(11, 16), backDur: mins(ib), backFlight: kiwiFlights(ib).join(', '), backFrom: ib.from, backTo: ib.to } : {}),
+    link: typeof it.bookingUrl === 'string' && /^https:\/\//.test(it.bookingUrl) ? it.bookingUrl : undefined, checked,
+  });
+}
+// De zoekvraag voor Kiwi.com, passend bij je keuzes (soort reis, verblijf, bagage, periode)
+function kiwiInput(o, flyTo, win, broad) {
+  const input = { flyFrom: o, flyTo, departureDate: ddmmyyyy(win.from), departureDateTo: ddmmyyyy(win.to), currency: 'EUR', locale: 'nl', sort: 'price', one_for_city: broad, adults: 1 };
+  if (state.filters.direct) input.max_sector_stopovers = 0;
+  if (state.bag === 'hand') input.adults_hand_bags = [1];
+  if (state.bag === 'koffer') input.adults_hold_bags = [1];
+  if (win.weekend) input.fly_days = '5,6';
+  if (state.trip === 'retour') {
+    const st = STAYS[state.stay];
+    const nMin = win.weekend ? 2 : st.min, nMax = win.weekend ? 3 : st.max;
+    input.nights_in_dst_from = nMin; input.nights_in_dst_to = nMax;
+    if (win.strictBack) {
+      const lastDep = addDays(win.to, -nMin);
+      if (lastDep < win.from) return null;
+      input.departureDateTo = ddmmyyyy(lastDep);
+    }
+  }
+  return input;
 }
 function mcpErrorText(err, server) {
   const code = err && err.code;
@@ -3405,17 +4022,18 @@ async function scanKiwi() {
   const dest = state.dest !== 'overal' ? DEST[state.dest] : null;
   const flyTo = dest ? (dest.iata || dest.en || dest.n) : 'Europe';
   const win = kiwiWindow(), origins = kiwiOrigins();
+  const tag = [state.trip === 'retour' && state.stay !== 'alle' && !(win && win.weekend) ? state.stay : '', win && win.tag ? win.tag : ''].filter(Boolean).join('-');
   const found = [];
-  let lastErr = null;
-  for (const o of origins) {
-    const input = { flyFrom: o, flyTo, departureDate: ddmmyyyy(win.from), departureDateTo: ddmmyyyy(win.to), currency: 'EUR', locale: 'nl', sort: 'price', one_for_city: !dest, adults: 1 };
-    if (state.filters.direct) input.max_sector_stopovers = 0;
-    if (win.weekend) Object.assign(input, { fly_days: '5', nights_in_dst_from: 2, nights_in_dst_to: 2, ret_fly_days: '0' });
+  let lastErr = null, asked = 0;
+  for (const o of (win ? origins : [])) {
+    const input = kiwiInput(o, flyTo, win, !dest);
+    if (!input) continue;
+    asked++;
     try {
       const res = await CLOUD.mcp.callTool(KIWI, 'search-flight', input, { cache: { staleTime: 10 * 60000, gcTime: 60 * 60000 } });
       const checked = res.cache && res.cache.storedAt ? new Date(res.cache.storedAt).toISOString() : new Date().toISOString();
       const list = (res.payload && Array.isArray(res.payload.itineraries)) ? res.payload.itineraries : [];
-      list.forEach(it => { const d = kiwiToDeal(it, o, checked); if (d) found.push(d); });
+      list.forEach(it => { const d = kiwiToDeal(it, checked, tag); if (d) found.push(d); });
     } catch (err) {
       lastErr = err;
       if (['server_not_connected', 'needs_reauth', 'not_in_manifest', 'not_granted', 'capability_disabled', 'approval_required', 'selection_required'].includes(err && err.code)) break;
@@ -3423,14 +4041,63 @@ async function scanKiwi() {
   }
   const best = new Map();
   found.forEach(d => { const o = best.get(d.id); if (!o || d.price < o.price) best.set(d.id, d); });
-  state.liveKiwi = [...best.values()].map(enrich).filter(Boolean);
+  // Eerdere live resultaten van het andere soort reis blijven staan; dezelfde route wordt ververst
+  const keep = (state.liveKiwi || []).filter(e => !best.has(e.id));
+  state.liveKiwi = keep.concat([...best.values()].map(enrich).filter(Boolean));
   syncLive();
-  if (state.liveKiwi.length) {
-    state.src.kiwi = { status: 'ok', text: `${state.liveKiwi.length} live vluchten` };
-    saveSearch([...best.values()], { flyTo, from: win.from, to: win.to, origins });
-  } else state.src.kiwi = lastErr ? { status: 'error', text: mcpErrorText(lastErr, KIWI) } : { status: 'ok', text: 'geen vluchten gevonden' };
+  const what = state.trip === 'retour' ? 'retourvluchten' : 'enkele vluchten';
+  if (best.size) {
+    state.src.kiwi = { status: 'ok', text: `${best.size} live ${what}` };
+    saveSearch([...best.values()], { flyTo, from: win.from, to: win.to, origins, trip: state.trip, stay: state.stay, bag: state.bag });
+  } else state.src.kiwi = lastErr ? { status: 'error', text: mcpErrorText(lastErr, KIWI) } : { status: 'ok', text: asked ? `geen ${what} gevonden` : 'deze periode is te kort of al voorbij' };
   rebuildHistory();
   renderRadar();
+}
+/* Eén deal nu live nacontroleren: zelfde route en datum(s), liefst dezelfde vlucht */
+async function verifyDeal(e, box) {
+  box.innerHTML = '<span class="small">Live controleren bij Kiwi.com…</span>';
+  try {
+    const input = { flyFrom: e.o.iata, flyTo: e.arr, departureDate: ddmmyyyy(e.out), currency: 'EUR', locale: 'nl', sort: 'price', adults: 1 };
+    if (e.trip === 'retour' && e.back) input.returnDate = ddmmyyyy(e.back);
+    if (e.transfers === 0) input.max_sector_stopovers = 0;
+    if (e.bag === 'hand') input.adults_hand_bags = [1];
+    if (e.bag === 'koffer') input.adults_hold_bags = [1];
+    const res = await CLOUD.mcp.callTool(KIWI, 'search-flight', input);
+    const now = new Date().toISOString();
+    const its = ((res.payload && res.payload.itineraries) || []).filter(it => it && it.outbound && (it.outbound.from || '') === e.o.iata && Number(it.price) > 0 && (e.trip !== 'retour' || it.tripType === 'return'));
+    if (!its.length) { box.innerHTML = `<div class="cmp-out"><b>Niet meer gevonden.</b> Kiwi.com vindt op ${esc(dateNL(e.out, { year: true }))} geen ${e.transfers === 0 ? 'rechtstreekse ' : ''}vlucht van ${esc(e.o.n)} naar ${esc(e.arr)}${e.back ? ' met deze terugdatum' : ''}. Mogelijk is hij uitverkocht of is het schema veranderd.<br><span class="small muted">Live gecontroleerd ${esc(timeNL(now))}.</span></div>`; return; }
+    const f1 = (e.flight || '').split(', ')[0], b1 = (e.backFlight || '').split(', ')[0];
+    const same = f1 ? its.find(it => kiwiFlights(it.outbound).includes(f1) && (!b1 || kiwiFlights(it.inbound).includes(b1))) : null;
+    const best = same || its.reduce((a, b) => (Number(a.price) <= Number(b.price) ? a : b));
+    const p = Math.round(Number(best.price) * 100) / 100, diff = p - e.price;
+    const link = typeof best.bookingUrl === 'string' && /^https:\/\//.test(best.bookingUrl) ? best.bookingUrl : 'https://www.kiwi.com/nl/';
+    const fl = kiwiFlights(best.outbound).join(', ') + (best.inbound ? ' / ' + kiwiFlights(best.inbound).join(', ') : '');
+    const verdict = Math.abs(diff) < 0.5 ? `<b class="down">De prijs klopt nog: ${eur(p)}.</b>` : diff < 0 ? `<b class="down">Nu ${eur(p)}: ${eur(-diff)} goedkoper</b> dan de ${eur(e.price)} hierboven.` : `<b class="up">Nu ${eur(p)}: ${eur(diff)} duurder</b> dan de ${eur(e.price)} hierboven.`;
+    box.innerHTML = `<div class="cmp-out">${verdict} ${same || !f1 ? '' : 'Let op: dit is een andere vlucht op dezelfde datum; de vlucht van deze deal staat er niet meer bij.'}<br>Kiwi.com, vlucht ${esc(fl)}${e.source ? '' : ''}. <a href="${esc(link)}" target="_blank" rel="noopener">Bekijk bij Kiwi.com</a><br><span class="small muted">Live gecontroleerd ${esc(timeNL(now))}. Controleer bagage en voorwaarden bij het boeken.</span></div>`;
+    // Een Kiwi-deal met dezelfde vlucht verversen we meteen in de lijst en in de prijsgeschiedenis
+    if (same && /^kiwi-/.test(e.id)) {
+      const d = kiwiToDeal(best, now);
+      if (d) { d.id = e.id; const en = enrich(d); if (en) { state.liveKiwi = (state.liveKiwi || []).filter(x => x.id !== e.id).concat([en]); syncLive(); rebuildHistory(); renderAll(); saveSearch([d], { verify: e.id }); } }
+    }
+  } catch (err) { box.innerHTML = `<span class="small">${esc(mcpErrorText(err, KIWI))}</span>`; }
+}
+/* Prijskalender live: de goedkoopste gevonden vlucht per dag voor één route en één maand */
+const KCAL = new Map();
+async function kiwiCalendar(from, destId, month) {
+  const dest = DEST[destId], tomorrow = addDays(todayISO(), 1);
+  const first = month + '-01', last = addDays(addDays(first, 32).slice(0, 8) + '01', -1);
+  const start = first > tomorrow ? first : tomorrow;
+  if (last < start) return {};
+  const res = await CLOUD.mcp.callTool(KIWI, 'search-flight', { flyFrom: from, flyTo: dest.iata || dest.en, departureDate: ddmmyyyy(start), departureDateTo: ddmmyyyy(last), currency: 'EUR', locale: 'nl', sort: 'price', adults: 1 }, { cache: { staleTime: 10 * 60000, gcTime: 60 * 60000 } });
+  const checked = res.cache && res.cache.storedAt ? new Date(res.cache.storedAt).toISOString() : new Date().toISOString();
+  const out = {};
+  for (const it of ((res.payload && res.payload.itineraries) || [])) {
+    const d = kiwiToDeal(it, checked);
+    if (!d || d.from !== from || d.to !== destId || !d.out || !d.out.startsWith(month)) continue;
+    if (!out[d.out] || d.price < out[d.out].price) out[d.out] = { price: d.price, airline: d.provider, transfers: d.transfers, link: d.link, checked };
+  }
+  KCAL.set(`${from}|${destId}|${month}`, out);
+  return out;
 }
 function syncLive() { state.liveDeals = [...(state.liveTP || []), ...(state.liveKiwi || [])]; }
 // Eigen zoekopdracht bewaren in de database (alleen de eigenaar), zodat de prijsgeschiedenis groeit

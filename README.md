@@ -10,8 +10,15 @@ Goedkope trein-, vlieg- en busdeals vanaf heel Nederland. Bij elke prijs staan d
 
 De app werkt daarna ook zonder internet, met de laatst bewaarde deals.
 
+## Wat kan de app?
+- **Retour of enkele reis.** Bij vluchten is de retourprijs samen gezocht (heen en terug, met vluchtnummers en het aantal nachten). Bij trein en bus rekent de app 2 × de vanafprijs en zet er "berekend" bij.
+- **Wanneer:** flexibel, een maand, een weekend, een schoolvakantie (data van de Rijksoverheid) of je eigen datums.
+- **Overzicht:** de beste deal per bestemming, een compacte lijst, een kaart van Europa, een prijskalender en ideeën zoals "Naar de zon" of "Met de trein".
+- **Eerlijk:** elke deal heeft een bron, een link en een controle-tijd. Schattingen van Skyscanner staan apart als "Indicatie".
+- **In Claude** kun je ook live zoeken via Kiwi.com (met of zonder koffer) en één prijs live nacontroleren.
+
 ## Hoe blijven de prijzen actueel?
-- **In Claude** (artifact "DealRadar NL") draait elke ochtend een dagelijkse controle. Die zoekt vluchten via de Kiwi.com-connector, controleert prijzen en stuurt een pushmelding bij een prijsalert.
+- **In Claude** (artifact "DealRadar NL") draait elke ochtend een dagelijkse controle. Die zoekt enkele vluchten en retourvluchten via de Kiwi.com-connector, controleert prijzen en stuurt een pushmelding bij een prijsalert.
 - **Deze website** gebruikt de ingebouwde, gecontroleerde deals plus `data/latest.json` als de dagelijkse controle die bijwerkt.
 - Live zoeken kan ook met je eigen API-sleutels (NS, Travelpayouts) via Instellingen in de app.
 

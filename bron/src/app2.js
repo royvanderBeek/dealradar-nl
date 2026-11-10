@@ -10,6 +10,16 @@ const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-mo
 const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 function dealById(id) { return allDeals().find(d => d.id === id); }
 function routeText(e) { return `${e.o.n} → ${e.dest.n}`; }
+// Vlaggetje bij een land (twee letters → emoji); op systemen zonder vlaggen zie je de landcode
+const flag = cc => (/^[A-Z]{2}$/.test(cc || '') ? String.fromCodePoint(...[...cc].map(c => 0x1F1A5 + c.charCodeAt(0))) : '');
+const nightsText = n => (n == null ? '' : n === 0 ? 'zelfde dag terug' : `${n} nacht${n === 1 ? '' : 'en'}`);
+// Reisdocumenten: algemene regel per land (voor Nederlanders); details staan bij de bron
+const EU_SCHENGEN = new Set(['NL', 'BE', 'DE', 'FR', 'ES', 'PT', 'IT', 'IE', 'AT', 'CH', 'PL', 'CZ', 'SK', 'HU', 'HR', 'SI', 'GR', 'BG', 'RO', 'LT', 'LV', 'EE', 'FI', 'SE', 'NO', 'DK', 'IS', 'LU', 'MT', 'CY', 'LI']);
+function docInfo(cc) {
+  if (EU_SCHENGEN.has(cc)) return 'Een geldige ID-kaart of een geldig paspoort is genoeg (EU/Schengen).';
+  if (cc === 'GB') return 'Paspoort verplicht; een ID-kaart is niet genoeg. Je hebt ook een ETA nodig: een digitale reistoestemming die je vooraf online aanvraagt.';
+  return 'Buiten de EU en Schengen: controleer vooraf welk reisdocument (en soms visum) je nodig hebt.';
+}
 
 /* ---------- 9. Basis ---------- */
 const hostTheme = document.documentElement.getAttribute('data-theme');
@@ -67,7 +77,8 @@ function renderAll() { renderDeals(); renderView(state.tab === 'deals' ? 'none' 
 function renderHeaderPill() {
   const live = state.liveDeals.length;
   $('#dataPillText').textContent = `${SNAP.length} gecontroleerde deals${live ? ` · ${live} live` : ''}`;
-  $('#footSnapshot').textContent = `Gecontroleerde deals: ${SNAP.length}, gecontroleerd op ${CHECK_WINDOW}. Live prijzen komen via je Claude-connectors of je eigen API-sleutels.`;
+  const newest = SNAP.reduce((m, e) => (Date.parse(e.checked) > m ? Date.parse(e.checked) : m), 0);
+  $('#footSnapshot').textContent = `Gecontroleerde deals: ${SNAP.length}. Ingebouwde controle: ${CHECK_WINDOW}${newest ? `; nieuwste controle: ${timeNL(new Date(newest).toISOString())}` : ''}. Live prijzen komen via je Claude-connectors of je eigen API-sleutels.`;
 }
 
 /* ---------- 10. Zoeken ---------- */
@@ -175,16 +186,55 @@ function initSearch() {
     const v = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     monthSel.insertAdjacentHTML('beforeend', `<option value="${v}">${MONTHS_LONG[d.getMonth()]} ${d.getFullYear()}</option>`);
   }
-  $$('.seg [data-when]').forEach(b => b.addEventListener('click', () => {
-    state.when.mode = b.dataset.when;
-    $$('.seg [data-when]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-    monthSel.hidden = state.when.mode !== 'month';
-    state.when.month = state.when.mode === 'month' ? monthSel.value : null;
-    renderAll();
-  }));
+  const holSel = $('#inHol'), regSel = $('#inRegion'), inFrom = $('#inFrom'), inTo = $('#inTo');
+  const today = todayISO();
+  holSel.innerHTML = HOLIDAYS.filter(h => (h.all || h.zuid)[1] >= today).map(h => `<option value="${h.id}">${esc(h.n)}</option>`).join('');
+  if (![...holSel.options].some(o => o.value === state.when.hol) && holSel.options.length) state.when.hol = holSel.options[0].value;
+  holSel.value = state.when.hol; regSel.value = state.when.region;
+  inFrom.min = inTo.min = today;
+  const syncWhen = () => {
+    const m = state.when.mode;
+    $$('.seg [data-when]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.when === m)));
+    monthSel.hidden = m !== 'month';
+    $('#whenHoliday').hidden = m !== 'holiday';
+    $('#whenRange').hidden = m !== 'range';
+    state.when.month = m === 'month' ? monthSel.value : null;
+    const h = $('#whenHint'), r = m === 'holiday' ? holidayRange() : null;
+    const voorjaar = state.when.hol === 'voorjaar';
+    h.innerHTML = r ? `${esc(r.name)}: ${esc(dateNL(r.from, { year: true }))} t/m ${esc(dateNL(r.to, { year: true }))}.${voorjaar ? ' Dit is een adviesdatum: je school mag afwijken.' : ''} <a href="${SRC.vakanties.url}" target="_blank" rel="noopener">Bron: Rijksoverheid</a>`
+      : m === 'weekend' ? 'Vertrek op vrijdag of zaterdag, binnen 4 dagen terug.' : '';
+  };
+  $$('.seg [data-when]').forEach(b => b.addEventListener('click', () => { state.when.mode = b.dataset.when; syncWhen(); renderAll(); }));
   monthSel.addEventListener('change', () => { state.when.month = monthSel.value; renderAll(); });
+  holSel.addEventListener('change', () => { state.when.hol = holSel.value; syncWhen(); renderAll(); });
+  regSel.addEventListener('change', () => { state.when.region = regSel.value; store.set('region', regSel.value); syncWhen(); renderAll(); });
+  inFrom.addEventListener('change', () => { state.when.from = inFrom.value; if (inTo.value && inTo.value < inFrom.value) { inTo.value = ''; state.when.to = ''; } inTo.min = inFrom.value || today; renderAll(); });
+  inTo.addEventListener('change', () => { state.when.to = inTo.value; renderAll(); });
+  window.setWhen = (mode, extra = {}) => { Object.assign(state.when, extra, { mode }); if (extra.hol) holSel.value = extra.hol; syncWhen(); };
+  // Soort reis: retour of enkele reis
+  const syncTrip = () => {
+    $$('.trip-tabs [data-trip]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.trip === state.trip)));
+    $('#fieldStay').hidden = state.trip !== 'retour';
+    if (window.syncMoreOpts) syncMoreOpts();
+    $('#fPriceTrip').textContent = tripWord();
+  };
+  window.setTrip = t => { state.trip = t === 'enkel' ? 'enkel' : 'retour'; store.set('trip', state.trip); syncTrip(); };
+  $$('.trip-tabs [data-trip]').forEach(b => b.addEventListener('click', () => {
+    if (state.trip === b.dataset.trip) return;
+    setTrip(b.dataset.trip); renderAll();
+    if (CLOUD.kiwi && !state.scanning) scan({ onlyKiwi: true, initial: true });
+  }));
+  syncTrip();
+  // Op een telefoon staan reizigers, verblijf en bagage achter "Meer opties"
+  const moreBtn = $('#btnMoreOpts'), grid = $('#searchExtra');
+  const moreText = () => { $('#moreOptsText').textContent = grid.classList.contains('open') ? 'Minder opties' : `Meer opties: ${state.travellers} reiziger${state.travellers === 1 ? '' : 's'}${state.trip === 'retour' ? ', verblijf' : ''}, korting en bagage`; };
+  moreBtn.addEventListener('click', () => { const o = grid.classList.toggle('open'); moreBtn.setAttribute('aria-expanded', String(o)); moreText(); });
+  window.syncMoreOpts = moreText; moreText();
+  const staySel = $('#inStay'), bagSel = $('#inBag');
+  staySel.addEventListener('change', () => { state.stay = staySel.value; renderAll(); });
+  bagSel.addEventListener('change', () => { state.bag = bagSel.value; renderAll(); });
   // Reizigers en korting
-  const setTrav = n => { state.travellers = Math.max(1, Math.min(9, n)); $('#travCount').textContent = state.travellers; renderAll(); renderPasses(); };
+  const setTrav = n => { state.travellers = Math.max(1, Math.min(9, n)); $('#travCount').textContent = state.travellers; syncMoreOpts(); renderAll(); renderPasses(); };
   $('#travMinus').addEventListener('click', () => setTrav(state.travellers - 1));
   $('#travPlus').addEventListener('click', () => setTrav(state.travellers + 1));
   const prof = $('#inProfile');
@@ -237,10 +287,8 @@ $('#radarList').addEventListener('click', ev => {
 
 /* ---------- 12. Deals ---------- */
 function initFiltersUI() {
-  $('#fModes').innerHTML = Object.entries(MODES).map(([k, m]) => `<label class="check"><input type="checkbox" data-f="mode" value="${k}" checked><span class="mode-dot" style="background:var(--m-${k})"></span>${m.label}</label>`).join('');
+  $('#fModes').innerHTML = Object.entries(MODES).filter(([k]) => k !== 'combi' || SNAP.some(e => e.mode === 'combi')).map(([k, m]) => `<label class="check"><input type="checkbox" data-f="mode" value="${k}" checked><span class="mode-dot" style="background:var(--m-${k})"></span>${m.label}</label>`).join('');
   $('#fTypes').innerHTML = Object.entries(TYPES).map(([k, l]) => `<label class="check"><input type="checkbox" data-f="type" value="${k}">${l}</label>`).join('');
-  const ccs = [...new Set(SNAP.map(e => e.dest.cc))].sort((a, b) => COUNTRIES[a].localeCompare(COUNTRIES[b], 'nl'));
-  $('#fCountries').innerHTML = ccs.map(cc => `<label class="check"><input type="checkbox" data-f="country" value="${cc}">${esc(COUNTRIES[cc])}</label>`).join('');
   $('#fStatus').innerHTML = `<label class="check"><input type="checkbox" data-f="status" value="snapshot" checked>Gecontroleerd (met bron)</label><label class="check"><input type="checkbox" data-f="status" value="live" checked>Live (via API)</label>`;
   $('#filters').addEventListener('change', ev => {
     const t = ev.target, f = state.filters;
@@ -248,8 +296,12 @@ function initFiltersUI() {
     if (t.dataset.f === 'type') t.checked ? f.types.add(t.value) : f.types.delete(t.value);
     if (t.dataset.f === 'country') t.checked ? f.countries.add(t.value) : f.countries.delete(t.value);
     if (t.dataset.f === 'status') t.checked ? f.status.add(t.value) : f.status.delete(t.value);
+    if (t.dataset.f === 'origin') t.checked ? f.origins.add(t.value) : f.origins.delete(t.value);
     if (t.id === 'fDirect') f.direct = t.checked;
     if (t.id === 'fBag') f.bagIncl = t.checked;
+    if (t.id === 'fNlOnly') f.nlOnly = t.checked;
+    if (t.id === 'fNoIndic') f.noIndic = t.checked;
+    if (t.id === 'fDepPart') f.depPart = t.value;
     syncFilterUI(); renderAll();
   });
   const ranges = [['fPrice', 'maxPrice', v => noLimit(v, 300) ? 'alles' : `≤ ${eur(v)}`], ['fHours', 'maxHours', v => noLimit(v, 24) ? 'alles' : `≤ ${v} uur`], ['fAccess', 'maxAccess', v => noLimit(v, 300) ? 'alles' : `≤ ${dur(v)}`]];
@@ -267,8 +319,31 @@ function initFiltersUI() {
   $('#sortSel').addEventListener('change', ev => { state.sort = ev.target.value; renderDeals(); });
 }
 const debouncedRender = debounce(() => renderAll(), 120);
+// Lijst met vertrekpunten in het filter: alleen punten waar nu deals vanaf gaan
+let originSig = '';
+function renderOriginFilter() {
+  const count = {};
+  for (const e of allDeals()) count[e.from] = (count[e.from] || 0) + 1;
+  const keys = Object.keys(count).sort((a, b) => ORIGINS[a].kind.localeCompare(ORIGINS[b].kind) || ORIGINS[a].n.localeCompare(ORIGINS[b].n, 'nl'));
+  const sig = keys.join(',');
+  if (sig === originSig) return;
+  originSig = sig;
+  $('#fOrigins').innerHTML = keys.map(k => `<label class="check"><input type="checkbox" data-f="origin" value="${k}">${esc(ORIGINS[k].n)}</label>`).join('');
+}
+let countrySig = '';
+function renderCountryFilter() {
+  const ccs = [...new Set(allDeals().map(e => e.dest.cc))].sort((a, b) => (COUNTRIES[a] || a).localeCompare(COUNTRIES[b] || b, 'nl'));
+  const sig = ccs.join(',');
+  if (sig === countrySig) return;
+  countrySig = sig;
+  $('#fCountries').innerHTML = ccs.map(cc => `<label class="check"><input type="checkbox" data-f="country" value="${cc}"><span aria-hidden="true">${flag(cc)}</span> ${esc(COUNTRIES[cc] || cc)}</label>`).join('');
+}
 function syncFilterUI() {
   const f = state.filters;
+  renderOriginFilter(); renderCountryFilter();
+  $$('#filters [data-f="origin"]').forEach(c => { c.checked = f.origins.has(c.value); });
+  $('#fNlOnly').checked = f.nlOnly; $('#fNoIndic').checked = f.noIndic; $('#fDepPart').value = f.depPart;
+  $('#fPriceTrip').textContent = tripWord();
   $$('#filters [data-f="mode"]').forEach(c => { c.checked = f.modes.has(c.value); });
   $$('#filters [data-f="type"]').forEach(c => { c.checked = f.types.has(c.value); });
   $$('#filters [data-f="country"]').forEach(c => { c.checked = f.countries.has(c.value); });
@@ -285,60 +360,82 @@ function syncFilterUI() {
 function renderActiveFilters() {
   const f = state.filters, chips = [];
   if (state.dest !== 'overal') chips.push({ label: `Naar: ${DEST[state.dest].n}`, fn: () => setDest('overal') });
-  if (state.when.mode !== 'flex') chips.push({ label: state.when.mode === 'weekend' ? 'Weekend' : `Maand: ${$('#inMonth').selectedOptions[0]?.textContent || ''}`, fn: () => $('.seg [data-when="flex"]').click() });
+  if (state.when.mode !== 'flex') {
+    const w = state.when, r = w.mode === 'holiday' ? holidayRange() : null;
+    const label = w.mode === 'weekend' ? 'Weekend' : w.mode === 'month' ? `Maand: ${$('#inMonth').selectedOptions[0]?.textContent || ''}`
+      : w.mode === 'holiday' ? (r ? r.name : 'Vakantie') : `Datums: ${w.from ? dateNL(w.from, { dow: false }) : '…'} – ${w.to ? dateNL(w.to, { dow: false }) : '…'}`;
+    chips.push({ label, fn: () => $('.seg [data-when="flex"]').click() });
+  }
+  if (state.trip === 'retour' && state.stay !== 'alle') chips.push({ label: STAYS[state.stay].label, fn: () => { state.stay = 'alle'; $('#inStay').value = 'alle'; } });
+  f.origins.forEach(o => chips.push({ label: `Vanaf ${ORIGINS[o].n}`, fn: () => f.origins.delete(o) }));
+  if (f.nlOnly) chips.push({ label: 'Vertrek in Nederland', fn: () => { f.nlOnly = false; } });
+  if (f.depPart !== 'alle') chips.push({ label: `Vertrek: ${f.depPart}`, fn: () => { f.depPart = 'alle'; } });
+  if (f.noIndic) chips.push({ label: 'Zonder indicaties', fn: () => { f.noIndic = false; } });
   if (f.modes.size < 4) chips.push({ label: `Vervoer: ${[...f.modes].map(m => MODES[m].label).join(', ') || 'geen'}`, fn: () => { f.modes = new Set(Object.keys(MODES)); } });
-  if (!noLimit(f.maxPrice, 300)) chips.push({ label: `Max ${eur(f.maxPrice)}`, fn: () => { f.maxPrice = 300; } });
+  if (!noLimit(f.maxPrice, 300)) chips.push({ label: `Max ${eur(f.maxPrice)} ${tripWord()}`, fn: () => { f.maxPrice = 300; } });
   if (!noLimit(f.maxHours, 24)) chips.push({ label: `Max ${f.maxHours} uur`, fn: () => { f.maxHours = 24; } });
   if (!noLimit(f.maxAccess, 300)) chips.push({ label: `Naar vertrekpunt ≤ ${dur(f.maxAccess)}`, fn: () => { f.maxAccess = 300; } });
   if (f.direct) chips.push({ label: 'Rechtstreeks', fn: () => { f.direct = false; } });
   if (f.bagIncl) chips.push({ label: 'Koffer inbegrepen', fn: () => { f.bagIncl = false; } });
   f.types.forEach(t => chips.push({ label: TYPES[t], fn: () => f.types.delete(t) }));
-  f.countries.forEach(c => chips.push({ label: COUNTRIES[c], fn: () => f.countries.delete(c) }));
+  f.countries.forEach(c => chips.push({ label: COUNTRIES[c] || c, fn: () => f.countries.delete(c) }));
   if (f.status.size < 2) chips.push({ label: f.status.has('live') ? 'Alleen live' : 'Alleen gecontroleerd', fn: () => { f.status = new Set(['snapshot', 'live']); } });
   const box = $('#activeFilters');
   box.innerHTML = chips.map((c, i) => `<button type="button" class="chip" data-i="${i}" aria-label="Filter weghalen: ${esc(c.label)}">${esc(c.label)} ${icon('i-close', 'sm')}</button>`).join('');
   box.onclick = ev => { const b = ev.target.closest('[data-i]'); if (!b) return; chips[+b.dataset.i].fn(); syncFilterUI(); renderAll(); };
 }
-function dealCard({ e, dd }) {
+// Prijsblok: bedrag + uitleg, passend bij enkele reis of retour
+function priceBlock(e, tp) {
+  const notes = [];
+  if (tp.calc) notes.push(`retour p.p., <b>berekend</b>: 2 × ${eur(e.price)}`);
+  else if (e.trip === 'retour') { notes.push('retour p.p.'); notes.push(`≈ ${eur(e.perDir)} per richting`); }
+  else notes.push('enkele reis p.p.');
+  if (state.travellers > 1) notes.push(`${state.travellers} pers.: <b>${eur(tp.p * state.travellers)}</b>`);
+  return `<div class="price-row"><div class="price">${e.priceType === 'vanaf' ? '<small>vanaf</small>' : ''}${eur(tp.p)}</div><div class="price-note">${notes.join('<br>')}</div></div>`;
+}
+// Heen en terug als twee regels (alleen als de data vastliggen)
+function legsBlock(e) {
+  if (!e.out) return `<div class="dates">${icon('i-cal', 'sm')} Datum naar keuze, zolang beschikbaar</div>`;
+  const leg = (k, d, t, extra) => `<div class="leg"><span class="leg-k">${k}</span><b>${esc(dateNL(d))}</b>${t ? `<span>${esc(t)}</span>` : ''}${extra ? `<span class="muted">${extra}</span>` : ''}</div>`;
+  return `<div class="legs">${leg('Heen', e.out, e.depTime, e.flight ? esc(e.flight.split(', ')[0]) : '')}${e.back ? leg('Terug', e.back, e.backTime, e.backFlight ? esc(e.backFlight.split(', ')[0]) : '') : ''}${e.nights != null ? `<span class="nights">${nightsText(e.nights)}</span>` : ''}</div>`;
+}
+const statusBadge = e => (e.indic ? '<span class="badge indic">Indicatie</span>' : `<span class="badge ${e.status}">${e.status === 'live' ? 'Live' : 'Gecontroleerd'}</span>`);
+function bagLabel(e) {
+  if (e.mode === 'vliegtuig' && state.bag !== 'tasje' && e.bag === 'tasje') return 'Zonder koffer: die kost extra';
+  return { koffer: 'Koffer inbegrepen', hand: 'Handbagagekoffer inbegrepen', tasje: 'Alleen klein tasje gratis', onbekend: 'Bagage: check bij boeken' }[e.bag] || 'Bagage: check';
+}
+function dealCard(x) {
+  const { e, dd } = x, tp = x.tp || tripPrice(e) || { p: e.price, calc: false };
   const m = MODES[e.mode], fav = isFav(e.id);
   const arrName = e.arr && ARR_AIRPORTS[e.arr] ? ` <span class="small muted">(${esc(ARR_AIRPORTS[e.arr].n)})</span>` : '';
   const route = `${e.o.n} naar ${e.dest.n}`;
-  const tripLabel = e.trip === 'retour' ? 'retour p.p.' : 'enkele reis p.p.';
-  const notes = [];
-  notes.push(tripLabel);
-  if (e.trip === 'retour') notes.push(`≈ ${eur(e.perDir)} per richting`);
-  if (state.travellers > 1) notes.push(`${state.travellers} pers.: <b>${eur(e.price * state.travellers)}</b>`);
-  const dates = e.out ? `${dateNL(e.out)}${e.depTime ? ' om ' + e.depTime : ''}${e.back ? ' – ' + dateNL(e.back) : ''}` : 'Datum naar keuze, zolang beschikbaar';
   const tr = e.transfers === 0 ? 'Rechtstreeks' : e.transfers == null ? 'Overstappen: onbekend' : `${e.transfers} overstap${e.transfers > 1 ? 'pen' : ''}`;
-  const bag = { koffer: 'Koffer inbegrepen', tasje: 'Alleen klein tasje gratis', onbekend: 'Bagage: check bij boeken' }[e.bag] || 'Bagage: check';
   const src = srcOf(e);
   const age = ageOf(e.checked);
   const book = bookLink(e);
   const acc = dd.a;
+  const more = x.more && x.more.n ? `<button class="more-opts" type="button" data-act="more">${icon('i-layers', 'sm')}<span>Nog ${x.more.n} andere optie${x.more.n === 1 ? '' : 's'} naar ${esc(e.dest.n)}</span>${icon('i-enkel', 'sm')}</button>` : '';
   return `<li class="deal" data-mode="${e.mode}" data-id="${esc(e.id)}">
     <div class="deal-top">
       <span class="mode-tag">${icon(m.icon)}${m.label}</span>
       <span class="provider">${esc(e.provider)}</span>
-      <span class="badge ${e.status}">${e.status === 'live' ? 'Live' : 'Gecontroleerd'}</span>
+      ${statusBadge(e)}
       ${TOP_IDS.has(e.id) ? '<span class="badge top">Topdeal</span>' : ''}
       ${e.who === 'jongeren' ? '<span class="badge who">Jongerentarief</span>' : ''}
     </div>
     <button class="icon-btn fav" type="button" data-act="fav" aria-pressed="${fav}" aria-label="${fav ? 'Haal uit favorieten' : 'Bewaar als favoriet'}: ${esc(route)}">${icon('i-star')}</button>
     <div class="route">
-      <h3>${esc(e.o.n)} <span class="arrow" aria-hidden="true">→</span><span class="sr-only">naar</span> ${esc(e.dest.n)}${arrName}</h3>
-      <div class="sub">${esc(e.dest.c)} · ${e.dest.t.map(t => TYPES[t]).join(', ')}</div>
+      <h3><span class="from">${esc(e.o.n)} <span class="arrow" aria-hidden="true">→</span><span class="sr-only"> naar</span></span> <span class="to">${esc(e.dest.n)}${arrName}</span></h3>
+      <div class="sub"><span class="flag" aria-hidden="true">${flag(e.dest.cc)}</span> ${esc(e.dest.c)}${e.dest.t.length ? ' · ' + e.dest.t.map(t => TYPES[t]).join(', ') : ''}</div>
     </div>
-    <div class="price-row">
-      <div class="price">${e.priceType === 'vanaf' ? '<small>vanaf</small>' : ''}${eur(e.price)}</div>
-      <div class="price-note">${notes.join('<br>')}</div>
-    </div>
-    <div class="dates">${icon('i-cal', 'sm')} ${dates}</div>
+    ${priceBlock(e, tp)}
+    ${legsBlock(e)}
     ${histLine(e)}
     <ul class="facts">
       <li>${icon('i-clock')}${dur(e.dur)}${e.durEst ? ` <span class="est">(geschat${e.transfers ? ', incl. overstap' : ''})</span>` : ''}</li>
       <li>${icon('i-route')}${tr}</li>
       <li title="CO2 per persoon, per richting">${icon('i-leaf')}${kg(e.co2One)} CO2</li>
-      <li>${icon('i-bag')}${bag}</li>
+      <li>${icon('i-bag')}${bagLabel(e)}</li>
     </ul>
     <div class="d2d">Deur tot deur vanaf ${esc(state.origin.n)}: <b>ca. ${dur(dd.total)}</b> · naar ${esc(e.o.n)} ${acc.live ? 'met NS: ' + dur(acc.min) + (acc.eur != null ? ', ' + eur(acc.eur) : '') : 'ca. ' + dur(acc.min)}</div>
     <div class="src-line">Bron: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.name)}</a>${e.status === 'live' && e.srcLive ? `<span>· opgehaald ${esc(timeNL(e.checked))}</span><span class="age">(prijs door gebruikers gevonden in de 48 uur ervoor)</span>` : `<span>· ${e.status === 'live' ? 'live opgehaald' : 'gecontroleerd'} ${esc(timeNL(e.checked))}</span><span class="age ${age.cls}">(${age.text})</span>`}${e.srcDate ? `<span>· bron-datum ${esc(dateNL(e.srcDate, { dow: false, year: true }))}</span>` : ''}</div>
@@ -348,18 +445,94 @@ function dealCard({ e, dd }) {
       <button class="icon-btn" type="button" data-act="share" aria-label="Deel ${esc(route)}">${icon('i-share')}</button>
       <button class="btn ghost sm" type="button" data-act="info">Details</button>
     </div>
+    ${more}
   </li>`;
 }
-let lastList = [];
+// Compacte regel (lijstweergave): één tik opent de details
+function dealRow(x) {
+  const { e } = x, tp = x.tp || tripPrice(e) || { p: e.price, calc: false };
+  const when = e.out ? `${dateNL(e.out)}${e.back ? ' – ' + dateNL(e.back) : ''}${e.nights != null ? ' · ' + nightsText(e.nights) : ''}` : 'datum naar keuze';
+  return `<li class="deal-row" data-mode="${e.mode}" data-id="${esc(e.id)}">
+    <button type="button" class="row-main" data-act="info" aria-label="${esc(e.o.n)} naar ${esc(e.dest.n)}, ${e.priceType === 'vanaf' ? 'vanaf ' : ''}${esc(eur(tp.p))} ${tp.calc || e.trip === 'retour' ? 'retour' : 'enkele reis'}. Open details.">
+      <span class="row-ic">${icon(MODES[e.mode].icon)}</span>
+      <span class="row-txt"><b>${esc(e.dest.n)}</b> <span class="flag" aria-hidden="true">${flag(e.dest.cc)}</span>${e.indic ? ' <span class="badge indic">Indicatie</span>' : e.status === 'live' ? ' <span class="badge live">Live</span>' : ''}
+        <span class="row-sub">${esc(e.o.n)} · ${esc(when)}</span>
+        <span class="row-sub">${esc(e.provider)} · ${e.transfers === 0 ? 'rechtstreeks' : e.transfers == null ? 'overstappen onbekend' : e.transfers + ' overstap' + (e.transfers > 1 ? 'pen' : '')}${x.more && x.more.n ? ` · nog ${x.more.n} optie${x.more.n === 1 ? '' : 's'}` : ''}</span></span>
+      <span class="row-price">${e.priceType === 'vanaf' ? '<small>vanaf</small> ' : ''}<b>${eur(tp.p)}</b><small>${tp.calc ? 'retour (2 ×)' : e.trip === 'retour' ? 'retour' : 'enkel'}</small></span>
+    </button>
+  </li>`;
+}
+/* Ideeën: tegels die in één tik een slimme selectie maken. Elke tegel telt echte deals (voor enkele reis of retour). */
+const INSPIRE = [
+  { id: 'zon', title: 'Naar de zon', icon: 'i-sun', test: e => e.dest.t.includes('strand'), apply: f => f.types.add('strand') },
+  { id: 'stad', title: 'Stedentrip', icon: 'i-city', test: e => e.dest.t.includes('stad'), apply: f => f.types.add('stad') },
+  { id: 'kerst', title: 'Kerstvakantie', icon: 'i-gift', test: e => { const r = holidayRange('kerst'); return !!(r && e.out && e.out >= addDays(r.from, -1) && e.out <= r.to && (!e.back || e.back <= r.to)); }, apply: () => setWhen('holiday', { hol: 'kerst' }), needs: () => holidayRange('kerst').to >= todayISO() },
+  { id: 'trein', title: 'Met de trein', icon: 'i-trein', test: e => e.mode === 'trein', apply: f => { f.modes = new Set(['trein']); } },
+  { id: 'ski', title: 'Wintersport', icon: 'i-snow', test: e => e.dest.t.includes('ski'), apply: f => f.types.add('ski') },
+  { id: 'natuur', title: 'Natuur', icon: 'i-tree', test: e => e.dest.t.includes('natuur'), apply: f => f.types.add('natuur') },
+  { id: 'budget', title: () => `Onder ${eur(state.trip === 'retour' ? 50 : 25)}`, icon: 'i-euro', test: (e, tp) => tp.p <= (state.trip === 'retour' ? 50 : 25), apply: f => { f.maxPrice = state.trip === 'retour' ? 50 : 25; } },
+  { id: 'direct', title: 'Rechtstreeks vliegen', icon: 'i-vliegtuig', test: e => e.mode === 'vliegtuig' && e.transfers === 0, apply: f => { f.modes = new Set(['vliegtuig']); f.direct = true; } },
+];
+function renderInspire() {
+  const box = $('#inspire'); if (!box) return;
+  const today = todayISO(), base = [];
+  for (const e of allDeals()) {
+    if ((e.out && e.out < today) || (e.who === 'jongeren' && !isYouth())) continue;
+    const tp = tripPrice(e); if (tp) base.push({ e, tp });
+  }
+  const tiles = INSPIRE.filter(t => !t.needs || t.needs()).map(t => {
+    const hit = base.filter(x => t.test(x.e, x.tp));
+    return hit.length ? { t, n: new Set(hit.map(x => x.e.to)).size, min: Math.min(...hit.map(x => x.tp.p)) } : null;
+  }).filter(Boolean);
+  box.hidden = !tiles.length;
+  box.innerHTML = tiles.length ? `<h2 class="inspire-title">Ideeën voor jou <span class="small muted">${tripWord()}, per persoon</span></h2><div class="inspire-row">${tiles.map(({ t, n, min }) => `<button type="button" class="tile" data-tile="${t.id}">
+      <span class="tile-ic">${icon(t.icon)}</span><b>${esc(typeof t.title === 'function' ? t.title() : t.title)}</b>
+      <span class="tile-p">vanaf ${eur(min)}</span><span class="small">${n} bestemming${n === 1 ? '' : 'en'}</span></button>`).join('')}</div>` : '';
+}
+$('#inspire').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-tile]'); if (!b) return;
+  const t = INSPIRE.find(x => x.id === b.dataset.tile); if (!t) return;
+  state.filters = defaultFilters();
+  setWhen('flex');
+  state.stay = 'alle'; $('#inStay').value = 'alle';
+  state.dest = 'overal'; $('#inDest').value = ''; $('#btnAnywhere').setAttribute('aria-pressed', 'true');
+  t.apply(state.filters);
+  state.sort = 'prijs'; $('#sortSel').value = 'prijs';
+  syncFilterUI(); renderAll();
+  if (state.tab !== 'deals') goTab('deals');
+  $('#view-deals').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  announce(`${typeof t.title === 'function' ? t.title() : t.title}: ${lastList.length} deals.`);
+});
+let lastList = [], lastSig = '';
 function renderDeals() {
-  const { list, hiddenYouth, expired } = filterDeals();
+  const { list, hiddenYouth, expired, otherTrip } = filterDeals();
   lastList = list;
-  const cheapest = list.reduce((m, x) => (!m || x.e.perDir < m.e.perDir ? x : m), null);
+  // Eén deal per bestemming: de beste volgens de sortering, met een teller voor de rest
+  let view = list;
+  const grouped = state.perDest && state.dest === 'overal';
+  if (grouped) {
+    // Een gecontroleerde of live deal gaat voor een indicatie: die staat dan bij de "andere opties"
+    const seen = new Map(); view = [];
+    for (const x of list) {
+      const g = seen.get(x.e.to);
+      if (!g) { x.more = { n: 0, rep: x }; seen.set(x.e.to, x.more); view.push(x); continue; }
+      g.n++;
+      if (g.rep.e.indic && !x.e.indic) { view[view.indexOf(g.rep)] = null; x.more = g; g.rep = x; view.push(x); }
+    }
+    view = view.filter(Boolean);
+  }
+  const sig = `${state.sort}|${state.trip}|${grouped}|${state.dest}|${view.length}|${view[0] ? view[0].e.id : ''}`;
+  if (sig !== lastSig) { state.shown = 24; lastSig = sig; }
+  const cheapest = list.reduce((m, x) => (!m || x.tp.p < m.tp.p ? x : m), null);
   $('#summary').innerHTML = list.length
-    ? `${list.length} deal${list.length === 1 ? '' : 's'} <span class="muted">· goedkoopst ${eur(cheapest.e.perDir)} p.p. per richting (${esc(cheapest.e.dest.n)})</span>`
+    ? `${grouped ? `${view.length} bestemming${view.length === 1 ? '' : 'en'} · ` : ''}${list.length} deal${list.length === 1 ? '' : 's'} <span class="muted">· goedkoopst ${eur(cheapest.tp.p)} ${tripWord()} p.p. (${esc(cheapest.e.dest.n)})</span>`
     : 'Geen deals <span class="muted">met deze keuzes</span>';
-  const notices = [];
-  if (hiddenYouth) notices.push(`<div class="notice info">${icon('i-info')}<div>${hiddenYouth} jongerentarie${hiddenYouth === 1 ? 'f is' : 'ven zijn'} verborgen. Kies "Jongere" bij reizigers om ze te zien.</div></div>`);
+  const notices = [], hints = [];
+  if (otherTrip) hints.push(state.trip === 'retour'
+    ? `<span class="trip-note"><b>Retourprijzen.</b> Trein en bus met een vrije datum: 2 × de enkele reis ("berekend"). ${otherTrip} losse enkele vlucht${otherTrip === 1 ? '' : 'en'} ${otherTrip === 1 ? 'doet' : 'doen'} niet mee. <button class="linkish" type="button" data-trip-switch>Toon enkele reizen</button></span>`
+    : `<span class="trip-note"><b>Enkele reizen.</b> ${otherTrip} deal${otherTrip === 1 ? '' : 's'} die alleen als retour te koop ${otherTrip === 1 ? 'is, doet' : 'zijn, doen'} niet mee. <button class="linkish" type="button" data-trip-switch>Toon retourreizen</button></span>`);
+  if (hiddenYouth) hints.push(`<span>${hiddenYouth} jongerentarie${hiddenYouth === 1 ? 'f is' : 'ven zijn'} verborgen. Kies "Jongere" bij reizigers om ze te zien.</span>`);
+  $('#dealHints').innerHTML = hints.join('');
   if (list.some(x => x.e.from === 'EIN')) notices.push(`<div class="notice">${icon('i-info')}<div><b>Let op:</b> ${esc(NOTICES.EIN.text)} <a href="${SRC.einClose.url}" target="_blank" rel="noopener">Bron</a></div></div>`);
   const newest = SNAP.reduce((m, e) => (Date.parse(e.checked) > m ? Date.parse(e.checked) : m), 0);
   const snapAge = ageOf(new Date(newest || Date.now()).toISOString());
@@ -367,12 +540,29 @@ function renderDeals() {
   if (expired) notices.push(`<div class="notice info">${icon('i-info')}<div>${expired} deal${expired === 1 ? '' : 's'} met een datum in het verleden ${expired === 1 ? 'is' : 'zijn'} weggelaten.</div></div>`);
   $('#dealNotices').innerHTML = notices.join('');
   renderTopDeals(list);
-  $('#dealGrid').innerHTML = list.map(dealCard).join('') + (state.scanning && (settings.tpToken || CLOUD.kiwi) ? '<li class="skeleton" aria-label="Live resultaten laden"></li><li class="skeleton" aria-hidden="true"></li>' : '');
+  const grid = $('#dealGrid'), rows = state.layout === 'rows';
+  grid.classList.toggle('rows', rows);
+  const page = view.slice(0, state.shown);
+  grid.innerHTML = page.map(rows ? dealRow : dealCard).join('') + (state.scanning && (settings.tpToken || CLOUD.kiwi) ? '<li class="skeleton" aria-label="Live resultaten laden"></li><li class="skeleton" aria-hidden="true"></li>' : '');
+  const rest = view.length - page.length;
+  $('#moreRow').innerHTML = rest > 0 ? `<button class="btn ghost" type="button" id="btnMore">Toon nog ${Math.min(24, rest)} ${grouped ? 'bestemmingen' : 'deals'} <span class="muted">(${rest} over)</span></button>` : '';
   $('#emptyState').innerHTML = list.length ? '' : emptyState();
+  const pd = $('#btnPerDest'); pd.setAttribute('aria-pressed', String(state.perDest)); pd.disabled = state.dest !== 'overal';
+  $('#btnLayout').innerHTML = icon(rows ? 'i-grid' : 'i-rows');
+  $('#btnLayout').setAttribute('aria-label', rows ? 'Toon als kaarten' : 'Toon als compacte lijst');
   renderActiveFilters();
   syncFilterUI();
   renderProviders();
+  renderInspire();
 }
+$('#moreRow').addEventListener('click', ev => { if (ev.target.closest('#btnMore')) { state.shown += 24; renderDeals(); } });
+$('#dealHints').addEventListener('click', ev => {
+  if (!ev.target.closest('[data-trip-switch]')) return;
+  setTrip(state.trip === 'retour' ? 'enkel' : 'retour'); renderAll();
+  if (CLOUD.kiwi && !state.scanning) scan({ onlyKiwi: true, initial: true });
+});
+$('#btnPerDest').addEventListener('click', () => { state.perDest = !state.perDest; store.set('perDest', state.perDest); renderDeals(); toast(state.perDest ? 'Je ziet de beste deal per bestemming.' : 'Je ziet alle deals los.', { ms: 2200 }); });
+$('#btnLayout').addEventListener('click', () => { state.layout = state.layout === 'rows' ? 'cards' : 'rows'; store.set('layout', state.layout); renderDeals(); });
 function emptyState() {
   const f = state.filters;
   const tips = [];
@@ -432,8 +622,9 @@ function renderPasses() {
 }
 $('#dealGrid').addEventListener('click', ev => {
   const b = ev.target.closest('[data-act]'); if (!b) return;
-  const id = b.closest('.deal').dataset.id, e = dealById(id); if (!e) return;
+  const id = b.closest('[data-id]').dataset.id, e = dealById(id); if (!e) return;
   const act = b.dataset.act;
+  if (act === 'more') { setDest(e.to); $('#view-deals').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); return; }
   if (act === 'fav') { toggleFav(e); b.setAttribute('aria-pressed', String(isFav(e.id))); }
   if (act === 'alert') openAlertDialog(e);
   if (act === 'share') shareDeal(e);
@@ -453,17 +644,21 @@ function openDealDialog(e, opts = {}) {
   const ctx = linkCtx(e);
   $('#dlgDealTitle').textContent = `${e.o.n} → ${e.dest.n}`;
   $('#dlgDealBody').innerHTML = `
-    <div class="deal-top"><span class="mode-tag" style="color:var(--m-${e.mode})">${icon(MODES[e.mode].icon)}${MODES[e.mode].label}</span><span class="provider">${esc(e.provider)}</span><span class="badge ${e.status}">${e.status === 'live' ? 'Live' : 'Gecontroleerd'}</span></div>
+    <div class="deal-top"><span class="mode-tag" style="color:var(--m-${e.mode})">${icon(MODES[e.mode].icon)}${MODES[e.mode].label}</span><span class="provider">${esc(e.provider)}</span>${statusBadge(e)}</div>
     <div class="price-row"><div class="price">${e.priceType === 'vanaf' ? '<small>vanaf</small>' : ''}${eur(e.price)}</div><div class="price-note">${e.trip === 'retour' ? 'retour' : 'enkele reis'} per persoon${e.trip === 'retour' ? `<br>≈ ${eur(e.perDir)} per richting` : ''}${state.travellers > 1 ? `<br>${state.travellers} personen: <b>${eur(e.price * state.travellers)}</b>` : ''}</div></div>
+    ${e.trip === 'enkel' && !e.out ? `<p class="calc-note">${icon('i-retour', 'sm')}<span>Heen en terug: reken op <b>2 × ${eur(e.price)} = ${eur(e.price * 2)}</b> per persoon. Dat is <b>berekend</b>, niet door de bron genoemd: de vanafprijs geldt niet op elke dag en in elke richting.</span></p>` : ''}
+    ${e.indic ? `<p class="calc-note">${icon('i-info', 'sm')}<span><b>Indicatie:</b> Skyscanner schat deze prijs op basis van de laatste 4 dagen. Het is geen live prijs.</span></p>` : ''}
     ${e.note ? `<p>${esc(e.note)}</p>` : ''}
     ${e.parts ? `<div><b>Opbouw van de prijs</b><ul>${e.parts.map(p => `<li>${esc(p.label)}: ${eur(p.price)} (<a href="${SRC[p.src].url}" target="_blank" rel="noopener">${esc(SRC[p.src].name)}</a>)</li>`).join('')}</ul></div>` : ''}
     <dl class="kv">
       <dt>Vertrek</dt><dd>${esc(e.o.full || e.o.n)}</dd>
       <dt>Aankomst</dt><dd>${esc(e.dest.n)}, ${esc(e.dest.c)}${e.arr && ARR_AIRPORTS[e.arr] ? ` (vliegveld ${esc(ARR_AIRPORTS[e.arr].n)}, ${Math.round(km(ARR_AIRPORTS[e.arr], e.dest))} km van het centrum)` : ''}</dd>
-      <dt>Reisdata</dt><dd>${e.out ? `${dateNL(e.out, { year: true })}${e.depTime ? ', vertrek ' + e.depTime : ''}${e.back ? ' tot ' + dateNL(e.back, { year: true }) : ''}${e.flight ? ` (vlucht ${esc(e.flight)})` : ''}` : 'Vrij te kiezen; de vanafprijs geldt niet op elke dag'}</dd>
+      ${e.out ? `<dt>Heenreis</dt><dd>${esc(dateNL(e.out, { year: true }))}${e.depTime ? ', vertrek ' + esc(e.depTime) : ''}${e.flight ? ` (vlucht ${esc(e.flight)})` : ''}</dd>` : '<dt>Reisdata</dt><dd>Vrij te kiezen; de vanafprijs geldt niet op elke dag</dd>'}
+      ${e.back ? `<dt>Terugreis</dt><dd>${esc(dateNL(e.back, { year: true }))}${e.backTime ? ', vertrek ' + esc(e.backTime) : ''}${e.backFlight ? ` (vlucht ${esc(e.backFlight)})` : ''}${e.backDur ? `, ${dur(e.backDur)}` : ''}${e.backFrom && e.backFrom !== e.arr ? ` · <b>vanaf ${esc(AIRPORT_NAMES[e.backFrom] || e.backFrom)} (${esc(e.backFrom)})</b>` : ''}${e.nights != null ? ` · ${nightsText(e.nights)}` : ''}</dd>` : ''}
       <dt>Reistijd</dt><dd>${dur(e.dur)} ${e.durEst ? `(geschat uit de afstand${e.transfers ? `, incl. ${e.transfers} overstap${e.transfers > 1 ? 'pen' : ''}` : ''}; de bron noemt geen reistijd)` : '(volgens de bron)'}</dd>
       <dt>Overstappen</dt><dd>${e.transfers == null ? 'Onbekend' : e.transfers === 0 ? 'Geen' : e.transfers}</dd>
-      <dt>Bagage</dt><dd>${esc(bag.text)}${bag.src ? ` <a href="${SRC[bag.src].url}" target="_blank" rel="noopener">Bron</a>` : ''}</dd>
+      <dt>Bagage</dt><dd>${e.mode === 'vliegtuig' && e.bag === 'hand' ? 'Een handbagagekoffer zit in deze prijs.' : e.mode === 'vliegtuig' && e.bag === 'koffer' ? 'Ruimbagage (een koffer) zit in deze prijs.' : esc(bag.text)}${bag.src && e.bag !== 'hand' && e.bag !== 'koffer' ? ` <a href="${SRC[bag.src].url}" target="_blank" rel="noopener">Bron</a>` : ''}</dd>
+      <dt>Reisdocument</dt><dd>${esc(docInfo(e.dest.cc))} <a href="${SRC.reisadvies.url}" target="_blank" rel="noopener">Controleer bij de overheid</a></dd>
       <dt>Afstand</dt><dd>${Math.round(e.routeKm)} km ${e.km ? '(volgens de bron)' : e.mode === 'vliegtuig' ? '(hemelsbreed + 8% omweg)' : '(hemelsbreed + 20%, schatting)'}</dd>
       <dt>CO2</dt><dd>${kg(e.co2One)} per persoon per richting = ${Math.round(e.routeKm)} km × ${String(fac.f).replace('.', ',')} kg/km (<a href="${SRC[fac.src].url}" target="_blank" rel="noopener">${esc(fac.label)}</a>)</dd>
     </dl>
@@ -475,6 +670,7 @@ function openDealDialog(e, opts = {}) {
         <li>Naar het centrum: ${dur(e.egress)} (aanname)</li>
       </ul></div>
     ${histChart(e)}
+    ${CLOUD.kiwi && e.mode === 'vliegtuig' && e.out && e.o.iata && e.arr ? `<div class="cmp-box verify-box"><button class="btn sm" type="button" id="btnVerify">${icon('i-shield', 'sm')}Controleer de prijs nu (live)</button><div id="verifyOut" aria-live="polite"></div></div>` : ''}
     ${CLOUD.lastminute && e.mode === 'vliegtuig' && e.trip === 'enkel' && e.out && e.o.iata && e.arr ? `<div class="cmp-box"><button class="btn ghost sm" type="button" id="btnCmpLm">Vergelijk deze vlucht bij lastminute.com</button><div id="cmpLmOut" aria-live="polite"></div></div>` : ''}
     <div><b>Bronnen</b><ul class="small">${srcs.map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join('')}</ul>
       <p class="small muted">${e.status === 'live' && e.srcLive ? `Opgehaald op ${esc(timeNL(e.checked))} uit de Aviasales-cache: deze prijs is door gebruikers gevonden in de 48 uur daarvoor, dus hij kan al anders zijn` : `${e.status === 'live' ? 'Live opgehaald' : 'Gecontroleerd'} op ${esc(timeNL(e.checked))}`}${e.srcDate ? `; de bron noemt prijzen van ${esc(dateNL(e.srcDate, { dow: false, year: true }))}` : ''}. Prijzen veranderen snel: controleer bij de aanbieder.</p></div>
@@ -484,6 +680,8 @@ function openDealDialog(e, opts = {}) {
       ${altLinks.map(k => `<a class="btn ghost sm" href="${esc(PROVIDERS[k].url(ctx))}" target="_blank" rel="noopener">Vergelijk bij ${esc(PROVIDERS[k].name)}</a>`).join('')}
     </div>`;
   openDialog('dlgDeal');
+  const bv = $('#btnVerify');
+  if (bv) bv.addEventListener('click', () => { bv.disabled = true; verifyDeal(e, $('#verifyOut')).finally(() => { bv.disabled = false; }); });
   const bl = $('#btnCmpLm');
   if (bl) bl.addEventListener('click', () => { bl.disabled = true; compareLastminute(e, $('#cmpLmOut')).finally(() => { bl.disabled = false; }); });
 }
@@ -497,11 +695,16 @@ function proj(lon, lat) {
   const x = k * Math.cos(p) * Math.sin(l - l0), y = k * (Math.cos(p0) * Math.sin(p) - Math.sin(p0) * Math.cos(p) * Math.cos(l - l0));
   return [MAP.translate[0] + MAP.scale * x, MAP.translate[1] - MAP.scale * y];
 }
-function tier(v) { return v <= 30 ? 1 : v <= 60 ? 2 : v <= 120 ? 3 : 4; }
-const TIER_LABEL = { 1: 't/m €30', 2: '€31–60', 3: '€61–120', 4: 'meer dan €120' };
+// Kleur per prijsklasse; bij retour zijn de grenzen twee keer zo hoog
+const tierMul = () => (state.trip === 'retour' ? 2 : 1);
+function tier(v) { const m = tierMul(); return v <= 30 * m ? 1 : v <= 60 * m ? 2 : v <= 120 * m ? 3 : 4; }
+function renderMapLegend() {
+  const m = tierMul(), lab = [`t/m €${30 * m}`, `€${30 * m + 1}–${60 * m}`, `€${60 * m + 1}–${120 * m}`, `meer dan €${120 * m}`];
+  $('#mapLegend').innerHTML = lab.map((l, i) => `<span><i style="background:var(--tier${i + 1})"></i>${l}</span>`).join('') + `<span><i style="background:var(--line)"></i>geen deal met deze keuzes</span><span class="muted">Prijs = goedkoopste per persoon, ${tripWord()}. Een gecontroleerde deal gaat voor een indicatie.</span>`;
+}
 function initMap() {
   $('#mapBase').innerHTML = `<rect x="-2000" y="-2000" width="5000" height="5000" fill="var(--sea)"/><path class="land" d="${MAP.land}"/><path class="nl" d="${MAP.nl}"/><path class="borders" d="${MAP.borders}"/>`;
-  $('#mapLegend').innerHTML = [1, 2, 3, 4].map(t => `<span><i style="background:var(--tier${t})"></i>${TIER_LABEL[t]}</span>`).join('') + `<span><i style="background:var(--line)"></i>geen gecontroleerde deal</span><span class="muted">Prijs = goedkoopste per persoon per richting.</span>`;
+  renderMapLegend();
   const svg = $('#mapSvg');
   const ptrs = new Map();
   let last = null, lastDist = null, moved = false;
@@ -555,13 +758,15 @@ function applyView() {
 function cheapestPerDest() {
   const { list } = filterDeals({ ignoreDest: true });
   const best = {};
-  for (const x of list) if (!best[x.e.to] || x.e.perDir < best[x.e.to].e.perDir) best[x.e.to] = x;
+  for (const x of list) { const b = best[x.e.to]; if (!b || (b.e.indic && !x.e.indic) || (!!b.e.indic === !!x.e.indic && x.tp.p < b.tp.p)) best[x.e.to] = x; }
   return best;
 }
 function renderMarkers() {
   const best = cheapestPerDest();
   const z = MAP.W / MAPV.w, s = 1 / z;
-  const ranked = Object.values(best).sort((a, b) => a.e.perDir - b.e.perDir).map(x => x.e.to);
+  const ranked = Object.values(best).sort((a, b) => a.tp.p - b.tp.p).map(x => x.e.to);
+  renderMapLegend();
+  $('#mapSub').textContent = `Goedkoopste prijs per bestemming, per persoon (${tripWord()}). Filters van het tabblad Deals gelden ook hier.`;
   const pos = Object.fromEntries(ranked.map(id => [id, proj(DEST[id].lon, DEST[id].lat)]));
   const [ox, oy] = proj(state.origin.lon, state.origin.lat);
 
@@ -578,7 +783,7 @@ function renderMarkers() {
   for (const id of order) {
     if (placed >= cap) break;
     const [x, y] = pos[id];
-    const w = widths[id] = 12 + eur(best[id].e.perDir).length * 7.4;
+    const w = widths[id] = 12 + eur(best[id].tp.p).length * 7.4;
     const right = [x + 10 * s, y - 11 * s, x + (10 + w) * s, y + 11 * s];
     const left = [x - (10 + w) * s, y - 11 * s, x - 10 * s, y + 11 * s];
     for (const [k, b] of [['r', right], ['l', left]]) {
@@ -593,10 +798,10 @@ function renderMarkers() {
     html += `<g class="mk" data-dest="${d.id}" tabindex="-1" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})"><circle class="dot" r="4" fill="var(--line)"/></g>`;
   }
   for (const id of ranked.slice().reverse()) {
-    const x0 = best[id], d = DEST[id], [x, y] = pos[id], t = tier(x0.e.perDir);
-    const label = eur(x0.e.perDir), w = widths[id] || 0, rx = side[id] === 'l' ? -(10 + w) : 10;
+    const x0 = best[id], d = DEST[id], [x, y] = pos[id], t = tier(x0.tp.p);
+    const label = eur(x0.tp.p), w = widths[id] || 0, rx = side[id] === 'l' ? -(10 + w) : 10;
     const sel = state.mapSel === id ? ' sel' : '';
-    html += `<g class="mk${sel}" data-dest="${id}" tabindex="0" role="button" aria-label="${esc(d.n)}: vanaf ${esc(label)} per richting" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})">
+    html += `<g class="mk${sel}" data-dest="${id}" tabindex="0" role="button" aria-label="${esc(d.n)}: vanaf ${esc(label)} ${tripWord()}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})">
       <circle class="dot" r="7" fill="var(--tier${t})"/>
       ${side[id] ? `<rect class="lbl-bg" x="${rx.toFixed(0)}" y="-11" width="${w.toFixed(0)}" height="22" rx="6"/><text x="${(rx + 6).toFixed(0)}" y="4.5">${esc(label)}</text>` : `<title>${esc(d.n)}: ${esc(label)}</title>`}
     </g>`;
@@ -609,16 +814,16 @@ function renderDestPanel() {
   const best = cheapestPerDest();
   const panel = $('#destPanel');
   if (!state.mapSel) {
-    const ranked = Object.values(best).sort((a, b) => a.e.perDir - b.e.perDir);
-    panel.innerHTML = `<h3>Goedkoopste bestemmingen</h3><p class="small muted">Vanaf ${esc(state.origin.n)}. Klik op een bestemming of een stip op de kaart.</p>
-      <ul class="dest-list">${ranked.map(x => `<li><button type="button" data-dest="${x.e.to}"><span>${esc(x.e.dest.n)} <span class="small muted">${MODES[x.e.mode].label.toLowerCase()}</span></span><span class="p">${eur(x.e.perDir)}</span></button></li>`).join('') || '<li class="muted">Geen deals met deze filters.</li>'}</ul>`;
+    const ranked = Object.values(best).sort((a, b) => a.tp.p - b.tp.p);
+    panel.innerHTML = `<h3>Goedkoopste bestemmingen</h3><p class="small muted">Vanaf ${esc(state.origin.n)}, ${tripWord()} per persoon. Klik op een bestemming of een stip op de kaart.</p>
+      <ul class="dest-list">${ranked.map(x => `<li><button type="button" data-dest="${x.e.to}"><span>${esc(x.e.dest.n)} <span class="small muted">${MODES[x.e.mode].label.toLowerCase()}</span></span><span class="p">${eur(x.tp.p)}</span></button></li>`).join('') || '<li class="muted">Geen deals met deze filters.</li>'}</ul>`;
   } else {
     const d = DEST[state.mapSel];
-    const deals = filterDeals({ ignoreDest: true }).list.filter(x => x.e.to === d.id).sort((a, b) => a.e.perDir - b.e.perDir);
+    const deals = filterDeals({ ignoreDest: true }).list.filter(x => x.e.to === d.id).sort((a, b) => a.tp.p - b.tp.p);
     const c = { fromIata: nearestAirports(state.origin, 1)[0].iata, fromName: nearestStation(state.origin).n, dest: d };
     panel.innerHTML = `<div class="section-head" style="margin:0"><h3>${esc(d.n)}</h3><button type="button" class="linkish" data-back>Alle bestemmingen</button></div>
       <div class="small muted">${esc(d.c)} · ${d.t.map(t => TYPES[t]).join(', ')}</div>
-      ${deals.length ? deals.slice(0, 6).map(x => `<div class="mini-deal">${icon(MODES[x.e.mode].icon)}<div><b>${eur(x.e.price)}</b> ${x.e.trip === 'retour' ? 'retour' : 'enkel'} · ${esc(x.e.provider)}<div class="tiny muted">${esc(x.e.o.n)}${x.e.out ? ' · ' + dateNL(x.e.out) : ''}</div></div><button class="btn ghost sm" type="button" data-open="${esc(x.e.id)}">Details</button></div>`).join('')
+      ${deals.length ? deals.slice(0, 6).map(x => `<div class="mini-deal">${icon(MODES[x.e.mode].icon)}<div><b>${eur(x.tp.p)}</b> ${x.tp.calc ? 'retour (2 × enkel)' : x.e.trip === 'retour' ? 'retour' : 'enkel'} · ${esc(x.e.provider)}<div class="tiny muted">${esc(x.e.o.n)}${x.e.out ? ' · ' + dateNL(x.e.out) : ''}</div></div><button class="btn ghost sm" type="button" data-open="${esc(x.e.id)}">Details</button></div>`).join('')
         : '<p class="small">Geen gecontroleerde deal met de huidige filters. Zoek live bij een aanbieder:</p>'}
       <div class="card-actions">
         ${deals.length ? `<button class="btn sm" type="button" data-all="${d.id}">Alle deals naar ${esc(d.n)}</button>` : ''}
@@ -681,15 +886,21 @@ async function renderCalendar() {
     mode = 'demo';
   }
   if (my !== calToken) return;
+  const kc = to !== 'alle' ? KCAL.get(`${from}|${to}|${month}`) : null;
+  if (kc && mode !== 'demo') {
+    Object.entries(kc).forEach(([d, v]) => { if (!data[d] || v.price < data[d].price) data[d] = { price: v.price, status: 'live', airline: v.airline }; });
+    if (mode === 'snapshot') mode = 'kiwi';
+  }
   const dname = to === 'alle' ? 'alle bestemmingen' : DEST[to].n;
   const routeCtx = { fromIata: from, dest: to === 'alle' ? null : DEST[to] };
   const nLive = Object.values(data).filter(v => v.status === 'live').length;
   let nt = '';
   if (mode === 'demo') nt = `<div class="notice">${icon('i-info')}<div><b>DEMO:</b> dit zijn verzonnen voorbeeldprijzen om de kalender te laten zien. Gebruik ze niet om te boeken. <button class="linkish" type="button" data-cal="nodemo">Demo uitzetten</button></div></div>`;
   else if (err) nt = `<div class="notice">${icon('i-info')}<div>Live kalender lukte niet: ${esc(explainError(err))}</div></div>`;
+  else if (mode === 'kiwi') nt = `<div class="notice info">${icon('i-info')}<div><b>Live via Kiwi.com:</b> de goedkoopste gevonden enkele vlucht op ${nLive} dag${nLive === 1 ? '' : 'en'}. Een dag zonder prijs zat niet bij de zoekresultaten; dat betekent niet dat er geen vlucht is. Controleer altijd bij de aanbieder.</div></div>`;
   else if (mode === 'live') nt = `<div class="notice info">${icon('i-info')}<div><b>Live:</b> ${nLive} dagen met prijzen uit de Travelpayouts-cache (gevonden in de laatste dagen). Controleer altijd bij de aanbieder.</div></div>`;
   else if (to !== 'alle') nt = `<div class="notice info">${icon('i-info')}<div><b>Geen prijs per dag zonder live koppeling.</b> Je ziet alleen gecontroleerde data. Opties:
-      <div class="card-actions" style="margin-top:8px"><button class="btn sm" type="button" data-cal="settings">Koppel vluchtprijzen (gratis)</button>
+      <div class="card-actions" style="margin-top:8px">${CLOUD.kiwi ? `<button class="btn sm" type="button" data-cal="kiwi">${icon('i-radar', 'sm')}Zoek prijzen per dag (live via Kiwi.com)</button>` : '<button class="btn sm" type="button" data-cal="settings">Koppel vluchtprijzen (gratis)</button>'}
       <a class="btn ghost sm" href="${esc(PROVIDERS.google.url(routeCtx))}" target="_blank" rel="noopener">Google Flights</a>
       <a class="btn ghost sm" href="${esc(PROVIDERS.sky.url(routeCtx))}" target="_blank" rel="noopener">Skyscanner (hele maand)</a>
       <button class="btn ghost sm" type="button" data-cal="demo">Toon demo (geen echte prijzen)</button></div></div></div>`;
@@ -723,6 +934,12 @@ $('#calWrap').addEventListener('keydown', ev => { if ((ev.key === 'Enter' || ev.
 $('#calNotice').addEventListener('click', ev => {
   const b = ev.target.closest('[data-cal]'); if (!b) return;
   if (b.dataset.cal === 'settings') openSettings();
+  if (b.dataset.cal === 'kiwi') {
+    b.disabled = true; b.textContent = 'Zoeken bij Kiwi.com…';
+    kiwiCalendar($('#calFrom').value, $('#calTo').value, $('#calMonth').value)
+      .then(r => { if (!Object.keys(r).length) toast('Kiwi.com vond in deze maand geen vluchten op deze route.'); renderCalendar(); })
+      .catch(err => { toast(mcpErrorText(err, KIWI)); renderCalendar(); });
+  }
   if (b.dataset.cal === 'demo') { settings.showDemo = true; saveSettings(); renderCalendar(); }
   if (b.dataset.cal === 'nodemo') { settings.showDemo = false; saveSettings(); renderCalendar(); }
 });
@@ -919,7 +1136,7 @@ function groupResults() {
   const sortKey = state.groupSort;
   // Per persoon: de beste mix van prijs en reistijd (incl. de reis naar het vertrekpunt),
   // zodat niemand twee uur omreist voor een paar euro. Bij "kortste reis" telt alleen de tijd.
-  const better = (x, y) => sortKey === 'snel' ? x.dd.total - y.dd.total || x.e.perDir - y.e.perDir : x.s - y.s;
+  const better = (x, y) => sortKey === 'snel' ? x.dd.total - y.dd.total || x.tp.p - y.tp.p : x.s - y.s;
   const perDest = new Map();
   people.forEach((p, pi) => {
     for (const x of filterDeals({ ignoreDest: true, home: p.place }).list) {
@@ -931,7 +1148,7 @@ function groupResults() {
   const rows = [];
   for (const [id, arr] of perDest) {
     if (arr.some(a => !a)) continue; // iedereen moet er kunnen komen
-    const prices = arr.map(a => a.e.perDir);
+    const prices = arr.map(a => a.tp.p);
     rows.push({ id, dest: DEST[id], arr,
       total: prices.reduce((s, v) => s + v, 0),
       spread: Math.max(...prices) - Math.min(...prices),
@@ -971,13 +1188,13 @@ function groupCard(r, people, k) {
   return `<article class="gcard${k === 0 ? ' top' : ''}">
     <header class="g-head">
       <div><h3>${esc(r.dest.n)}</h3><div class="small muted">${esc(r.dest.c)} · ${r.dest.t.map(t => TYPES[t]).join(', ')}</div></div>
-      <div class="g-total"><b>${eur(r.total)}</b><span class="small muted">samen, per richting</span></div>
+      <div class="g-total"><b>${eur(r.total)}</b><span class="small muted">samen, ${tripWord()}</span></div>
     </header>
     <div class="g-meta">${k === 0 ? '<span class="win">Beste keuze</span>' : ''}<span class="g-pill">${icon('i-clock', 'sm')}Langste reis ca. ${dur(r.maxT)}</span><span class="g-pill">Prijsverschil ${eur(r.spread)}</span></div>
     <ul class="g-list">${r.arr.map((a, i) => `<li>
       <span class="g-who"><span class="avatar sm" aria-hidden="true">${esc(personLabel(people[i], people[i].i).slice(0, 1).toUpperCase())}</span>${esc(personLabel(people[i], people[i].i))}</span>
       <span class="g-how" style="--mc:var(--m-${a.e.mode})">${icon(MODES[a.e.mode].icon, 'sm')}<span>${esc(a.e.provider)}<br><span class="small muted">vanaf ${esc(a.e.o.n)} · deur tot deur ca. ${dur(a.dd.total)}</span></span></span>
-      <span class="g-price">${a.e.priceType === 'vanaf' ? '<small>vanaf</small> ' : ''}${eur(a.e.perDir)}</span>
+      <span class="g-price">${a.e.priceType === 'vanaf' ? '<small>vanaf</small> ' : ''}${eur(a.tp.p)}${a.tp.calc ? ' <small>2 × enkel</small>' : ''}</span>
       <button class="btn ghost sm" type="button" data-open="${esc(a.e.id)}" data-who="${people[i].i}">Details</button>
     </li>`).join('')}</ul>
     ${together.length ? `<p class="g-together">${icon('i-group', 'sm')}${together.join(' ')}</p>` : ''}
@@ -1095,7 +1312,7 @@ function csvOf(list) {
   const num = v => v == null ? '' : String(Math.round(v * 100) / 100).replace('.', ',');
   const rows = list.map(({ e }) => {
     const src = srcOf(e);
-    return [e.status === 'live' ? 'live (cache, max. 48 uur oud)' : 'gecontroleerd', MODES[e.mode].label, e.provider, e.o.full || e.o.n, e.dest.n, e.dest.c, num(e.price), e.priceType, e.trip, num(e.perDir), e.out || '', e.back || '', dur(e.dur), e.durEst ? 'ja' : 'nee', e.transfers ?? '', e.bag, num(e.co2One), src.name, src.url, e.checked, bookLink(e).url].map(q).join(';');
+    return [e.indic ? 'indicatie (laatste 4 dagen)' : e.status === 'live' ? (e.srcLive ? 'live (cache, max. 48 uur oud)' : 'live (Kiwi.com)') : 'gecontroleerd', MODES[e.mode].label, e.provider, e.o.full || e.o.n, e.dest.n, e.dest.c, num(e.price), e.priceType, e.trip, num(e.perDir), e.out || '', e.back || '', dur(e.dur), e.durEst ? 'ja' : 'nee', e.transfers ?? '', e.bag, num(e.co2One), src.name, src.url, e.checked, bookLink(e).url].map(q).join(';');
   });
   return '﻿' + CSV_COLS.join(';') + '\n' + rows.join('\n');
 }
@@ -1259,12 +1476,22 @@ function openHelp(section) {
     <section id="h-use"><h3>Zo gebruik je DealRadar</h3><ol>
       <li>Kies waar je vertrekt: een station, vliegveld of adres (of tik op het richtkruis voor je locatie).</li>
       <li>Kies een bestemming, of laat "Overal" staan voor de goedkoopste plekken.</li>
-      <li>Kies flexibel, een maand of weekend, en het aantal reizigers. Ben je jonger dan 18? Kies "Jongere 12–17" voor jongerentarieven.</li>
+      <li>Kies bovenaan <b>Retour</b> of <b>Enkele reis</b>. Bij retour kun je ook kiezen hoe lang je blijft.</li>
+      <li>Kies wanneer: flexibel, een maand, een weekend, een <b>schoolvakantie</b> of je eigen datums. Kies ook het aantal reizigers. Ben je jonger dan 18? Kies "Jongere 12–17" voor jongerentarieven.</li>
       <li>Tik op <b>Scan deals</b>. Filter en sorteer. Tik op <b>Naar boeken</b> om de prijs bij de aanbieder te controleren.</li>
+      <li>Standaard zie je de <b>beste deal per bestemming</b>. Met de knoppen naast Sorteren zie je alle deals los, of een compacte lijst.</li>
       <li>Gebruik <b>Kaart</b>, <b>Kalender</b> en <b>Vergelijk</b> voor overzicht, de goedkoopste dag en trein tegen vliegtuig.</li>
       <li>Reis je met vrienden die ergens anders wonen? Vul bij <b>Samen</b> ieders vertrekpunt in. Je ziet waar jullie samen het goedkoopst of het eerlijkst naartoe kunnen.</li>
       <li>Tik op het belletje voor een <b>prijsalert</b>. In Claude controleert de dagelijkse controle je alerts elke ochtend en krijg je een pushmelding als een prijs onder je grens zakt.</li>
     </ol></section>
+    <section id="h-retour"><h3>Retour of enkele reis</h3><ul>
+      <li><b>Echte retourprijs:</b> bij vluchten is de retourprijs samen gezocht: heen en terug op de genoemde data. Je ziet beide vluchten, de vertrektijden en het aantal nachten.</li>
+      <li><b>Berekend:</b> trein- en busprijzen zijn vanafprijzen voor een enkele reis op een vrije datum. Bij retour rekent DealRadar 2 × die prijs en zet er "berekend" bij. De echte prijs hangt af van je datums.</li>
+      <li><b>Indicatie:</b> prijzen van Skyscanner zijn een schatting op basis van de laatste 4 dagen. Ze staan apart gemarkeerd en je kunt ze verbergen bij Filters. Is er voor dezelfde bestemming ook een gecontroleerde of live deal, dan zie je die eerst.</li>
+      <li><b>Controleer de prijs nu:</b> in Details van een vlucht zoekt deze knop (in Claude) dezelfde vlucht opnieuw op bij Kiwi.com. Zo zie je meteen of de prijs nog klopt.</li>
+      <li><b>Bagage:</b> kies bij Zoeken een handbagagekoffer of ruimbagage. Live zoeken in Claude vraagt dan de prijs inclusief die bagage op.</li>
+      <li><b>Schoolvakanties:</b> de data komen van de Rijksoverheid (schooljaar 2026-2027). De voorjaarsvakantie is een advies; je school mag afwijken.</li>
+    </ul></section>
     <section id="h-new"><h3>Live, dagelijks en geschiedenis</h3><ul>
       <li><b>Live vluchten (Kiwi.com):</b> in Claude zoekt <b>Scan deals</b> live via je gratis Kiwi.com-connector. Dat gebeurt vanaf de dichtstbijzijnde vliegvelden, en ook vanaf Weeze en Charleroi als die dichtbij liggen. Elke live deal heeft een eigen boeklink.</li>
       <li><b>Prijs vergelijken:</b> in het detailvenster van een vlucht vergelijk je met de lastminute.com-connector dezelfde route op dezelfde dag.</li>
@@ -1275,7 +1502,8 @@ function openHelp(section) {
     </ul></section>
     <section id="h-data"><h3>Waar komen de prijzen vandaan?</h3>
       <ul>
-        <li><span class="badge snapshot">Gecontroleerd</span> Prijzen die Claude op ${esc(CHECK_WINDOW)} heeft opgezocht en gecontroleerd op de websites van NS International, Eurostar, Deutsche Bahn, Kombo (FlixBus en BlaBlaCar Bus) en Skyscanner. Bij elke deal staan de bron, een link en het tijdstip. In Claude ververst de dagelijkse controle ze elke ochtend, met een nieuwe controletijd.</li>
+        <li><span class="badge snapshot">Gecontroleerd</span> Prijzen die Claude op ${esc(CHECK_WINDOW)} heeft opgezocht op de websites van NS International, Eurostar, Deutsche Bahn en Kombo (FlixBus en BlaBlaCar Bus), en vluchten die live via Kiwi.com zijn gevonden. Bij elke deal staan de bron, een link en het tijdstip. In Claude ververst de dagelijkse controle ze elke ochtend, met een nieuwe controletijd.</li>
+        <li><span class="badge indic">Indicatie</span> Schattingen van Skyscanner op basis van prijzen van de laatste 4 dagen. Handig om een idee te krijgen, maar geen live prijs.</li>
         <li><span class="badge live">Live</span> Live opgehaald op het moment dat je zoekt: vluchten via je Kiwi.com-connector (in Claude), of met je eigen sleutels vluchtprijzen uit de Travelpayouts-cache (laatste 48 uur) en NS-reistijden en -prijzen naar het vertrekpunt.</li>
         <li><span class="badge demo">Demo</span> Alleen in de kalender als je dat aanzet. Verzonnen voorbeeldprijzen, nooit om te boeken.</li>
       </ul>

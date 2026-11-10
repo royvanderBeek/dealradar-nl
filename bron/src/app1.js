@@ -89,12 +89,19 @@ function saveSettings() { store.set('settings', settings); }
 /* ---------- 4. Toestand ---------- */
 const UTRECHT = STATIONS.find(s => s.n === 'Utrecht Centraal') || STATIONS[0];
 function defaultFilters() {
-  return { modes: new Set(['trein', 'vliegtuig', 'bus', 'combi']), maxPrice: 300, maxHours: 24, maxAccess: 300, direct: false, bagIncl: false, countries: new Set(), types: new Set(), status: new Set(['snapshot', 'live']) };
+  return { modes: new Set(['trein', 'vliegtuig', 'bus', 'combi']), maxPrice: 300, maxHours: 24, maxAccess: 300, direct: false, bagIncl: false, countries: new Set(), types: new Set(), status: new Set(['snapshot', 'live']),
+    origins: new Set(), nlOnly: false, depPart: 'alle', noIndic: false };
 }
 const state = {
   origin: store.get('origin', { n: UTRECHT.n, lat: UTRECHT.lat, lon: UTRECHT.lon, kind: 'station', uic: UTRECHT.uic }),
   dest: 'overal',
-  when: { mode: 'flex', month: null },
+  trip: ['enkel', 'retour'].includes(store.get('trip')) ? store.get('trip') : 'retour', // soort reis: enkele reis of retour
+  stay: 'alle',      // verblijf bij retour: alle | kort (1–4 nachten) | week (5–9) | lang (10+)
+  bag: 'tasje',      // bagage bij live zoeken: tasje | hand | koffer
+  when: { mode: 'flex', month: null, hol: 'kerst', region: store.get('region', 'midden'), from: '', to: '' },
+  perDest: store.get('perDest', true),   // één (beste) deal per bestemming tonen
+  layout: store.get('layout', 'cards'),  // cards | rows
+  shown: 24,
   travellers: 1,
   profile: store.get('profile', 'volwassene'),
   sort: 'prijs',
@@ -166,6 +173,7 @@ function enrich(deal) {
   const isFlight = deal.mode === 'vliegtuig';
   const routeKm = deal.km || (isFlight ? gcd * CO2.upliftFlight : gcd * CO2.routeGround);
   const durEst = deal.dur == null;
+  const nights = deal.out && deal.back ? Math.round((new Date(deal.back + 'T12:00:00') - new Date(deal.out + 'T12:00:00')) / 86400000) : null;
   const duration = deal.dur ?? estTravel(deal.mode === 'combi' ? 'trein' : deal.mode, gcd, deal.transfers);
   const fac = isFlight ? (gcd < 700 ? CO2.vliegKort : CO2.vlieg) : (deal.mode === 'bus' ? CO2.bus : CO2.trein);
   const legs = deal.trip === 'retour' ? 2 : 1;
@@ -176,7 +184,7 @@ function enrich(deal) {
   } else egress = deal.mode === 'bus' ? 20 : 15;
   return {
     status: 'snapshot', ...deal, dest, o, gcd, routeKm, dur: duration, durEst,
-    co2f: fac, co2One: routeKm * fac.f, legs, perDir: deal.price / legs, egress,
+    co2f: fac, co2One: routeKm * fac.f, legs, perDir: deal.price / legs, egress, nights,
   };
 }
 function door(e, home) {
@@ -187,27 +195,92 @@ function door(e, home) {
 function score(e, dd) { return e.perDir + settings.hourValue * dd.total / 60 + settings.co2Value * e.co2One + 4 * (e.transfers || 0); }
 
 let SNAP = [];
-function buildSnapshot() { SNAP = SNAPSHOT_DEALS.map(enrich).filter(Boolean); }
+// Deals zonder vaste bestemmings-id (bv. vluchten met alleen een vliegveldcode) krijgen hier hun bestemming
+function resolveDest(d) {
+  if (d.to && DEST[d.to]) return d;
+  const id = destForAirport(d.arr, d.toCity, d.toCountry);
+  return id ? { ...d, to: id } : null;
+}
+function buildSnapshot() { SNAP = SNAPSHOT_DEALS.map(resolveDest).filter(Boolean).map(enrich).filter(Boolean); }
+
+/* Soort reis: welke prijs hoort bij "enkele reis" of "retour"?
+   - Retour gekozen: echte retourprijzen tellen zoals ze zijn. Een vanafprijs zonder vaste datum (trein, bus)
+     rekenen we als 2 × de enkele reis en dat staat er dan bij als "berekend". Losse vluchten op één datum doen niet mee.
+   - Enkele reis gekozen: alleen prijzen die je los voor één richting kunt kopen. */
+function tripPrice(e) {
+  if (state.trip === 'retour') {
+    if (e.trip === 'retour') return { p: e.price, calc: false };
+    if (!e.out) return { p: e.price * 2, calc: true };
+    return null;
+  }
+  return e.trip === 'enkel' ? { p: e.price, calc: false } : null;
+}
+const tripWord = () => (state.trip === 'retour' ? 'retour' : 'enkele reis');
+const STAYS = { alle: { label: 'Maakt niet uit', min: 2, max: 7 }, kort: { label: 'Kort: 1 tot 4 nachten', min: 1, max: 4 }, week: { label: 'Week: 5 tot 9 nachten', min: 5, max: 9 }, lang: { label: 'Lang: 10 nachten of meer', min: 10, max: 21 } };
+function stayOk(e) {
+  if (state.trip !== 'retour' || state.stay === 'alle' || e.nights == null) return true;
+  const s = STAYS[state.stay];
+  return e.nights >= s.min && (state.stay === 'lang' || e.nights <= s.max);
+}
+// Periode waarin je wilt vertrekken (maand, schoolvakantie of eigen datums); null = flexibel
+function holidayRange(id = state.when.hol, region = state.when.region) {
+  const h = HOLIDAYS.find(x => x.id === id);
+  if (!h) return null;
+  const r = h.all || h[region] || h.midden;
+  return { from: r[0], to: r[1], name: h.n };
+}
+function whenWindow() {
+  const w = state.when;
+  if (w.mode === 'month' && w.month) {
+    const first = w.month + '-01';
+    return { from: first, to: addDays(addDays(first, 32).slice(0, 8) + '01', -1) };
+  }
+  if (w.mode === 'holiday') {
+    const r = holidayRange();
+    // Vertrek mag op de vrijdag voor de vakantie; je bent uiterlijk op de laatste dag terug
+    return r ? { from: addDays(r.from, -1), to: r.to, strictBack: true, name: r.name } : null;
+  }
+  if (w.mode === 'range' && (w.from || w.to)) return { from: w.from || todayISO(), to: w.to || '2099-12-31', strictBack: !!w.to };
+  return null;
+}
 
 /* ---------- 6. Filteren en sorteren ---------- */
-function allDeals() { return SNAP.concat(state.liveDeals); }
+// Alle deals: gecontroleerd + live. Staat een deal in beide, dan telt de live versie (die is nieuwer).
+let _all = null, _allKey = null;
+function allDeals() {
+  if (_all && _allKey === SNAP && _all.live === state.liveDeals) return _all;
+  const liveIds = new Set(state.liveDeals.map(e => e.id));
+  _all = SNAP.filter(e => !liveIds.has(e.id)).concat(state.liveDeals);
+  _allKey = SNAP; _all.live = state.liveDeals;
+  return _all;
+}
 function isWeekendStart(iso) { const g = new Date(iso + 'T12:00:00').getDay(); return g === 5 || g === 6; }
 function filterDeals(opts = {}) {
   const f = state.filters, today = todayISO();
-  let hiddenYouth = 0, expired = 0;
-  const out = [];
+  let hiddenYouth = 0, expired = 0, otherTrip = 0;
+  const out = [], win = whenWindow();
   for (const e of allDeals()) {
     if (e.out && e.out < today) { expired++; continue; }
+    const tp = opts.anyTrip ? { p: e.perDir, calc: false } : tripPrice(e);
+    if (!tp) { otherTrip++; continue; }
     if (!f.modes.has(e.mode)) continue;
     if (!f.status.has(e.status)) continue;
     if (!opts.ignoreDest && state.dest !== 'overal' && e.to !== state.dest) continue;
-    if (!noLimit(f.maxPrice, 300) && e.perDir > f.maxPrice) continue;
+    if (!noLimit(f.maxPrice, 300) && tp.p > f.maxPrice) continue;
+    if (!stayOk(e)) continue;
+    if (f.origins.size && !f.origins.has(e.from)) continue;
+    if (f.nlOnly && e.o.abroad) continue;
+    if (f.noIndic && e.indic) continue;
+    if (f.depPart !== 'alle' && e.depTime) {
+      const h = +e.depTime.slice(0, 2), part = h < 12 ? 'ochtend' : h < 18 ? 'middag' : 'avond';
+      if (part !== f.depPart) continue;
+    }
     if (!noLimit(f.maxHours, 24) && e.dur > f.maxHours * 60) continue;
     if (f.direct && e.transfers !== 0) continue;
     if (f.bagIncl && e.bag !== 'koffer') continue;
     if (f.countries.size && !f.countries.has(e.dest.cc)) continue;
     if (f.types.size && !e.dest.t.some(t => f.types.has(t))) continue;
-    if (state.when.mode === 'month' && state.when.month && e.out && e.out.slice(0, 7) !== state.when.month) continue;
+    if (win && e.out && (e.out < win.from || e.out > win.to || (win.strictBack && e.back && e.back > win.to))) continue;
     if (state.when.mode === 'weekend') {
       if (e.out && !isWeekendStart(e.out)) continue;
       if (e.out && e.back && (new Date(e.back) - new Date(e.out)) / 86400000 > 4) continue;
@@ -216,23 +289,26 @@ function filterDeals(opts = {}) {
     const dd = door(e, opts.home);
     if (!noLimit(f.maxAccess, 300) && dd.access > f.maxAccess) continue;
     if (e.who === 'jongeren' && !isYouth()) { hiddenYouth++; continue; }
-    out.push({ e, dd, s: score(e, dd) });
+    out.push({ e, dd, s: score(e, dd), tp });
   }
-  return { list: sortDeals(out), hiddenYouth, expired };
+  return { list: sortDeals(out), hiddenYouth, expired, otherTrip };
 }
 function sortDeals(arr) {
   const by = {
-    prijs: (a, b) => a.e.perDir - b.e.perDir || a.dd.total - b.dd.total,
+    prijs: (a, b) => a.tp.p - b.tp.p || a.dd.total - b.dd.total,
+    datum: (a, b) => (a.e.out || '9999').localeCompare(b.e.out || '9999') || a.tp.p - b.tp.p,
+    per100: (a, b) => per100(a.e) - per100(b.e),
     snel: (a, b) => a.dd.total - b.dd.total || a.e.perDir - b.e.perDir,
     groen: (a, b) => a.e.co2One - b.e.co2One || a.e.perDir - b.e.perDir,
     score: (a, b) => a.s - b.s,
-  }[state.sort] || ((a, b) => a.e.perDir - b.e.perDir);
+  }[state.sort] || ((a, b) => a.tp.p - b.tp.p);
   return arr.sort(by);
 }
 function activeFilterCount() {
   const f = state.filters;
   return (f.modes.size < 4 ? 1 : 0) + (!noLimit(f.maxPrice, 300) ? 1 : 0) + (!noLimit(f.maxHours, 24) ? 1 : 0) + (!noLimit(f.maxAccess, 300) ? 1 : 0)
-    + (f.direct ? 1 : 0) + (f.bagIncl ? 1 : 0) + f.countries.size + f.types.size + (f.status.size < 2 ? 1 : 0);
+    + (f.direct ? 1 : 0) + (f.bagIncl ? 1 : 0) + f.countries.size + f.types.size + (f.status.size < 2 ? 1 : 0)
+    + f.origins.size + (f.nlOnly ? 1 : 0) + (f.noIndic ? 1 : 0) + (f.depPart !== 'alle' ? 1 : 0);
 }
 
 /* ---------- 7. Links naar aanbieders ---------- */

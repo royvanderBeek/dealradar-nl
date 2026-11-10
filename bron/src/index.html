@@ -53,6 +53,19 @@
   <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 1 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-retour" viewBox="0 0 24 24"><path d="M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4"/></symbol>
+  <symbol id="i-enkel" viewBox="0 0 24 24"><path d="M4 12h15M14 7l5 5-5 5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-rows" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></symbol>
+  <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.7 1.8-2.4 3.2-2.4s2.6.7 3.2 2.4M15 10h3.5M15 13.5h3.5"/></symbol>
+  <symbol id="i-snow" viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/></symbol>
+  <symbol id="i-city" viewBox="0 0 24 24"><path d="M4 20V9l6-3v14M10 20V4l9 4v12M3 20h18M13 11h3M13 15h3M6.5 12h1M6.5 16h1"/></symbol>
+  <symbol id="i-tree" viewBox="0 0 24 24"><path d="M12 3l5 7h-3l4 6H6l4-6H7zM12 16v5"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 24 24"><circle cx="17" cy="7" r="3"/><path d="M3 15c2 0 2-1.5 4.5-1.5S10 15 12 15s2-1.5 4.5-1.5S19 15 21 15M3 19.5c2 0 2-1.5 4.5-1.5S10 19.5 12 19.5s2-1.5 4.5-1.5S19 19.5 21 19.5"/></symbol>
+  <symbol id="i-euro" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5a4.3 4.3 0 1 0 0 7M7 11h6M7 13.5h5"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M3 7h18v3H3zM12 7v13M12 7c-1.5-3.5-6-3.5-5 0M12 7c1.5-3.5 6-3.5 5 0"/></symbol>
   <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l6-6"/><circle cx="16" cy="9" r="1"/></symbol>
 </svg>
 
@@ -68,7 +81,7 @@
       </svg>
       <span class="brand-name">DealRadar <b>NL</b></span>
     </a>
-    <span class="data-pill" id="dataPill"><span class="dot"></span><span id="dataPillText">Gecontroleerd 9 nov 2026</span></span>
+    <span class="data-pill" id="dataPill"><span class="dot"></span><span id="dataPillText">Gecontroleerd 10 nov 2026</span></span>
     <button class="btn soft sm install-btn" id="btnInstall" type="button" aria-label="Installeer DealRadar als app" hidden><svg class="ic sm"><use href="#i-download"/></svg>Installeer app</button>
     <button class="icon-btn" id="btnTheme" type="button" aria-label="Thema: systeem"><svg class="ic"><use href="#i-auto"/></svg></button>
     <button class="icon-btn" id="btnSettings" type="button" aria-label="Instellingen en API-sleutels"><svg class="ic"><use href="#i-gear"/></svg></button>
@@ -88,11 +101,17 @@
 <div class="offline-bar" role="status">Je bent offline. Je ziet de laatst bewaarde deals; prijzen kunnen veranderd zijn.</div>
 <main id="main" class="wrap" tabindex="-1">
   <section class="hero" aria-labelledby="heroTitle">
-    <h1 id="heroTitle">Waar kun je <em>goedkoop</em> of slim naartoe?</h1>
-    <p class="lede">Trein, vliegtuig en bus vanaf heel Nederland. Elke prijs heeft een bron, een link en het tijdstip van controle.</p>
+    <div class="hero-head">
+      <h1 id="heroTitle">Waar kun je <em>goedkoop</em> of slim naartoe?</h1>
+      <p class="lede">Trein, vliegtuig en bus vanaf heel Nederland, als enkele reis of retour. Elke prijs heeft een bron, een link en het tijdstip van controle.</p>
+    </div>
 
     <form class="search-card" id="searchForm" autocomplete="off" role="search" aria-label="Deals zoeken">
-      <div class="search-grid">
+      <div class="trip-tabs" role="group" aria-label="Soort reis">
+        <button type="button" data-trip="retour" aria-pressed="true"><svg class="ic sm" aria-hidden="true"><use href="#i-retour"/></svg>Retour</button>
+        <button type="button" data-trip="enkel" aria-pressed="false"><svg class="ic sm" aria-hidden="true"><use href="#i-enkel"/></svg>Enkele reis</button>
+      </div>
+      <div class="search-grid" id="searchExtra">
         <div class="field">
           <label for="inOrigin">Vertrek vanaf</label>
           <div class="input-row">
@@ -116,10 +135,24 @@
             <button type="button" data-when="flex" aria-pressed="true">Flexibel</button>
             <button type="button" data-when="month" aria-pressed="false">Maand</button>
             <button type="button" data-when="weekend" aria-pressed="false">Weekend</button>
+            <button type="button" data-when="holiday" aria-pressed="false">Vakantie</button>
+            <button type="button" data-when="range" aria-pressed="false">Datums</button>
           </div>
           <select class="input" id="inMonth" aria-label="Kies een maand" hidden></select>
+          <div class="when-extra" id="whenHoliday" hidden>
+            <select class="input" id="inHol" aria-label="Kies een schoolvakantie"></select>
+            <select class="input" id="inRegion" aria-label="Regio van je school">
+              <option value="noord">Regio noord</option><option value="midden">Regio midden</option><option value="zuid">Regio zuid</option>
+            </select>
+          </div>
+          <div class="when-extra" id="whenRange" hidden>
+            <label class="mini-lbl">Vertrek vanaf<input class="input" id="inFrom" type="date"></label>
+            <label class="mini-lbl">Terug uiterlijk<input class="input" id="inTo" type="date"></label>
+          </div>
+          <div class="origin-hint" id="whenHint" aria-live="polite"></div>
         </div>
-        <div class="field">
+        <button class="more-opts-btn" type="button" id="btnMoreOpts" aria-expanded="false" aria-controls="searchExtra"><svg class="ic sm" aria-hidden="true"><use href="#i-plus"/></svg><span id="moreOptsText">Meer opties</span></button>
+        <div class="field extra">
           <span class="lbl" id="lblWho">Reizigers en korting</span>
           <div class="travellers">
             <div class="stepper" role="group" aria-labelledby="lblWho">
@@ -136,6 +169,23 @@
               <option value="dal">NS Dal Voordeel (40%)</option>
             </select>
           </div>
+        </div>
+        <div class="field extra" id="fieldStay">
+          <label for="inStay">Hoe lang blijf je?</label>
+          <select class="input" id="inStay">
+            <option value="alle">Maakt niet uit</option>
+            <option value="kort">Kort: 1 tot 4 nachten</option>
+            <option value="week">Week: 5 tot 9 nachten</option>
+            <option value="lang">Lang: 10 nachten of meer</option>
+          </select>
+        </div>
+        <div class="field extra">
+          <label for="inBag">Bagage in het vliegtuig</label>
+          <select class="input" id="inBag">
+            <option value="tasje">Alleen een klein tasje</option>
+            <option value="hand">Met handbagagekoffer</option>
+            <option value="koffer">Met ruimbagage (koffer)</option>
+          </select>
         </div>
       </div>
       <div class="scan-row">
@@ -155,10 +205,8 @@
       <button class="chip" type="button" data-type="ski" aria-pressed="false">Skiën</button>
     </div>
 
-    <section class="radar" aria-labelledby="radarTitle">
-      <div class="radar-title" id="radarTitle"><svg class="ic"><use href="#i-radar"/></svg>Bronnen</div>
-      <ul class="radar-list" id="radarList"></ul>
-    </section>
+    <section class="inspire" id="inspire" aria-label="Ideeën"></section>
+
   </section>
 
   <!-- DEALS -->
@@ -169,24 +217,30 @@
       <div class="filters" id="filters" role="region" aria-label="Filters">
         <div class="filters-head"><h3>Filters</h3><button class="icon-btn" type="button" id="btnFiltersClose" aria-label="Filters sluiten"><svg class="ic"><use href="#i-close"/></svg></button></div>
         <fieldset><legend>Vervoer</legend><div id="fModes"></div></fieldset>
-        <fieldset><legend>Maximumprijs (per persoon, per richting)</legend>
-          <div class="range-row"><input type="range" id="fPrice" aria-label="Maximumprijs per persoon per richting" min="5" max="300" step="5" value="300" aria-describedby="fPriceOut"><output id="fPriceOut">alles</output></div></fieldset>
+        <fieldset><legend>Maximumprijs per persoon (<span id="fPriceTrip">retour</span>)</legend>
+          <div class="range-row"><input type="range" id="fPrice" aria-label="Maximumprijs per persoon" min="5" max="300" step="5" value="300" aria-describedby="fPriceOut"><output id="fPriceOut">alles</output></div></fieldset>
         <fieldset><legend>Maximale reistijd</legend>
           <div class="range-row"><input type="range" id="fHours" aria-label="Maximale reistijd in uren" min="1" max="24" step="1" value="24" aria-describedby="fHoursOut"><output id="fHoursOut">alles</output></div></fieldset>
         <fieldset><legend>Reis naar vertrekpunt (vanaf jouw plek)</legend>
           <div class="range-row"><input type="range" id="fAccess" aria-label="Maximale reistijd naar het vertrekpunt" min="30" max="300" step="15" value="300" aria-describedby="fAccessOut"><output id="fAccessOut">alles</output></div></fieldset>
+        <fieldset><legend>Vertrekpunt van de deal</legend>
+          <label class="check"><input type="checkbox" id="fNlOnly"> Alleen vertrek in Nederland</label>
+          <div id="fOrigins" class="check-cols"></div></fieldset>
+        <fieldset><legend><label for="fDepPart">Vertrektijd (als die bekend is)</label></legend>
+          <select class="input" id="fDepPart"><option value="alle">Maakt niet uit</option><option value="ochtend">Ochtend (voor 12:00)</option><option value="middag">Middag (12:00–18:00)</option><option value="avond">Avond (na 18:00)</option></select></fieldset>
         <fieldset><legend>Overstappen en bagage</legend>
           <label class="check"><input type="checkbox" id="fDirect"> Alleen rechtstreeks</label>
           <label class="check"><input type="checkbox" id="fBag"> Koffer is inbegrepen</label></fieldset>
         <fieldset><legend>Soort reis</legend><div id="fTypes"></div></fieldset>
         <fieldset><legend>Land</legend><div id="fCountries"></div></fieldset>
-        <fieldset><legend>Soort data</legend><div id="fStatus"></div></fieldset>
+        <fieldset><legend>Soort data</legend><div id="fStatus"></div>
+          <label class="check"><input type="checkbox" id="fNoIndic"> Verberg indicaties (Skyscanner)</label></fieldset>
         <button class="btn ghost block" type="button" id="btnResetFilters">Wis alle filters</button>
       </div>
 
       <div>
         <div class="toolbar">
-          <div class="summary" id="summary" aria-live="polite">…</div>
+          <div class="summary-box"><div class="summary" id="summary" aria-live="polite">…</div><div class="hints" id="dealHints"></div></div>
           <div class="actions">
             <button class="btn ghost sm filter-open-btn" type="button" id="btnFilters"><svg class="ic sm"><use href="#i-filter"/></svg>Filters <span id="filterCount"></span></button>
             <label class="sr-only" for="sortSel">Sorteren</label>
@@ -195,7 +249,11 @@
               <option value="snel">Snelst (deur tot deur)</option>
               <option value="groen">Groenst (CO2)</option>
               <option value="score">Beste prijs-kwaliteit</option>
+              <option value="datum">Vroegste vertrek</option>
+              <option value="per100">Prijs per 100 km</option>
             </select>
+            <button class="icon-btn toggle" type="button" id="btnPerDest" aria-pressed="true" aria-label="Eén deal per bestemming" title="Eén deal per bestemming"><svg class="ic"><use href="#i-layers"/></svg></button>
+            <button class="icon-btn" type="button" id="btnLayout" aria-label="Wissel tussen kaarten en lijst" title="Kaarten of lijst"><svg class="ic"><use href="#i-rows"/></svg></button>
             <button class="icon-btn" type="button" id="btnShareList" aria-label="Deel deze lijst"><svg class="ic"><use href="#i-share"/></svg></button>
             <button class="icon-btn" type="button" id="btnExport" aria-label="Exporteer naar CSV of PDF"><svg class="ic"><use href="#i-download"/></svg></button>
           </div>
@@ -204,7 +262,13 @@
         <div id="dealNotices"></div>
         <section class="top-deals" id="topDeals" aria-label="Topdeals" hidden></section>
         <ul class="deal-grid" id="dealGrid" aria-live="off"></ul>
+        <div class="more-row" id="moreRow"></div>
         <div id="emptyState"></div>
+
+        <section class="radar section" aria-labelledby="radarTitle">
+          <div class="radar-title" id="radarTitle"><svg class="ic"><use href="#i-radar"/></svg>Bronnen</div>
+          <ul class="radar-list" id="radarList"></ul>
+        </section>
 
         <section class="section providers-sec" aria-labelledby="provTitle">
           <div class="section-head"><h2 id="provTitle">Zoek live bij aanbieders</h2><span class="small muted" id="provHint">Opent hun zoekpagina met jouw route waar dat kan.</span></div>
@@ -226,7 +290,7 @@
 
   <!-- KAART -->
   <section class="view" id="view-kaart" data-view="kaart" aria-labelledby="mapTitle" hidden>
-    <div class="section-head"><h2 id="mapTitle">Kaart van Europa</h2><span class="small muted">Goedkoopste prijs per bestemming, per persoon per richting. Filters van het tabblad Deals gelden ook hier.</span></div>
+    <div class="section-head"><h2 id="mapTitle">Kaart van Europa</h2><span class="small muted" id="mapSub">Goedkoopste prijs per bestemming, per persoon. Filters van het tabblad Deals gelden ook hier.</span></div>
     <div class="map-layout">
       <div class="map-card">
         <svg class="map-svg" id="mapSvg" viewBox="0 0 1000 860" role="img" aria-labelledby="mapTitle mapDesc" tabindex="0">
@@ -291,7 +355,7 @@
             <option value="score">beste mix van prijs en tijd</option>
           </select></div>
       </div>
-      <p class="small muted">Per persoon kiest DealRadar de beste mix van prijs en reistijd, inclusief de reis naar het vertrekpunt. De prijzen zijn per persoon en per richting, zonder de kosten van die reis naar het vertrekpunt. De filters van het tabblad Deals gelden ook hier.</p>
+      <p class="small muted">Per persoon kiest DealRadar de beste mix van prijs en reistijd, inclusief de reis naar het vertrekpunt. De prijzen zijn per persoon, voor het soort reis dat je bij Zoeken koos (enkele reis of retour), zonder de kosten van die reis naar het vertrekpunt. De filters van het tabblad Deals gelden ook hier.</p>
     </div>
     <div id="groupResults" class="group-results" aria-live="polite"></div>
   </section>

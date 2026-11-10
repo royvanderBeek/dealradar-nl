@@ -72,13 +72,14 @@ with sync_playwright() as p:
     page.goto(URL)
     page.wait_for_selector('.deal')
     ev = page.evaluate
+    today = ev('todayISO()')
 
     # 1. Laden
     n = ev("document.querySelectorAll('#dealGrid .deal').length")
     snap = ev('SNAP.length')
     check('Pagina laadt zonder JavaScript-fouten', not errors, '; '.join(errors[:3]))
-    check('Deals zichtbaar bij openen', n > 30, f'{n} kaarten, {snap} in snapshot')
-    check('Jongerentarieven standaard verborgen (met melding)', ev("!lastList.some(x=>x.e.who==='jongeren') && /jongerentarie/.test(document.querySelector('#dealNotices').textContent)"))
+    check('Deals zichtbaar bij openen (eerste 24, rest achter "Toon meer")', n == 24 and snap > 150, f'{n} kaarten, {snap} in snapshot')
+    check('Jongerentarieven standaard verborgen (met melding)', ev("!lastList.some(x=>x.e.who==='jongeren') && /jongerentarie/.test(document.querySelector('#dealHints').textContent)"))
 
     # 2. Elke kaart: bron, link, tijdstip, boeklink
     card_ok = ev("""[...document.querySelectorAll('#dealGrid .deal')].every(c => {
@@ -89,19 +90,19 @@ with sync_playwright() as p:
     check('Elke snapshot-deal verwijst naar een bestaande bron', ev("SNAPSHOT_DEALS.every(d=>d.src.length && d.src.every(k=>SRC[k]))"))
 
     # 3. Sorteren
-    for key, expr in [('prijs', 'x.e.perDir'), ('snel', 'x.dd.total'), ('groen', 'x.e.co2One'), ('score', 'x.s')]:
+    for key, expr in [('prijs', 'x.tp.p'), ('snel', 'x.dd.total'), ('groen', 'x.e.co2One'), ('score', 'x.s'), ('per100', 'per100(x.e)'), ('datum', "(x.e.out||'9999')")]:
         page.select_option('#sortSel', key)
-        ok = ev(f"(() => {{ const v = lastList.map(x => {expr}); return v.every((a,i)=> i===0 || v[i-1] <= a + 1e-9); }})()")
+        ok = ev(f"(() => {{ const v = lastList.map(x => {expr}); return v.every((a,i)=> i===0 || (typeof a === 'string' ? v[i-1] <= a : v[i-1] <= a + 1e-9)); }})()")
         check(f'Sorteren op "{key}" klopt', ok)
     page.select_option('#sortSel', 'prijs')
-    first = ev("lastList[0].e.id + ' ' + lastList[0].e.perDir")
+    first = ev("lastList[0].e.id + ' ' + lastList[0].tp.p")
     check('Goedkoopste deal bovenaan', first.startswith('flix-brussel'), first)
 
     # 4. Filters
     ev("state.filters.modes.delete('vliegtuig'); renderAll()")
     check('Filter vervoer: geen vliegtuig meer', ev("lastList.length>0 && !lastList.some(x=>x.e.mode==='vliegtuig')"))
     ev("state.filters = defaultFilters(); state.filters.maxPrice = 50; renderAll()")
-    check('Filter maximumprijs €50 (per richting)', ev("lastList.length>0 && lastList.every(x=>x.e.perDir<=50)"), f"{ev('lastList.length')} deals")
+    check('Filter maximumprijs €50 (getoonde prijs)', ev("lastList.length>0 && lastList.every(x=>x.tp.p<=50)"), f"{ev('lastList.length')} deals")
     ev("state.filters = defaultFilters(); state.filters.direct = true; renderAll()")
     check('Filter alleen rechtstreeks', ev("lastList.length>0 && lastList.every(x=>x.e.transfers===0)"))
     ev("state.filters = defaultFilters(); state.filters.bagIncl = true; renderAll()")
@@ -125,6 +126,8 @@ with sync_playwright() as p:
     page.select_option('#inMonth', '2026-12')
     check('Maand december: vaste data in december', ev("lastList.filter(x=>x.e.out).length>0 && lastList.filter(x=>x.e.out).every(x=>x.e.out.startsWith('2026-12'))"))
     page.click('.seg [data-when="flex"]')
+    check('Telefoon: reizigers, verblijf en bagage staan achter "Meer opties"', not page.is_visible('#inProfile'))
+    page.click('#btnMoreOpts')
     page.select_option('#inProfile', 'jongere12')
     check('Jongere: DB-jongerentarieven zichtbaar', ev("lastList.some(x=>x.e.who==='jongeren')"))
     page.select_option('#inProfile', 'volwassene')
@@ -144,7 +147,7 @@ with sync_playwright() as p:
     e2 = ev("(()=>{const e=SNAP.find(d=>d.id==='ein-stn'); return {o:[e.o.lat,e.o.lon], a:[ARR_AIRPORTS.STN.lat, ARR_AIRPORTS.STN.lon], co2:e.co2One, perDir:e.perDir}})()")
     g = hav(e2['o'], e2['a']); fac = 0.202 if g < 700 else 0.172
     check('CO2 vlucht Eindhoven–Stansted (8% omweg, factor < 700 km)', abs(g*1.08*fac - e2['co2']) < 0.01, f"{e2['co2']:.1f} kg")
-    check('Retourprijs per richting = prijs / 2', abs(e2['perDir'] - 17.5) < 1e-9)
+    check('Retourprijs per richting = prijs / 2', abs(e2['perDir'] - 18) < 1e-9)
     acc = ev("(()=>{const e=SNAP.find(d=>d.id==='nsi-parijs'); return door(e)})()")
     d = hav((52.08758, 5.11117), (52.37919, 4.89943))
     check('Deur-tot-deur: Utrecht → Amsterdam C geschat', acc['access'] == round(15 + d/65*60) and acc['total'] == acc['access'] + 10 + 205 + 15, f"{acc['access']} min naar vertrekpunt, totaal {acc['total']} min")
@@ -209,14 +212,15 @@ with sync_playwright() as p:
 
     # 12. Live koppelingen (nagebootst)
     page.goto(URL + '#deals'); page.wait_for_selector('.deal')
+    ev("setTrip('enkel'); renderAll()")  # live vluchtprijzen van Travelpayouts zijn enkele reizen
     ev("settings.nsKey='test-ns'; settings.tpToken='test-tp'; saveSettings()")
     ev("scan()"); page.wait_for_function("!state.scanning", timeout=20000)
     check('NS API: stations en ritten verwerkt', calls['ns_st'] >= 1 and calls['ns_trip'] >= 3 and ev("state.src.ns.status")=='ok', f"{calls['ns_trip']} ritten; {ev('state.src.ns.text')}")
     check('NS-prijs en -tijd in deur-tot-deur', re.search(r'met NS: 27 min, €\s?9,30', ev("document.querySelector('#dealGrid').textContent").replace('\u00a0',' ')) is not None)
+    ev("setDest('barcelona')")
     check('Travelpayouts: live vluchten toegevoegd met Live-label', ev("state.liveDeals.length>0 && document.querySelectorAll('.badge.live').length>0"), f"{ev('state.liveDeals.length')} live vluchten")
     check('Live deal heeft bron, tijdstip en boeklink (Aviasales)', ev("(()=>{const e=state.liveDeals[0]; return e.srcLive.url.startsWith('https://') && bookLink(e).url.startsWith('https://www.aviasales.com/search/')})()"))
     check('Live deal zegt eerlijk: opgehaald + cache van 48 uur', ev("(()=>{const c=[...document.querySelectorAll('.deal')].find(d=>d.querySelector('.badge.live')); return !!c && /opgehaald \\d+ \\w+ 2026, \\d\\d:\\d\\d/.test(c.textContent) && c.textContent.includes('48 uur') && !/gecontroleerd \\d/.test(c.querySelector('.src-line').textContent)})()"))
-    ev("setDest('barcelona')")
     check('Live deal naar Barcelona zichtbaar bij bestemming', ev("lastList.some(x=>x.e.status==='live' && x.e.to==='barcelona')"))
     ev("setDest('overal')")
     page.goto(URL + '#kalender'); page.wait_for_selector('.cal-grid')
@@ -259,10 +263,11 @@ with sync_playwright() as p:
     FAKE = r"""
     (() => {
       const store = { runs: {}, searches: {}, alerts: {} }, subs = [];
-      const T = h => '2026-11-10T' + h + ':00+01:00';
-      store.runs['2026-11-09b'] = { t: '2026-11-09T23:00:00+01:00', deals: [{ id: 'flix-brussel', price: 7.49, checked: '2026-11-09T23:00:00+01:00' }] };
-      store.runs['2026-11-10'] = { t: T('06:40'), summary: 'test', alertHits: [], deals: [
+      const T = h => '2026-11-11T' + h + ':00+01:00';
+      store.runs['2026-11-10b'] = { t: '2026-11-10T23:00:00+01:00', deals: [{ id: 'flix-brussel', price: 7.49, checked: '2026-11-10T23:00:00+01:00' }] };
+      store.runs['2026-11-11'] = { t: T('06:40'), summary: 'test', alertHits: [], deals: [
         { id: 'flix-brussel', price: 6.99, checked: T('06:40') },
+        { id: 'kiwi-ein-opo-r', from: 'EIN', arr: 'OPO', toCity: 'Porto', toCountry: 'Portugal', price: 61.5, out: '2026-12-12', depTime: '07:10', dur: 160, flight: 'FR100', provider: 'Ryanair', link: 'https://kiwi.com/u/test2', checked: T('06:42'), back: '2026-12-16', backTime: '20:05', backDur: 165, backFlight: 'FR101' },
         { id: 'kiwi-ams-sdr', mode: 'vliegtuig', provider: 'Vueling', from: 'AMS', arr: 'SDR', toCity: 'Santander', toCountry: 'Spanje', price: 44, trip: 'enkel', priceType: 'gevonden', out: '2026-12-12', depTime: '10:00', dur: 130, transfers: 0, bag: 'tasje', link: 'https://kiwi.com/u/test1', src: ['kiwi'], checked: T('06:41') } ] };
       const notify = () => subs.forEach(s => s());
       const query = (name, field, dir, n) => ({
@@ -281,10 +286,18 @@ with sync_playwright() as p:
       const itin = (from, to, city, price, dep, extra = {}) => ({ id: from + to, tripType: 'oneway', price, priceFormatted: price + ' EUR', totalDurationSeconds: 9000, bookingUrl: 'https://kiwi.com/u/' + from + to,
         baggage: { personalItem: 1, cabinBag: 0, checkedBag: 0 },
         outbound: { from, to, departureTime: dep, arrivalTime: dep, durationSeconds: 9000, stops: 0, route: [from, to], segments: [{ from, to, fromCity: 'X', toCity: city, toCountry: extra.country || 'Spanje', carrierName: 'Ryanair', flightNumber: 'FR1' }] }, inbound: null });
+      const addDaysISO = (iso, n) => { const d = new Date(iso.slice(0, 10) + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+      const ret = (it, nights, cabin) => { const back = addDaysISO(it.outbound.departureTime, nights) + 'T18:15:00'; const o = it.outbound;
+        return { ...it, tripType: 'return', price: it.price * 2 + (cabin ? 30 : 0), baggage: { personalItem: 1, cabinBag: cabin ? 1 : 0, checkedBag: 0 },
+          inbound: { from: o.to, to: o.from, departureTime: back, arrivalTime: back, durationSeconds: 9600, stops: 0, route: [o.to, o.from], segments: [{ from: o.to, to: o.from, fromCity: 'Y', toCity: 'X', carrierName: 'Ryanair', flightNumber: 'FR2' }] } }; };
       const mcp = {
         listTools: async () => ({ servers: [{ server: 'Kiwi.com', authStatus: 'connected', tools: [{ name: 'search-flight' }] }, { server: 'lastminute.com', authStatus: 'connected', tools: [{ name: 'search_flights' }] }] }),
         callTool: async (server, tool, input) => {
-          if (server === 'Kiwi.com') { calls.kiwi.push(input); return { payload: { itineraries: [itin(input.flyFrom, 'AGP', 'Málaga', 19, '2026-12-03T08:00:00'), itin(input.flyFrom, 'BIO', 'Bilbao', 29, '2026-12-05T09:30:00')] } }; }
+          if (server === 'Kiwi.com') { calls.kiwi.push(input);
+            let list = [itin(input.flyFrom, 'AGP', 'Málaga', 19, '2026-12-03T08:00:00'), itin(input.flyFrom, 'BIO', 'Bilbao', 29, '2026-12-05T09:30:00')];
+            const isRet = input.nights_in_dst_from != null || input.returnDate;
+            if (isRet) list = list.map(it => ret(it, input.nights_in_dst_from != null ? Math.max(input.nights_in_dst_from, 3) : 3, !!input.adults_hand_bags));
+            return { payload: { itineraries: list } }; }
           if (server === 'lastminute.com') { calls.lm.push(input); return { payload: { flights: [{ airline: 'Ryanair', departure: input.departure + ' 08:00', arrival: input.arrival + ' 10:30', price_amount: 1799, deeplink: 'https://nl.lastminute.com/test' }] } }; }
           const e = new Error('nee'); e.code = 'server_not_connected'; throw e;
         },
@@ -305,16 +318,35 @@ with sync_playwright() as p:
     p2.wait_for_selector('.deal')
     p2.wait_for_function("state.liveKiwi.length > 0 && SNAP.some(e => e.id === 'kiwi-ams-sdr')", timeout=15000)
     e2 = p2.evaluate
-    check('Claude-modus: dagelijkse controle ververst gecontroleerde deals', e2("SNAP.find(e=>e.id==='flix-brussel').price===6.99 && /2026-11-10/.test(SNAP.find(e=>e.id==='flix-brussel').checked)"))
+    check('Claude-modus: dagelijkse controle ververst gecontroleerde deals', e2("SNAP.find(e=>e.id==='flix-brussel').price===6.99 && /2026-11-11/.test(SNAP.find(e=>e.id==='flix-brussel').checked)"))
     check('Prijsgeschiedenis: 3 controles voor Amsterdam–Brussel, met sparkline op de kaart', e2("histStats('flix-brussel').n===3 && histStats('flix-brussel').isLow && !!document.querySelector('.deal[data-id=\"flix-brussel\"] .spark')"), str(e2("histStats('flix-brussel') && histStats('flix-brussel').a.map(x=>x.p)")))
     e2("openDealDialog(dealById('flix-brussel'))")
     check('Detailvenster toont prijsgeschiedenis als grafiek', p2.locator('#dlgDealBody .hist-chart circle.pt').count() == 3)
     p2.keyboard.press('Escape')
+    check('Dagelijkse controle: korte retour-rij wordt een volledige deal (soort reis, nachten, bron, uitleg)', e2("(()=>{const e=SNAP.find(d=>d.id==='kiwi-ein-opo-r'); return !!e && e.mode==='vliegtuig' && e.trip==='retour' && e.nights===4 && e.perDir===30.75 && e.to==='porto' && e.bag==='tasje' && srcOf(e).url.startsWith('https://') && /dagelijkse controle/.test(e.note) && /FR101/.test(e.note) && bookLink(e).url==='https://kiwi.com/u/test2'})()"))
     check('Onbekend vliegveld (Santander) wordt een nieuwe bestemming met echte coördinaten', e2("!!DEST['x-santander'] && DEST['x-santander'].lat>43 && DEST['x-santander'].lat<44"))
+    check('Retour is de standaard: live zoeken vraagt retourvluchten (2 tot 7 nachten) op', e2("window.__fake.calls.kiwi[0].nights_in_dst_from===2 && window.__fake.calls.kiwi[0].nights_in_dst_to===7 && state.liveKiwi.every(e=>e.trip==='retour' && e.back>e.out && e.nights===3 && e.backFlight==='FR2')"))
+    e2("setDest('malaga')")
+    card = p2.locator('.deal[data-id="kiwi-ams-agp-r"]')
+    check('Retourkaart: heen en terug met datum en tijd, aantal nachten en prijs per richting', card.count() == 1 and 'heen' in card.inner_text().lower() and 'terug' in card.inner_text().lower() and '3 nachten' in card.inner_text() and 'retour p.p.' in card.inner_text() and '38' in card.locator('.price').inner_text(), card.inner_text()[:160].replace('\n', ' | ') if card.count() else 'kaart ontbreekt')
+    e2("openDealDialog(dealById('kiwi-ams-agp-r'))")
+    dlg = p2.inner_text('#dlgDealBody')
+    check('Details retour: terugreis, reisdocument en knop om de prijs live te controleren', 'Terugreis' in dlg and 'FR2' in dlg and 'ID-kaart' in dlg and p2.locator('#btnVerify').count() == 1)
+    p2.click('#btnVerify'); p2.wait_for_function("document.querySelector('#verifyOut').textContent.includes('Live gecontroleerd')", timeout=5000)
+    vq = e2("window.__fake.calls.kiwi[window.__fake.calls.kiwi.length-1]")
+    check('Prijs live nacontroleren: zelfde vlucht en data, "klopt nog"', 'klopt nog' in p2.inner_text('#verifyOut') and vq.get('departureDate') == '03/12/2026' and vq.get('returnDate') == '06/12/2026' and vq.get('flyTo') == 'AGP', p2.inner_text('#verifyOut')[:100])
+    p2.keyboard.press('Escape')
+    e2("setDest('overal')")
+    p2.select_option('#inBag', 'hand'); p2.click('#btnScan'); p2.wait_for_function("!state.scanning && state.liveKiwi.some(e=>e.bag==='hand')", timeout=10000)
+    check('Bagage: live zoeken vraagt de prijs met handbagagekoffer op (aparte deal, eigen prijs)', e2("(()=>{const c=window.__fake.calls.kiwi; const e=dealById('kiwi-ams-agp-r-hb'); return Array.isArray(c[c.length-1].adults_hand_bags) && !!e && e.price===68 && e.bag==='hand' && dealById('kiwi-ams-agp-r').price===38})()"))
+    p2.select_option('#inBag', 'tasje')
+    p2.click('.trip-tabs [data-trip="enkel"]')
+    p2.wait_for_function("!state.scanning && state.liveKiwi.some(e=>e.trip==='enkel')", timeout=10000)
+    check('Enkele reis: live zoeken zonder nachten, lijst toont alleen enkele reizen', e2("(()=>{const c=window.__fake.calls.kiwi; return c[c.length-1].nights_in_dst_from===undefined && lastList.length>0 && lastList.every(x=>x.e.trip==='enkel')})()"))
     check('Kiwi.com live: vluchten met Live-label en Kiwi-boeklink', e2("state.liveKiwi.length>=2 && state.liveKiwi.every(e=>e.status==='live' && bookLink(e).url.startsWith('https://kiwi.com/u/'))") and p2.locator('.deal .badge.live').count() > 0, f"{e2('state.liveKiwi.length')} live, {e2('window.__fake.calls.kiwi.length')} zoekopdrachten")
     check('Kiwi.com: zoekt vanaf de dichtstbijzijnde vliegvelden (Utrecht → Schiphol en Rotterdam)', e2("window.__fake.calls.kiwi.map(c=>c.flyFrom).slice(0,2).join(',')") == 'AMS,RTM', e2("window.__fake.calls.kiwi.map(c=>c.flyFrom).join(',')"))
     check('Eigen zoekopdracht wordt in de database bewaard (geschiedenis groeit)', e2("Object.keys(window.__fake.store.searches).length>=1"))
-    e2("openDealDialog(state.liveKiwi.find(e=>e.arr==='AGP'))")
+    e2("openDealDialog(state.liveKiwi.find(e=>e.arr==='AGP' && e.trip==='enkel'))")
     p2.click('#btnCmpLm')
     p2.wait_for_function("document.querySelector('#cmpLmOut').textContent.includes('lastminute.com:')", timeout=5000)
     check('Vergelijk bij lastminute.com: zelfde route en datum, met verschil', 'goedkoper' in p2.inner_text('#cmpLmOut') and e2("window.__fake.calls.lm[0].start_date") == '2026-12-03', p2.inner_text('#cmpLmOut')[:120])
@@ -328,7 +360,7 @@ with sync_playwright() as p:
     p2.goto(URL + '#samen'); p2.wait_for_selector('#people .person')
     e2("state.group=[{name:'Roy',place:{n:'Utrecht Centraal',lat:52.08758,lon:5.11117,kind:'station',uic:'8400621'}},{name:'Sam',place:{n:'Eindhoven Centraal',lat:51.44306,lon:5.47995,kind:'station',uic:'8400206'}}]; renderPeople(); renderGroup()")
     rows = e2("groupResults().rows.length")
-    tot_ok = e2("(()=>{const r=groupResults().rows[0]; return Math.abs(r.total - r.arr.reduce((s,a)=>s+a.e.perDir,0))<0.001 && r.arr.length===2})()")
+    tot_ok = e2("(()=>{const r=groupResults().rows[0]; return Math.abs(r.total - r.arr.reduce((s,a)=>s+a.tp.p,0))<0.001 && r.arr.length===2})()")
     check('Samen reizen: bestemmingen voor iedereen, totaal = som per persoon', rows > 5 and tot_ok and p2.locator('#groupResults .gcard').count() > 0, f'{rows} bestemmingen')
     e2("document.querySelector('#groupSort').value='eerlijk'; document.querySelector('#groupSort').dispatchEvent(new Event('change'))")
     check('Samen reizen: "eerlijkst" sorteert op het kleinste prijsverschil', e2("(()=>{const r=groupResults().rows; return r.every((x,i)=>i===0||r[i-1].spread<=x.spread)})()"))
@@ -336,6 +368,85 @@ with sync_playwright() as p:
     p2.keyboard.press('Escape')
     check('Claude-modus: geen JavaScript-fouten', not errs2, '; '.join(errs2[:3]))
     ctx2.close()
+
+
+    # ===== 16. Versie 3: retour, verblijf, vakanties, datums, weergave, ideeën en controle van alle data =====
+    ctx4 = browser.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2, locale='nl-NL', timezone_id='Europe/Amsterdam', has_touch=True)
+    ctx4.route('**/*', route_all)
+    p4 = ctx4.new_page(); errs4 = []
+    p4.on('pageerror', lambda e: errs4.append(str(e)))
+    p4.on('console', lambda m: errs4.append('console: ' + m.text) if m.type == 'error' and 'net::' not in m.text and 'Failed to load resource' not in m.text else None)
+    p4.goto(URL + '#deals'); p4.wait_for_selector('.deal')
+    e4 = p4.evaluate
+    check('Retour (standaard): alleen echte retourprijzen of berekend 2 × de vanafprijs', e4("state.trip==='retour' && lastList.length>40 && lastList.every(x => x.e.trip==='retour' ? (!x.tp.calc && x.tp.p===x.e.price) : (!x.e.out && x.tp.calc && Math.abs(x.tp.p-2*x.e.price)<1e-9))"), f"{e4('lastList.length')} deals, {e4('lastList.filter(x=>x.tp.calc).length')} berekend")
+    check('Berekende retourprijs staat duidelijk op de kaart', e4("(()=>{const c=document.querySelector('.deal[data-id=\"flix-brussel\"]'); return !!c && /berekend/.test(c.querySelector('.price-note').textContent) && /16,38/.test(c.querySelector('.price').textContent)})()"))
+    check('Uitleg onder de telling noemt retourprijzen en de verborgen enkele vluchten', 'Retourprijzen' in p4.inner_text('#dealHints') and 'Toon enkele reizen' in p4.inner_text('#dealHints'))
+    rr = e4("lastList.filter(x=>x.e.trip==='retour' && x.e.mode==='vliegtuig').map(x=>x.e)")
+    check('Elke retourvlucht heeft heen- en terugdatum, en het aantal nachten klopt', len(rr) >= 40 and all(r['back'] > r['out'] and r['nights'] == (__import__('datetime').date.fromisoformat(r['back']) - __import__('datetime').date.fromisoformat(r['out'])).days for r in rr), f'{len(rr)} retourvluchten')
+    p4.click('.trip-tabs [data-trip="enkel"]')
+    check('Enkele reis: alleen prijzen die je los kunt kopen', e4("state.trip==='enkel' && lastList.length>60 && lastList.every(x=>x.e.trip==='enkel' && x.tp.p===x.e.price)"), f"{e4('lastList.length')} deals")
+    check('Keuze enkele reis/retour wordt onthouden', e4("store.get('trip')==='enkel'"))
+    p4.click('.trip-tabs [data-trip="retour"]')
+    p4.click('#btnMoreOpts'); p4.select_option('#inStay', 'kort')
+    check('Verblijf "kort": retourvluchten van 1 tot 4 nachten', e4("(()=>{const d=lastList.filter(x=>x.e.nights!=null); return d.length>3 && d.every(x=>x.e.nights>=1 && x.e.nights<=4)})()"), f"{e4('lastList.filter(x=>x.e.nights!=null).length')} vluchten")
+    p4.select_option('#inStay', 'week')
+    check('Verblijf "week": 5 tot 9 nachten', e4("(()=>{const d=lastList.filter(x=>x.e.nights!=null); return d.length>10 && d.every(x=>x.e.nights>=5 && x.e.nights<=9)})()"))
+    p4.select_option('#inStay', 'alle')
+    p4.click('.seg [data-when="holiday"]')
+    check('Schoolvakantie: kerstvakantie 19 dec 2026 t/m 3 jan 2027, met bron', e4("holidayRange('kerst').from==='2026-12-19' && holidayRange('kerst').to==='2027-01-03'") and 'Rijksoverheid' in p4.inner_text('#whenHint') and '3 jan' in p4.inner_text('#whenHint'))
+    check('Kerstvakantie: vertrek vanaf 18 dec en uiterlijk 3 jan terug', e4("(()=>{const d=lastList.filter(x=>x.e.out); return d.length>=2 && d.every(x=>x.e.out>='2026-12-18' && x.e.out<='2027-01-03' && (!x.e.back || x.e.back<='2027-01-03'))})()"), f"{e4('lastList.filter(x=>x.e.out).length')} vluchten met datum")
+    check('Voorjaarsvakantie verschilt per regio (zuid een week eerder)', e4("holidayRange('voorjaar','zuid').from==='2027-02-13' && holidayRange('voorjaar','midden').from==='2027-02-20' && holidayRange('zomer','noord').from==='2027-07-10'"))
+    p4.click('.seg [data-when="range"]')
+    p4.fill('#inFrom', '2026-12-01'); p4.dispatch_event('#inFrom', 'change'); p4.fill('#inTo', '2026-12-15'); p4.dispatch_event('#inTo', 'change')
+    check('Eigen datums: vertrek vanaf 1 dec, uiterlijk 15 dec terug', e4("(()=>{const d=lastList.filter(x=>x.e.out); return d.length>3 && d.every(x=>x.e.out>='2026-12-01' && x.e.back<='2026-12-15')})()"), f"{e4('lastList.filter(x=>x.e.out).length')} vluchten")
+    p4.click('.seg [data-when="flex"]')
+    ids = e4("[...document.querySelectorAll('#dealGrid .deal')].map(c=>dealById(c.dataset.id).to)")
+    check('Eén deal per bestemming: geen dubbele bestemmingen, met "andere opties"', len(ids) == len(set(ids)) and p4.locator('.more-opts').count() > 3 and 'bestemmingen' in p4.inner_text('#summary'))
+    before = p4.locator('#dealGrid .deal').count()
+    p4.click('#btnMore')
+    check('"Toon meer" laat de volgende bestemmingen zien', p4.locator('#dealGrid .deal').count() > before, f"{before} → {p4.locator('#dealGrid .deal').count()}")
+    p4.click('.more-opts >> nth=0')
+    check('"Andere opties" opent alle deals naar die bestemming', e4("state.dest!=='overal' && lastList.length>1 && lastList.every(x=>x.e.to===state.dest)"))
+    e4("setDest('overal')")
+    p4.click('#btnPerDest')
+    ids2 = e4("lastList.slice(0,24).map(x=>x.e.to)")
+    check('Per bestemming uit: alle deals los', len(ids2) > len(set(ids2)) and e4("state.perDest===false"))
+    p4.click('#btnPerDest'); p4.click('#btnLayout')
+    check('Compacte lijst: één regel per deal, tik opent details', p4.locator('#dealGrid .deal-row').count() == 24 and p4.locator('#dealGrid .deal').count() == 0)
+    p4.click('#dealGrid .deal-row >> nth=0'); p4.wait_for_selector('#dlgDeal[open]')
+    check('Details van een berekende retour: uitleg 2 × enkele reis', 'berekend' in p4.inner_text('#dlgDealBody') and 'Reisdocument' in p4.inner_text('#dlgDealBody'))
+    p4.keyboard.press('Escape'); p4.click('#btnLayout')
+    tiles = e4("[...document.querySelectorAll('#inspire .tile')].map(t=>t.dataset.tile)")
+    check('Ideeën: tegels met echte aantallen en vanafprijs', len(tiles) >= 6 and 'trein' in tiles and 'kerst' in tiles, ', '.join(tiles))
+    p4.click('#inspire [data-tile="trein"]')
+    check('Tegel "Met de trein": alleen treinen', e4("lastList.length>5 && lastList.every(x=>x.e.mode==='trein')"))
+    tp_txt = p4.inner_text('#inspire [data-tile="zon"] .tile-p')
+    p4.click('#inspire [data-tile="zon"]')
+    check('Tegel "Naar de zon": alleen strandbestemmingen, vanafprijs klopt met de lijst', e4("lastList.length>5 && lastList.every(x=>x.e.dest.t.includes('strand'))") and e4("eur(lastList[0].tp.p)").replace(' ', ' ') in tp_txt.replace(' ', ' '), tp_txt)
+    e4("state.filters = defaultFilters(); state.filters.nlOnly = true; renderAll()")
+    check('Filter "Alleen vertrek in Nederland": geen Weeze of Charleroi', e4("lastList.length>20 && lastList.every(x=>!x.e.o.abroad)"))
+    e4("state.filters = defaultFilters(); state.filters.origins.add('EIN'); renderAll()")
+    check('Filter vertrekpunt: alleen Eindhoven Airport', e4("lastList.length>5 && lastList.every(x=>x.e.from==='EIN')") and p4.locator('#fOrigins input').count() >= 8)
+    e4("state.filters = defaultFilters(); state.filters.depPart = 'ochtend'; renderAll()")
+    check('Filter vertrektijd: ochtend', e4("(()=>{const d=lastList.filter(x=>x.e.depTime); return d.length>5 && d.every(x=>+x.e.depTime.slice(0,2)<12)})()"))
+    e4("state.filters = defaultFilters(); state.filters.noIndic = true; renderAll()")
+    check('Indicaties (Skyscanner) zijn gemarkeerd en te verbergen', e4("lastList.every(x=>!x.e.indic) && SNAP.filter(e=>e.indic).length>=30 && SNAP.filter(e=>e.indic).every(e=>e.src.some(k=>k.startsWith('sky')))"))
+    e4("state.filters = defaultFilters(); renderAll()")
+    check('Geen horizontaal scrollen op een telefoon', e4("document.documentElement.scrollWidth <= window.innerWidth + 1"), f"{e4('document.documentElement.scrollWidth')} px breed")
+    # Controle van alle ingebouwde data
+    snapd = e4("SNAP.map(e=>({id:e.id,mode:e.mode,trip:e.trip,price:e.price,out:e.out||null,back:e.back||null,checked:e.checked,link:e.link||null,book:bookLink(e).url,src:srcsOf(e).map(s=>s.url),indic:!!e.indic,type:e.priceType,flight:e.flight||null,backFlight:e.backFlight||null,dur:e.dur,bag:e.bag,nights:e.nights}))")
+    ids_all = [d['id'] for d in snapd]
+    check('Data: elke deal heeft een unieke id', len(ids_all) == len(set(ids_all)), f'{len(ids_all)} deals')
+    check('Data: elke deal is vandaag (10 nov 2026) gecontroleerd en heeft een prijs, bron en boeklink', all(d['checked'].startswith('2026-11-10T') and d['price'] > 0 and d['src'] and all(u.startswith('https://') for u in d['src']) and d['book'].startswith('https://') for d in snapd))
+    check('Data: geen reisdatum in het verleden op de dag van controle', all((d['out'] or '9') >= '2026-11-10' for d in snapd), ', '.join(d['id'] for d in snapd if (d['out'] or '9') < '2026-11-10'))
+    kiwi = [d for d in snapd if d['id'].startswith('kiwi-')]
+    check('Data: elke Kiwi-vlucht heeft datum, vluchtnummer, reistijd en eigen boeklink', len(kiwi) >= 95 and all(d['out'] and d['flight'] and d['dur'] and d['link'] and d['link'].startswith('https://kiwi.com/u/') and d['book'] == d['link'] for d in kiwi), f'{len(kiwi)} vluchten')
+    kr = [d for d in kiwi if d['trip'] == 'retour']
+    check('Data: elke Kiwi-retour heeft terugdatum, terugvlucht en 2 tot 7 nachten', len(kr) == 40 and all(d['back'] and d['backFlight'] and 2 <= d['nights'] <= 7 and ('-r' in d['id']) for d in kr), f'{len(kr)} retourvluchten')
+    check('Data: vanafprijzen (trein en bus) hebben geen vaste datum; gevonden prijzen wel', all((d['out'] is None) == (d['type'] == 'vanaf') for d in snapd))
+    check('Data: kaartjes en kortingen houden hun controle van 9 november', e4("PASSES.every(p=>p.checked.startsWith('2026-11-09T'))"))
+    check('Versie 3: geen JavaScript-fouten', not errs4, '; '.join(errs4[:3]))
+    ctx4.close()
 
     # ===== 15. App-versie (PWA): manifest, service worker en offline openen =====
     ctx3 = browser.new_context(viewport={'width': 390, 'height': 844}, locale='nl-NL', timezone_id='Europe/Amsterdam', service_workers='allow')
@@ -352,7 +463,7 @@ with sync_playwright() as p:
     p3.wait_for_timeout(800)
     ctx3.set_offline(True)
     p3.reload(); p3.wait_for_selector('.deal', timeout=8000)
-    check('App-versie: werkt offline (opnieuw laden zonder internet)', p3.locator('.deal').count() > 30 and p3.evaluate("document.body.classList.contains('offline')"))
+    check('App-versie: werkt offline (opnieuw laden zonder internet)', p3.locator('.deal').count() >= 20 and p3.evaluate("document.body.classList.contains('offline')"))
     ctx3.set_offline(False)
     check('App-versie: geen JavaScript-fouten', not errs3, '; '.join(errs3[:3]))
     ctx3.close()

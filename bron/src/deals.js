@@ -108,6 +108,7 @@ const ORIGINS = {
   NRN:  { n: 'Weeze (net over de grens)', full: 'Airport Weeze (Duitsland), ongeveer 30 km van Nijmegen en Venlo', kind: 'airport', iata: 'NRN', lat: 51.6024, lon: 6.1422, abroad: true },
   BRU:  { n: 'Brussel-Zaventem', full: 'Brussels Airport in Zaventem (België)', kind: 'airport', iata: 'BRU', lat: 50.9014, lon: 4.4844, abroad: true },
   DUS:  { n: 'Düsseldorf Airport', full: 'Flughafen Düsseldorf (Duitsland)', kind: 'airport', iata: 'DUS', lat: 51.2895, lon: 6.7668, abroad: true },
+  CGN:  { n: 'Keulen-Bonn Airport', full: 'Flughafen Köln/Bonn (Duitsland)', kind: 'airport', iata: 'CGN', lat: 50.8659, lon: 7.1427, abroad: true },
   CRL:  { n: 'Brussel-Charleroi', full: 'Brussels South Charleroi Airport (België), ongeveer 45 km ten zuiden van Brussel', kind: 'airport', iata: 'CRL', lat: 50.4592, lon: 4.4538, abroad: true },
 };
 

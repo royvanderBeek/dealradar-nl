@@ -12,7 +12,7 @@ data=("/* Basisdata: NL-stations (trainline-eu/stations, ODbL), vliegvelden (Our
       "/* Kaart van Europa (Natural Earth, publiek domein), Lambert-projectie rond 10°O 52°N */\n"
       "const MAP = "+json.dumps(mp,separators=(',',':'))+";")
 deals=open('src/deals.js',encoding='utf-8').read()
-app='\n'.join(open(f'src/{n}',encoding='utf-8').read() for n in ('app1.js','app2.js','app3.js'))
+app='\n'.join(open(f'src/{n}',encoding='utf-8').read() for n in ('app1.js','app2.js','app3.js','app4.js','boot.js'))
 out=t.replace('/*__CSS__*/',css).replace('/*__DATA__*/',data).replace('/*__DEALS__*/',deals).replace('/*__APP__*/',app)
 assert '/*__' not in out
 open('dist/dealradar-nl.html','w',encoding='utf-8').write(out)

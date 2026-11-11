@@ -31,6 +31,7 @@
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
   <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></symbol>
   <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-calcheck" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M9 14.8l2 2 4-4"/></symbol>
   <symbol id="i-compare" viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6M3 20h18"/></symbol>
   <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></symbol>
   <symbol id="i-group" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c.6-3.3 3-5.2 6-5.2s5.4 1.9 6 5.2"/><circle cx="17" cy="9" r="2.6"/><path d="M15.6 14.3c2.6-.4 4.8 1.2 5.4 4.2"/></symbol>
@@ -92,6 +93,7 @@
 
 <nav class="tabbar" aria-label="Weergaven">
   <a class="tab" href="#deals" data-tab="deals"><svg class="ic"><use href="#i-list"/></svg><span>Deals</span></a>
+  <a class="tab" href="#reisdata" data-tab="reisdata"><svg class="ic"><use href="#i-calcheck"/></svg><span>Reisdata</span><span class="count" id="watchCount" hidden>0</span></a>
   <a class="tab" href="#kaart" data-tab="kaart"><svg class="ic"><use href="#i-map"/></svg><span>Kaart</span></a>
   <a class="tab" href="#kalender" data-tab="kalender"><svg class="ic"><use href="#i-cal"/></svg><span>Kalender</span></a>
   <a class="tab" href="#vergelijk" data-tab="vergelijk"><svg class="ic"><use href="#i-compare"/></svg><span>Vergelijk</span></a>
@@ -300,6 +302,51 @@
   </section>
 
   <!-- KAART -->
+  <section class="view" id="view-reisdata" data-view="reisdata" aria-labelledby="watchTitle" hidden>
+    <div class="section-head"><h2 id="watchTitle">Jouw reisdata</h2>
+      <p class="small muted">Vul in wanneer je weg kunt. DealRadar laat apart zien welke deals precies passen, en meldt nieuwe deals.</p>
+      <button class="btn ghost sm w-add" type="button" data-wfocus><svg class="ic sm"><use href="#i-plus"/></svg>Nieuwe reisdata</button></div>
+    <div class="watch-layout">
+      <div class="watch-main"><div id="watchNotice"></div><div id="watchList" aria-live="polite"></div></div>
+      <form id="watchForm" class="panel watch-form" novalidate aria-labelledby="wfTitle">
+        <h3 id="wfTitle">Nieuwe reisdata</h3>
+        <div class="field"><span class="lbl" id="lblWfTrip">Soort reis</span>
+          <div class="seg" id="wfTrip" role="group" aria-labelledby="lblWfTrip">
+            <button type="button" data-wtrip="retour" aria-pressed="true">Heen en terug</button>
+            <button type="button" data-wtrip="enkel" aria-pressed="false">Alleen heen</button></div></div>
+        <div class="field"><span class="lbl">Snel invullen</span><div class="w-quick" id="wfQuick"></div></div>
+        <fieldset class="w-dates"><legend>Heen: vertrekken tussen</legend>
+          <div class="w-pair"><label><span class="sr-only">Vroegste vertrekdatum</span><input class="input" type="date" id="wfOutFrom" required></label>
+            <span aria-hidden="true">t/m</span><label><span class="sr-only">Laatste vertrekdatum</span><input class="input" type="date" id="wfOutTo" required></label></div></fieldset>
+        <fieldset class="w-dates" id="wfBackSet"><legend>Terug: terugkomen tussen</legend>
+          <div class="w-pair"><label><span class="sr-only">Vroegste terugkomdatum</span><input class="input" type="date" id="wfBackFrom"></label>
+            <span aria-hidden="true">t/m</span><label><span class="sr-only">Laatste terugkomdatum</span><input class="input" type="date" id="wfBackTo"></label></div></fieldset>
+        <p class="small muted" id="wfHint" aria-live="polite"></p>
+        <div class="field"><label for="wfDest">Waarheen?</label><select class="input" id="wfDest"></select></div>
+        <div class="w-two">
+          <div class="field"><span class="lbl" id="lblWfWho">Personen</span>
+            <div class="stepper" role="group" aria-labelledby="lblWfWho">
+              <button type="button" id="wfMinus" aria-label="Eén persoon minder">−</button>
+              <output id="wfPeople" aria-live="polite">1</output>
+              <button type="button" id="wfPlus" aria-label="Eén persoon meer">+</button></div></div>
+          <div class="field"><label for="wfMax">Max. prijs p.p. (retour)</label><input class="input" id="wfMax" type="number" min="1" max="3000" step="1" inputmode="numeric" placeholder="geen"></div>
+        </div>
+        <fieldset class="field"><legend class="lbl">Vertrekken vanaf</legend>
+          <label class="check"><input type="checkbox" id="wfNL" checked> Nederland</label>
+          <label class="check"><input type="checkbox" id="wfBorder" checked> Net over de grens (Weeze, Düsseldorf, Keulen, Brussel, Charleroi)</label></fieldset>
+        <fieldset class="field" id="wfModes"><legend class="lbl">Vervoer</legend>
+          <label class="check"><input type="checkbox" value="vliegtuig" checked> Vliegtuig</label>
+          <label class="check"><input type="checkbox" value="trein" checked> Trein</label>
+          <label class="check"><input type="checkbox" value="bus" checked> Bus</label></fieldset>
+        <div class="field"><label for="wfName">Naam (mag leeg)</label><input class="input" id="wfName" maxlength="40" placeholder="Bijv. Weekendje weg met Sam"></div>
+        <label class="check"><input type="checkbox" id="wfNotify" checked> Geef een melding bij nieuwe deals</label>
+        <p class="w-err" id="wfErr" role="alert"></p>
+        <div class="btns"><button class="btn" type="submit" id="wfSave"><svg class="ic"><use href="#i-calcheck"/></svg><span id="wfSaveTxt">Bewaar en zoek deals</span></button>
+          <button class="btn ghost" type="button" id="wfCancel" hidden>Annuleer</button></div>
+        <p class="small muted">Prijzen zijn per persoon, behalve waar "samen" staat. Een periode mag hooguit 45 dagen zijn. Je kunt zoveel periodes bewaren als je wilt.</p>
+      </form>
+    </div>
+  </section>
   <section class="view" id="view-kaart" data-view="kaart" aria-labelledby="mapTitle" hidden>
     <div class="section-head"><h2 id="mapTitle">Kaart</h2><div class="seg map-seg" role="group" aria-label="Welke kaart"><button type="button" data-map="eu" aria-pressed="true">Europa</button><button type="button" data-map="world" aria-pressed="false">Wereld</button></div><span class="small muted" id="mapSub">Goedkoopste prijs per bestemming, per persoon. Filters van het tabblad Deals gelden ook hier.</span></div>
     <div class="map-layout">

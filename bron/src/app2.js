@@ -8,7 +8,7 @@
 const icon = (id, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
 const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-function dealById(id) { return allDeals().find(d => d.id === id); }
+function dealById(id) { return allDeals().find(d => d.id === id) || (typeof watchDealById === 'function' ? watchDealById(id) : undefined); }
 function routeText(e) { return `${e.o.n} → ${e.dest.n}`; }
 // Vlaggetje bij een land (twee letters → emoji); op systemen zonder vlaggen zie je de landcode
 const flag = cc => (/^[A-Z]{2}$/.test(cc || '') ? String.fromCodePoint(...[...cc].map(c => 0x1F1A5 + c.charCodeAt(0))) : '');
@@ -54,7 +54,7 @@ function openDialog(id) { const d = $('#' + id); if (!d.open) { try { d.showModa
 document.addEventListener('click', ev => { const b = ev.target.closest('[data-close]'); if (b) b.closest('dialog').close(); });
 $$('dialog').forEach(d => d.addEventListener('click', ev => { if (ev.target === d) d.close(); }));
 
-const VIEWS = ['deals', 'kaart', 'kalender', 'vergelijk', 'samen', 'bewaard'];
+const VIEWS = ['deals', 'reisdata', 'kaart', 'kalender', 'vergelijk', 'samen', 'bewaard'];
 function setTab(tab, opt = {}) {
   if (!VIEWS.includes(tab)) tab = 'deals';
   state.tab = tab;
@@ -72,8 +72,9 @@ function renderView(tab) {
   if (tab === 'vergelijk') renderCompare();
   if (tab === 'samen') renderGroup();
   if (tab === 'bewaard') renderSaved();
+  if (tab === 'reisdata' && typeof renderWatches === 'function') renderWatches();
 }
-function renderAll() { renderDeals(); renderView(state.tab === 'deals' ? 'none' : state.tab); renderSavedCount(); renderHeaderPill(); }
+function renderAll() { renderDeals(); renderView(state.tab === 'deals' ? 'none' : state.tab); renderSavedCount(); renderHeaderPill(); if (typeof checkWatches === 'function') checkWatches(); }
 function renderHeaderPill() {
   const live = state.liveDeals.length;
   $('#dataPillText').textContent = `${SNAP.length} gecontroleerde deals${live ? ` · ${live} live` : ''}`;

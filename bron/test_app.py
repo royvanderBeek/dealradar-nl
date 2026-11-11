@@ -465,6 +465,139 @@ with sync_playwright() as p:
     check('Versie 3: geen JavaScript-fouten', not errs4, '; '.join(errs4[:3]))
     ctx4.close()
 
+
+    # ===== 17. Reisdata: eigen periodes, passende deals apart, live zoeken, verder zoeken en meldingen =====
+    WFAKE = r"""
+    (() => {
+      const orig = window.claude.use;
+      const iso = s => s.slice(6, 10) + '-' + s.slice(3, 5) + '-' + s.slice(0, 2);
+      window.__wmode = 'normal'; window.__fake.calls.w = [];
+      const leg = (from, to, dep) => ({ from, to, departureTime: dep, arrivalTime: dep, durationSeconds: 7800, stops: 0, route: [from, to], segments: [{ from, to, fromCity: 'X', toCity: to === 'BCN' ? 'Barcelona' : 'Amsterdam', toCountry: to === 'BCN' ? 'Spanje' : 'Nederland', carrierName: 'Vueling', flightNumber: 'VY' + (to === 'BCN' ? '8300' : '8301') }] });
+      window.claude.use = async n => {
+        const r = await orig(n);
+        if (n !== 'mcp' || !r) return r;
+        return { ...r, callTool: async (s, tool, input) => {
+          if (s === 'Kiwi.com' && input.returnDateTo && input.departureDateTo) {
+            window.__fake.calls.w.push(input);
+            const m = window.__wmode, wide = input.max_sector_stopovers === 1;
+            const from = ['AMS', 'EIN', 'RTM'].concat(m === 'more' ? ['MST'] : []);
+            if (!from.includes(input.flyFrom) || (m === 'none' && !wide) || (m !== 'none' && wide)) return { payload: { itineraries: [] } };
+            const price = (input.flyFrom === 'AMS' ? 90 : input.flyFrom === 'EIN' ? 105 : input.flyFrom === 'MST' ? 70 : 120) * input.adults;
+            return { payload: { itineraries: [{ id: 'w' + input.flyFrom, tripType: 'return', price, bookingUrl: 'https://kiwi.com/u/w' + input.flyFrom.toLowerCase(),
+              baggage: { personalItem: 1, cabinBag: 0, checkedBag: 0 },
+              outbound: leg(input.flyFrom, 'BCN', iso(input.departureDate) + 'T07:15:00'), inbound: leg('BCN', input.flyFrom, iso(input.returnDateTo) + 'T19:40:00') }] } };
+          }
+          return r.callTool(s, tool, input);
+        } };
+      };
+    })();
+    """
+    ctx5 = browser.new_context(viewport={'width': 1280, 'height': 900}, locale='nl-NL', timezone_id='Europe/Amsterdam')
+    ctx5.route('**/*', route_all)
+    ctx5.add_init_script(FAKE); ctx5.add_init_script(WFAKE)
+    p5 = ctx5.new_page(); errs5 = []
+    p5.on('pageerror', lambda e: errs5.append(str(e)))
+    p5.on('console', lambda m: errs5.append('console: ' + m.text) if m.type == 'error' and 'net::' not in m.text and 'Failed to load resource' not in m.text else None)
+    p5.goto(URL + '#reisdata'); p5.wait_for_selector('#watchForm')
+    p5.wait_for_function("CLOUD.kiwi && !state.scanning", timeout=15000)
+    e5 = p5.evaluate
+    check('Reisdata: eigen tabblad met formulier en lege uitleg', p5.locator('.tab[data-tab="reisdata"]').count() == 1 and p5.is_visible('#watchForm') and 'Nog geen reisdata' in p5.inner_text('#watchList'))
+    check('Reisdata: snelknoppen voor weekend en schoolvakanties', p5.locator('#wfQuick .chip').count() >= 3 and 'Kerstvakantie' in p5.inner_text('#wfQuick'))
+    # Fout invullen: terug voor heen
+    p5.fill('#wfOutFrom', '2026-11-18'); p5.dispatch_event('#wfOutFrom', 'change'); p5.fill('#wfOutTo', '2026-11-21'); p5.dispatch_event('#wfOutTo', 'change')
+    p5.fill('#wfBackFrom', '2026-11-10'); p5.fill('#wfBackTo', '2026-11-12'); p5.dispatch_event('#wfBackTo', 'change')
+    p5.click('#wfSave')
+    check('Reisdata: controle op datums (terug voor vertrek geeft een duidelijke fout)', 'voordat je vertrekt' in p5.inner_text('#wfErr') and e5("state.watches.length") == 0, p5.inner_text('#wfErr'))
+    p5.fill('#wfBackFrom', '2026-11-25'); p5.dispatch_event('#wfBackFrom', 'change'); p5.fill('#wfBackTo', '2026-11-28'); p5.dispatch_event('#wfBackTo', 'change')
+    check('Reisdata: uitleg hoeveel nachten je weg bent (4 tot 10)', '4 tot 10 nachten' in p5.inner_text('#wfHint'), p5.inner_text('#wfHint'))
+    p5.click('#wfPlus'); p5.fill('#wfName', 'Barcelona met Sam')
+    p5.click('#wfSave')
+    p5.wait_for_function("state.watches.length===1 && state.watches[0].lastSearch && !WBUSY.size", timeout=15000)
+    w0 = e5("state.watches[0]")
+    q = e5("window.__fake.calls.w")
+    qa = [x for x in q if x['flyFrom'] == 'AMS' and x.get('max_sector_stopovers') == 0]
+    check('Reisdata: bewaard met beide periodes en 2 personen (ook in de database voor de dagelijkse controle)', w0['outFrom'] == '2026-11-18' and w0['backTo'] == '2026-11-28' and w0['people'] == 2 and e5("Object.values(window.__fake.store.watches||{}).some(x=>x.outFrom==='2026-11-18' && x.backFrom==='2026-11-25' && x.people===2 && x.destName==='Europa')"))
+    check('Reisdata: live zoeken met precies jouw periodes, 2 volwassenen, rechtstreeks', len(qa) == 1 and qa[0]['departureDate'] == '18/11/2026' and qa[0]['departureDateTo'] == '21/11/2026' and qa[0]['returnDate'] == '25/11/2026' and qa[0]['returnDateTo'] == '28/11/2026' and qa[0]['adults'] == 2 and qa[0]['flyTo'] == 'Europe', json.dumps(qa)[:200])
+    froms = sorted({x['flyFrom'] for x in q})
+    check('Reisdata: zoekt vanaf Nederland én net over de grens (Weeze, Düsseldorf, Keulen, Brussel, Charleroi)', all(a in froms for a in ['AMS', 'EIN', 'RTM', 'MST', 'GRQ', 'NRN', 'DUS', 'CGN', 'BRU', 'CRL']), ','.join(froms))
+    m0 = e5("(()=>{const m=watchMatches(state.watches[0]); return {exact:m.exact.map(x=>({id:x.e.id,pp:x.pp,total:x.total,out:x.e.out,back:x.e.back})), near:m.near.length, free:m.free.length}})()")
+    ams = [x for x in m0['exact'] if x['id'].startswith('kiwi-ams-bcn')]
+    check('Reisdata: passende vluchten staan apart onder "Precies", prijs per persoon en samen', len(m0['exact']) >= 3 and ams and ams[0]['pp'] == 90 and ams[0]['total'] == 180 and ams[0]['out'] == '2026-11-18' and ams[0]['back'] == '2026-11-28', json.dumps(m0)[:240])
+    card = p5.inner_text('.watch')
+    check('Reisdata: kaart toont periodes, aantallen en goedkoopste deal (totaal voor 2)', 'Barcelona met Sam' in card and 'precies' in card and '180' in card and 'samen' in card and 'Live gezocht' in card, card[:200].replace('\n', ' | '))
+    check('Reisdata: genoeg precieze deals, dus niet verder gezocht', not any(x.get('max_sector_stopovers') == 1 for x in q) and not e5("state.watches[0].lastInfo.wide"))
+    e5("openDealDialog(dealById(watchMatches(state.watches[0]).exact.find(x=>x.e.from==='AMS').e.id))")
+    dlg5 = p5.inner_text('#dlgDealBody')
+    check('Reisdata: details noemen de prijs voor 2 personen samen en de Kiwi-boeklink', '2 personen samen' in dlg5 and e5("bookLink(watchMatches(state.watches[0]).exact.find(x=>x.e.from==='AMS').e).url") == 'https://kiwi.com/u/wams', dlg5[:160])
+    p5.keyboard.press('Escape')
+    check('Reisdata: zelf gezocht = geen extra "nieuw"-teller', e5("document.querySelector('#watchCount').hidden"))
+    # Melding: automatische controle vindt iets nieuws terwijl je op een ander tabblad bent
+    p5.click('.tab[data-tab="deals"]'); p5.wait_for_timeout(200)
+    e5("window.__wmode='more'; state.watches[0].lastSearch=null; runWatchSearch(state.watches[0],{quiet:true})")
+    p5.wait_for_function("[...document.querySelectorAll('.toast')].some(t=>/nieuwe deal/.test(t.textContent))", timeout=10000)
+    tt = e5("[...document.querySelectorAll('.toast')].map(t=>t.textContent).join(' | ')")
+    check('Melding bij een nieuwe deal op jouw data, met goedkoopste prijs en knop Bekijk', '1 nieuwe deal' in tt and 'Barcelona met Sam' in tt and '140' in tt and 'Bekijk' in tt, tt[:200])
+    check('Teller op het tabblad Reisdata telt de nieuwe deal', e5("!document.querySelector('#watchCount').hidden && document.querySelector('#watchCount').textContent==='1'"))
+    p5.click('.tab[data-tab="reisdata"]'); p5.wait_for_timeout(200)
+    check('Nieuwe deal staat bovenaan met label Nieuw; teller gaat weg als je kijkt', p5.locator('.watch .w-item .badge.top').count() == 1 and 'Maastricht' in p5.inner_text('.watch .w-sec[data-sec="exact"] .w-item >> nth=0') and e5("document.querySelector('#watchCount').hidden"))
+    # Geen deals op precies jouw data: verder zoeken
+    e5("window.__wmode='none'")
+    p5.click('.chip[data-wq="wknd"]') if False else None
+    p5.fill('#wfName', ''); p5.click('#wfMinus')
+    p5.fill('#wfOutFrom', '2026-12-10'); p5.dispatch_event('#wfOutFrom', 'change'); p5.fill('#wfOutTo', '2026-12-11'); p5.dispatch_event('#wfOutTo', 'change')
+    p5.fill('#wfBackFrom', '2026-12-14'); p5.dispatch_event('#wfBackFrom', 'change'); p5.fill('#wfBackTo', '2026-12-15'); p5.dispatch_event('#wfBackTo', 'change')
+    n_before = e5("window.__fake.calls.w.length")
+    p5.click('#wfSave')
+    p5.wait_for_function("state.watches.length===2 && state.watches.every(w=>w.lastSearch) && !WBUSY.size", timeout=20000)
+    q2 = e5(f"window.__fake.calls.w.slice({n_before})")
+    wide = [x for x in q2 if x.get('max_sector_stopovers') == 1 and x['flyFrom'] == 'AMS' and x['flyTo'] == 'Europe']
+    w1 = e5("state.watches.find(w=>w.outFrom==='2026-12-10')")
+    m1 = e5("(()=>{const m=watchMatches(state.watches.find(w=>w.outFrom==='2026-12-10')); return {exact:m.exact.length, near:m.near.map(x=>({id:x.e.id,offOut:x.offOut,offBack:x.offBack})), free:m.free.length}})()")
+    check('Niets op precies jouw data: DealRadar zoekt zelf verder (2 dagen ruimer, 1 overstap)', wide and wide[0]['departureDate'] == '08/12/2026' and wide[0]['returnDateTo'] == '17/12/2026' and 'price_to' not in wide[0] and w1['lastInfo']['wide'], json.dumps(wide)[:200])
+    check('Verder gevonden opties staan apart onder "Bijna", met hoeveel dagen anders', m1['exact'] == 0 and any(x['offOut'] == -2 and x['offBack'] == 2 for x in m1['near']), json.dumps(m1)[:200])
+    c1 = p5.inner_text(f'.watch[data-w="{w1["id"]}"]')
+    check('Uitleg bij geen precieze deals + links om zelf verder te zoeken (Kiwi, Google Flights, NS, FlixBus)', 'geen passende vlucht' in c1 and '2 dagen eerder' in c1 and p5.locator(f'.watch[data-w="{w1["id"]}"] .w-links a').count() == 4 and 'dag eerder dan je periode' in c1, c1[:240].replace('\n', ' | '))
+    kl = p5.get_attribute(f'.watch[data-w="{w1["id"]}"] .w-links a >> nth=0', 'href')
+    check('Kiwi-link gebruikt jouw periodes', '2026-12-10_2026-12-11/2026-12-14_2026-12-15' in kl and 'adults=1' in kl, kl)
+    # Bestaande deals: precies, bijna en vrije datum
+    mx = e5("""(()=>{const w=cleanWatchLocal({id:'wt',outFrom:'2026-12-11',outTo:'2026-12-12',backFrom:'2026-12-16',backTo:'2026-12-16',people:1});
+      const n=cleanWatchLocal({...w,id:'wn',outFrom:'2026-12-13',outTo:'2026-12-14'}); const a=watchMatches(w), b=watchMatches(n);
+      return {exact:a.exact.some(x=>x.e.id==='kiwi-ein-opo-r'), near:b.near.some(x=>x.e.id==='kiwi-ein-opo-r' && x.offOut===-1), free:a.free.length>5 && a.free.every(x=>!x.e.out && (x.calc ? Math.abs(x.pp-2*x.e.price)<1e-9 : x.e.trip==='retour' && x.pp===x.e.price) && x.e.mode!=='vliegtuig') && a.free.some(x=>x.calc)}})()""")
+    check('Reisdata gebruikt ook bestaande deals: precies, 1 dag eerder (bijna) en trein/bus met vrije datum (retour of 2 × vanafprijs)', mx['exact'] and mx['near'] and mx['free'], json.dumps(mx))
+    mo = e5("(()=>{const w=cleanWatchLocal({id:'wo',oneway:true,outFrom:'2026-12-12',outTo:'2026-12-12',people:1,modes:['vliegtuig'],maxPP:50,origins:['nl']}); const m=watchMatches(w); return {n:m.exact.length, ok:m.exact.every(x=>x.e.trip==='enkel' && x.e.out==='2026-12-12' && x.pp<=50 && !x.e.o.abroad && x.e.mode==='vliegtuig'), sdr:m.exact.some(x=>x.e.id==='kiwi-ams-sdr')}})()")
+    check('Alleen heen + maximumprijs + alleen vliegtuig + alleen Nederland', mo['n'] >= 1 and mo['ok'] and mo['sdr'], json.dumps(mo))
+    # Bewerken, melding uit, verwijderen met ongedaan maken
+    p5.click(f'[data-wedit="{w1["id"]}"]')
+    check('Bewerken vult het formulier met de periode', p5.input_value('#wfOutFrom') == '2026-12-10' and p5.input_value('#wfBackTo') == '2026-12-15' and 'bewerken' in p5.inner_text('#wfTitle'))
+    p5.click('#wfCancel')
+    p5.click(f'[data-wnotify="{w1["id"]}"]')
+    check('Melding per periode aan of uit (ook in de database)', e5(f"state.watches.find(w=>w.id==='{w1['id']}').notify===false") and p5.wait_for_function(f"window.__fake.store.watches['{w1['id']}'].notify===false", timeout=3000))
+    p5.click(f'[data-wdel="{w1["id"]}"]')
+    p5.wait_for_timeout(150)
+    gone = e5(f"!state.watches.some(w=>w.id==='{w1['id']}') && !window.__fake.store.watches['{w1['id']}']")
+    p5.click('.toast >> text=Ongedaan maken')
+    p5.wait_for_timeout(150)
+    check('Verwijderen met "Ongedaan maken"', gone and e5(f"state.watches.some(w=>w.id==='{w1['id']}') && !!window.__fake.store.watches['{w1['id']}']"))
+    p5.reload(); p5.wait_for_selector('.watch')
+    check('Reisdata en live gevonden deals blijven bewaard na opnieuw openen', e5("state.watches.length===2 && watchMatches(state.watches.find(w=>w.name==='Barcelona met Sam')).exact.length>=4") and p5.locator('.watch').count() == 2)
+    check('Reisdata (Claude): geen JavaScript-fouten', not errs5, '; '.join(errs5[:3]))
+    ctx5.close()
+    # Website-versie (zonder Claude) op een telefoon
+    ctx6 = browser.new_context(viewport={'width': 375, 'height': 812}, device_scale_factor=2, locale='nl-NL', timezone_id='Europe/Amsterdam', has_touch=True)
+    ctx6.route('**/*', route_all)
+    p6 = ctx6.new_page(); errs6 = []
+    p6.on('pageerror', lambda e: errs6.append(str(e)))
+    p6.goto(URL + '#reisdata'); p6.wait_for_selector('#watchForm')
+    e6 = p6.evaluate
+    check('Telefoon: 7 tabbladen passen, geen horizontaal scrollen', p6.locator('.tabbar .tab').count() == 7 and e6("document.documentElement.scrollWidth<=innerWidth") and e6("[...document.querySelectorAll('.tab span:not(.count)')].every(s=>s.scrollWidth<=s.parentElement.clientWidth+1)"))
+    p6.click('#wfQuick .chip[data-wq="kerst"]')
+    check('Snelknop Kerstvakantie vult de periodes in', p6.input_value('#wfOutFrom') == '2026-12-18' and p6.input_value('#wfBackTo') == '2027-01-03', p6.input_value('#wfOutFrom') + ' / ' + p6.input_value('#wfBackTo'))
+    p6.click('#wfSave'); p6.wait_for_selector('.watch')
+    c6 = p6.inner_text('.watch')
+    check('Website: reisdata bewaard in de browser, met uitleg en zoeklinks', e6("store.get('watches').length===1") and 'Kerstvakantie' in c6 and ('Live zoeken kan in Claude' in c6) and p6.locator('.watch .w-sec').count() >= 1, c6[:200].replace('\n', ' | '))
+    check('Website: geen JavaScript-fouten', not errs6, '; '.join(errs6[:3]))
+    ctx6.close()
+
     # ===== 15. App-versie (PWA): manifest, service worker en offline openen =====
     ctx3 = browser.new_context(viewport={'width': 390, 'height': 844}, locale='nl-NL', timezone_id='Europe/Amsterdam', service_workers='allow')
     ctx3.route('**/*', lambda r, req: r.abort() if 'fonts.g' in req.url else r.continue_())

@@ -57,6 +57,8 @@ function normalizeDeal(raw) {
   if (d.trip === 'retour' && d.mode === 'vliegtuig' && !d.back) return null; // een retourvlucht zonder terugdatum klopt niet
   if (!d.checked || Number.isNaN(Date.parse(d.checked))) return null;
   if (typeof d.link === 'string' && !/^https:\/\//.test(d.link)) delete d.link;
+  // Gevonden voor jouw reisdata met meer personen: prijs is per persoon, het totaal staat erbij
+  if (+d.people > 1 && +d.priceTotal > 0 && !/personen samen/.test(d.note || '')) d.note = `${d.note || ''} Prijs voor ${+d.people} personen samen: ${eur(+d.priceTotal)} (${eur(d.price)} per persoon).`.trim();
   if (!d.book || !PROVIDERS[d.book]) d.book = d.mode === 'vliegtuig' ? (d.link ? 'kiwi' : 'google') : d.mode === 'bus' ? 'kombo-route' : 'nsi';
   return d;
 }
@@ -406,6 +408,8 @@ async function initCloud() {
       state.src.kiwi = CLOUD.kiwi ? { status: 'ok', text: 'klaar om te zoeken' } : { status: 'off', text: 'niet gekoppeld' };
       renderRadar();
       if (CLOUD.kiwi) { for (let i = 0; i < 40 && state.scanning; i++) await new Promise(r => setTimeout(r, 250)); scan({ initial: true, onlyKiwi: true }); }
+      renderWatches();
+      if (CLOUD.kiwi) setTimeout(autoSearchWatches, 2500);
     }
   } catch (err) { CLOUD.mcp = null; }
   // Database
@@ -430,6 +434,7 @@ async function initCloud() {
         CLOUD.alertsDb = snap.docs.map(d => ({ ...d.data(), id: d.id }));
         syncAlertsFromCloud();
       }, () => {});
+      watchCloudSubscribe();
     }
   } catch (err) { state.src.cloud = { status: 'error', text: 'niet beschikbaar' }; renderRadar(); }
 }
@@ -491,7 +496,3 @@ function initPWA() {
   window.addEventListener('online', off); window.addEventListener('offline', off); off();
 }
 
-init();
-$('#topDeals').addEventListener('click', ev => { const b = ev.target.closest('[data-open]'); if (b) { const e = dealById(b.dataset.open); if (e) openDealDialog(e); } });
-initCloud();
-initPWA();
